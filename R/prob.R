@@ -28,3 +28,16 @@ rtexp <- function (n = 1, rate = 1, upper = Inf){
 rate_to_prob <- function(r, t = 1){
   1 - exp(-r * t)
 }
+
+
+#' Convert probability to rate
+#'
+#' The constant rate at which an event with a given probability will occur
+#'
+#' @param p probability
+#' @param t time period
+#'
+#' @return Probability of event in timestep
+prob_to_rate <- function(p, t = 1){
+  -log(1 - p) / t
+}

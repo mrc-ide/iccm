@@ -11,7 +11,13 @@ test_that("random draws from truncated exponential", {
   expect_type(draw, "double")
 })
 
-test_that("rate to probability",{
+test_that("rate probability conversions",{
   expect_equal(rate_to_prob(0), 0)
   expect_equal(rate_to_prob(Inf), 1)
+
+  expect_equal(prob_to_rate(0), 0)
+  expect_equal(prob_to_rate(1), Inf)
+
+  expect_equal(rate_to_prob(prob_to_rate(0.75)), 0.75)
+  expect_equal(prob_to_rate(rate_to_prob(1.23)), 1.23)
 })

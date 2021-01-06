@@ -7,7 +7,7 @@
 #' \strong{Demography:}
 #'
 #' * pop - Population size
-#' * lifespan - The average lifespan of an individual within the population
+#' * average_age - The average lifespan of an individual within the population
 #' * age_upper - The upper limit to modelled ages
 #'
 #' @param overrides a named list of parameter values to use instead of defaults.
@@ -15,8 +15,8 @@ get_parameters <- function(overrides = list()){
 
   parameters <- list(
     # Demography
-    pop = 1000,
-    lifespan = 80 * 365,
+    population = 1000,
+    average_age = 60 * 365,
     age_upper = 5 * 365
   )
 

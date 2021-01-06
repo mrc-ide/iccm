@@ -17,6 +17,7 @@ The parameters are defined below.
 \strong{Demography:}
 \itemize{
 \item pop - Population size
-\item lifespan - The average lifespan of an individual within the population
+\item average_age - The average lifespan of an individual within the population
+\item age_upper - The upper limit to modelled ages
 }
 }

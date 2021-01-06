@@ -26,10 +26,5 @@ rtexp <- function (n = 1, rate = 1, upper = Inf){
 #'
 #' @return Probability of event in timestep
 rate_to_prob <- function(r, t = 1){
-  stopifnot(r >= 0,
-            t > 0,
-            is.numeric(r),
-            is.numeric(t))
-
   1 - exp(-r * t)
 }

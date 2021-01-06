@@ -18,7 +18,12 @@ Config/testthat/edition: 3
 Remotes:
   mrc-ide/individual
 Imports:
-  individual
+    individual,
+    dplyr,
+    tidyr,
+    ggplot2,
+    magrittr,
+    rlang,
 Suggests: 
-  testthat
-
+  testthat,
+  mockery

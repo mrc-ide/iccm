@@ -17,7 +17,7 @@ get_parameters <- function(overrides = list()){
     # Demography
     population = 1000,
     average_age = 60 * 365,
-    age_upper = 5 * 365
+    age_upper = 5 * 365 - 1
   )
 
   # Override parameters with any client specified ones

@@ -11,13 +11,14 @@ rtexp(n = 1, rate = 1, lower = 0, upper = Inf)
 
 \item{rate}{Rate}
 
-\item{lower}{Lower truncation (inclusive: \link{lower, upper})}
+\item{lower}{Lower truncation (inclusive: [])}
 
-\item{upper}{Upper truncation (inclusive: \link{lower, upper})}
+\item{upper}{Upper truncation (inclusive: [])}
 }
 \value{
 Random draws from truncated exponential
 }
 \description{
-Random deviates from upper-truncated exponential distribution
+Code adapted from Lorenzo Rimella (2017). RGeode: Geometric Density Estimation.
+R package version 0.1.0. https://CRAN.R-project.org/package=RGeode
 }

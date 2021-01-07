@@ -1,9 +1,12 @@
 #' Random deviates from upper-truncated exponential distribution
 #'
+#' Code adapted from Lorenzo Rimella (2017). RGeode: Geometric Density Estimation.
+#'    R package version 0.1.0. https://CRAN.R-project.org/package=RGeode
+#'
 #' @param n Number of draws
 #' @param rate Rate
-#' @param lower Lower truncation (inclusive: [lower, upper])
-#' @param upper Upper truncation (inclusive: [lower, upper])
+#' @param lower Lower truncation (inclusive: [])
+#' @param upper Upper truncation (inclusive: [])
 #'
 #' @return Random draws from truncated exponential
 rtexp <- function (n = 1, rate = 1, lower = 0, upper = Inf){
@@ -12,9 +15,9 @@ rtexp <- function (n = 1, rate = 1, lower = 0, upper = Inf){
             lower >= 0,
             lower < upper)
 
-  cdf1 = pexp(lower, rate = rate)
-  cdf2 = pexp(upper, rate = rate)
-  stats::qexp(cdf1 + runif(n) * (cdf2 - cdf1), rate = rate)
+  cdf1 = stats::pexp(lower, rate = rate)
+  cdf2 = stats::pexp(upper, rate = rate)
+  stats::qexp(cdf1 + stats::runif(n) * (cdf2 - cdf1), rate = rate)
 }
 
 #' Convert rate to probability

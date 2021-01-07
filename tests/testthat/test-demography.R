@@ -42,7 +42,7 @@ test_that("background mortality works", {
   # Make the call using the mock API
   bm(api)
   # Check that the arguments match the mocked API
-  mockery::expect_args(api$queue_variable_update, 1, individuals$child, variables$birth_t, 0, 2)
+  mockery::expect_args(api$queue_variable_update, 1, individuals$child, variables$birth_t, -parameters$age_lower, 2)
 })
 
 test_that("graduation works", {
@@ -51,5 +51,5 @@ test_that("graduation works", {
   # Make the call using the mock API
   gr(api)
   # Check that the arguments match the mocked API
-  mockery::expect_args(api$queue_variable_update, 1, individuals$child, variables$birth_t, 0, 2)
+  mockery::expect_args(api$queue_variable_update, 1, individuals$child, variables$birth_t, -parameters$age_lower, 2)
 })

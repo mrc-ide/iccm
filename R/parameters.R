@@ -17,6 +17,7 @@ get_parameters <- function(overrides = list()){
     # Demography
     population = 1000,
     average_age = 60 * 365,
+    age_lower = 30,
     age_upper = 5 * 365 - 1
   )
 

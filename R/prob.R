@@ -2,19 +2,19 @@
 #'
 #' @param n Number of draws
 #' @param rate Rate
-#' @param upper Upper truncation (inclusive: (0, upper])
+#' @param lower Lower truncation (inclusive: [lower, upper])
+#' @param upper Upper truncation (inclusive: [lower, upper])
 #'
 #' @return Random draws from truncated exponential
-rtexp <- function (n = 1, rate = 1, upper = Inf){
+rtexp <- function (n = 1, rate = 1, lower = 0, upper = Inf){
   stopifnot(n >= 1,
             rate > 0,
-            upper > 0,
-            is.numeric(n),
-            is.numeric(rate),
-            is.numeric(upper))
+            lower >= 0,
+            lower < upper)
 
-  cdf = stats::pexp(upper, rate = rate)
-  stats::qexp(stats::runif(n) * cdf, rate = rate)
+  cdf1 = pexp(lower, rate = rate)
+  cdf2 = pexp(upper, rate = rate)
+  stats::qexp(cdf1 + runif(n) * (cdf2 - cdf1), rate = rate)
 }
 
 #' Convert rate to probability

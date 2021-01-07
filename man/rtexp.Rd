@@ -4,14 +4,16 @@
 \alias{rtexp}
 \title{Random deviates from upper-truncated exponential distribution}
 \usage{
-rtexp(n = 1, rate = 1, upper = Inf)
+rtexp(n = 1, rate = 1, lower = 0, upper = Inf)
 }
 \arguments{
 \item{n}{Number of draws}
 
 \item{rate}{Rate}
 
-\item{upper}{Upper truncation (inclusive: (0, upper])}
+\item{lower}{Lower truncation (inclusive: \link{lower, upper})}
+
+\item{upper}{Upper truncation (inclusive: \link{lower, upper})}
 }
 \value{
 Random draws from truncated exponential

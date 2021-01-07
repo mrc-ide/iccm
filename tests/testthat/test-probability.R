@@ -1,10 +1,8 @@
 test_that("random draws from truncated exponential", {
   expect_error(rtexp(n = 0), "n >= 1 is not TRUE", fixed = TRUE)
   expect_error(rtexp(rate = 0), "rate > 0 is not TRUE", fixed = TRUE)
-  expect_error(rtexp(upper = 0), "upper > 0 is not TRUE", fixed = TRUE)
-  expect_error(rtexp(n = "A"), "is.numeric(n) is not TRUE", fixed = TRUE)
-  expect_error(rtexp(rate = "A"), "is.numeric(rate) is not TRUE", fixed = TRUE)
-  expect_error(rtexp(upper = "A"), "is.numeric(upper) is not TRUE", fixed = TRUE)
+  expect_error(rtexp(upper = 0), "lower < upper is not TRUE", fixed = TRUE)
+  expect_error(rtexp(lower = -1), "lower >= 0 is not TRUE", fixed = TRUE)
 
   draw <- rtexp()
   expect_equal(length(draw), 1)

@@ -15,7 +15,7 @@ create_states <- function(parameters){
 create_variables <- function(parameters){
   size <- parameters$pop
 
-  initial_age <- floor(rtexp(size, rate = 1 / parameters$average_age, upper = parameters$age_upper))
+  initial_age <- floor(rtexp(size, rate = 1 / parameters$average_age, lower = parameters$age_lower, upper = parameters$age_upper))
 
   # Define variables
   variables <- list(

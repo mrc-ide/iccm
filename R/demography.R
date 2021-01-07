@@ -19,7 +19,7 @@ graduate <- function(parameters, individuals, variables){
 
     # Replace graduating individuals
     if(n_graduate > 0){
-      replace_child(api, which(to_graduate), individuals, variables)
+      replace_child(api, which(to_graduate), individuals, variables, parameters)
     }
   }
 }
@@ -43,7 +43,7 @@ background_mortality <- function(parameters, individuals, variables){
 
     # Replace individuals who have died
     if(sum(n_die) > 0){
-      replace_child(api, which(background_death == 1), individuals, variables)
+      replace_child(api, which(background_death == 1), individuals, variables, parameters)
     }
   }
 }
@@ -53,8 +53,8 @@ background_mortality <- function(parameters, individuals, variables){
 #' @param api Model API
 #' @param target Indices of children to replace
 #' @inheritParams graduate
-replace_child <- function(api, target, individuals, variables) {
-  api$queue_variable_update(individuals$child, variables$birth_t, api$get_timestep(), target)
+replace_child <- function(api, target, individuals, variables, parameters) {
+  api$queue_variable_update(individuals$child, variables$birth_t, api$get_timestep() - parameters$age_lower, target)
 }
 
 #' Render demographic outputs

@@ -4,7 +4,7 @@
 \alias{replace_child}
 \title{Replace child with new}
 \usage{
-replace_child(api, target, individuals, variables)
+replace_child(api, target, individuals, variables, parameters)
 }
 \arguments{
 \item{api}{Model API}
@@ -14,6 +14,8 @@ replace_child(api, target, individuals, variables)
 \item{individuals}{Model individuals}
 
 \item{variables}{Model variables}
+
+\item{parameters}{Model parameters}
 }
 \description{
 Replace child with new

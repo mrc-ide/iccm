@@ -4,18 +4,21 @@
 \alias{rtexp}
 \title{Random deviates from upper-truncated exponential distribution}
 \usage{
-rtexp(n = 1, rate = 1, upper = Inf)
+rtexp(n = 1, rate = 1, lower = 0, upper = Inf)
 }
 \arguments{
 \item{n}{Number of draws}
 
 \item{rate}{Rate}
 
-\item{upper}{Upper truncation (inclusive: (0, upper])}
+\item{lower}{Lower truncation (inclusive: [])}
+
+\item{upper}{Upper truncation (inclusive: [])}
 }
 \value{
 Random draws from truncated exponential
 }
 \description{
-Random deviates from upper-truncated exponential distribution
+Code adapted from Lorenzo Rimella (2017). RGeode: Geometric Density Estimation.
+R package version 0.1.0. https://CRAN.R-project.org/package=RGeode
 }

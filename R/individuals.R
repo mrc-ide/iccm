@@ -18,16 +18,22 @@ create_variables <- function(parameters){
   initial_age <- floor(rtexp(size, rate = 1 / parameters$average_age, lower = parameters$age_lower, upper = parameters$age_upper))
 
   # Define variables
-  variables <- list(
+  demog_variables <- list(
     birth_t = individual::Variable$new("birth_t", -initial_age)
   )
+
+  # Add disease variables
+  disease_variables <- create_disease_variables(parameters)
+
+  # Create list of all variables
+  variables <- c(demog_variables, disease_variables)
 
   return(variables)
 }
 
-create_individuals <- function(states, variables){
+create_individuals <- function(states, variables, events){
   individuals <- list(
-    child = individual::Individual$new("child", states = states, variables = variables)
+    child = individual::Individual$new("child", states = states, variables = variables, events = events)
   )
   return(individuals)
 }

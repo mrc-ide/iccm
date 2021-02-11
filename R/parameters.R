@@ -10,8 +10,7 @@
 #' * average_age - The average lifespan of an individual within the population
 #' * age_upper - The upper limit to modelled ages
 #'
-#' @param overrides a named list of parameter values to use instead of defaults.
-get_parameters <- function(overrides = list()){
+get_parameters <- function(){
 
   parameters <- list(
     # Demography
@@ -21,17 +20,15 @@ get_parameters <- function(overrides = list()){
     age_upper = 5 * 365 - 1
   )
 
-  # Override parameters with any client specified ones
-  if (!is.list(overrides)) {
-    stop('overrides must be a list')
-  }
-
-  for (name in names(overrides)) {
-    if (!(name %in% names(parameters))) {
-      stop(paste('Unknown parameter', name, sep = ' '))
-    }
-    parameters[[name]] <- overrides[[name]]
-  }
-
+  parameters$diarrhoea <- list(
+    groups = 2,
+    type = c("bacteria", "virus"),
+    index = c(1, 2),
+    sigma = c(0.01, 0.02),
+    # Maternal immunity half life
+    mi =  c(100, 200),
+    # Average duration of clinical episode
+    clin_dur = c(14, 14)
+  )
   return(parameters)
 }

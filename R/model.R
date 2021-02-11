@@ -10,14 +10,18 @@
 #' @examples
 #' simulation1 <- run_simulation(timesteps = 365)
 run_simulation <- function(timesteps, parameters = NULL, long = TRUE){
+  # TODO: need to fix this is using nested list of parameters
   if(is.null(parameters)){
     parameters = get_parameters()
+  } else {
+  #  parameters = get_parameters(overrides = parameters)
   }
 
   states <- create_states(parameters)
   variables <- create_variables(parameters)
-  individuals <- create_individuals(states, variables)
-  processes <- create_processes(parameters, individuals, variables)
+  events <- create_events(individuals, variables)
+  individuals <- create_individuals(states, variables, events)
+  processes <- create_processes(parameters, individuals, variables, events)
 
   output <- individual::simulate(individuals = individuals,
                        processes = processes,

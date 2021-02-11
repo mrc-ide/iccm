@@ -8,8 +8,7 @@
 graduate <- function(parameters, individuals, variables){
   function(api) {
     # Find children who have reached the maximum age
-    timestep <- api$get_timestep()
-    to_graduate <- (timestep - api$get_variable(individuals$child, variables$birth_t)) == parameters$age_upper
+    to_graduate <- get_age(api, individuals, variables) == parameters$age_upper
 
     # Number graduating in this timestep
     n_graduate <- sum(to_graduate)
@@ -35,7 +34,7 @@ background_mortality <- function(parameters, individuals, variables){
     # Randomly draw background mortality
     background_death <- stats::rbinom(parameters$population, 1, rate_to_prob(1 / parameters$average_age))
 
-    # Number dieing from background mortality
+    # Number dying from background mortality
     n_die <- sum(background_death)
 
     # Save deaths
@@ -57,6 +56,16 @@ replace_child <- function(api, target, individuals, variables, parameters) {
   api$queue_variable_update(individuals$child, variables$birth_t, api$get_timestep() - parameters$age_lower, target)
 }
 
+#' Get children's ages
+#'
+#' @param api Model API
+#' @param index optionally return a subset of the variable vector
+#' @inheritParams graduate
+get_age <- function(api, individuals, variables, index = NULL){
+  timestep <- api$get_timestep()
+  timestep - api$get_variable(individuals$child, variables$birth_t, index)
+}
+
 #' Render demographic outputs
 #'
 #' Average ages and number of children in each year age-group.
@@ -75,3 +84,5 @@ render_demography <- function(individuals, variables){
     api$render("average_age", mean(age_days) / 365)
   }
 }
+
+

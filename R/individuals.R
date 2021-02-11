@@ -3,7 +3,7 @@
 #' @param parameters Model parameters
 create_states <- function(parameters){
   states <- list(
-    S = individual::State$new("S", parameters$pop)
+    NULLSTATE = individual::State$new("NULLSTATE", parameters$pop)
   )
 
   return(states)
@@ -31,6 +31,13 @@ create_variables <- function(parameters){
   return(variables)
 }
 
+#' Create individuals
+#'
+#' @param states Model states
+#' @param variables Model variables
+#' @param events Model events
+#'
+#' @return List of individuals
 create_individuals <- function(states, variables, events){
   individuals <- list(
     child = individual::Individual$new("child", states = states, variables = variables, events = events)

@@ -2,8 +2,9 @@
 parameters <- get_parameters()
 states <- create_states(parameters)
 variables <- create_variables(parameters)
-individuals <- create_individuals(states, variables)
-processes <- create_processes(parameters, individuals, variables)
+events <- create_events(individuals, variables)
+individuals <- create_individuals(states, variables, events)
+processes <- create_processes(parameters, individuals, variables, events)
 
 # Set up a mock API with 2 children of ages 0 and the age limit
 api <- mock_api(

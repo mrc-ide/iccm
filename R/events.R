@@ -1,4 +1,10 @@
 
+#' Create events
+#'
+#' @param individuals  Model individuals
+#' @param variables Model variables
+#'
+#' @return List of events
 create_events <- function(individuals, variables){
   events <- list()
 
@@ -8,6 +14,16 @@ create_events <- function(individuals, variables){
   return(events)
 }
 
+
+#' Recovery event
+#'
+#' A recovery event. Resets status back to 0 (susceptible) and clears the disease index.
+#'
+#' @param condition Condition recovered from
+#' @param individuals Model individuals
+#' @param variables Model variables
+#'
+#' @return Event
 recover_event <- function(condition, individuals, variables){
   event<- individual::Event$new(paste0(condition, "_recover"))
   # Add listener

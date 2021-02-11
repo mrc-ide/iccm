@@ -3,6 +3,7 @@
 #' @param parameters Model parameters
 #' @param individuals Model individuals
 #' @param variables Model variables
+#' @param events Model events
 #'
 #' @return List of model process functions
 create_processes <- function(parameters, individuals, variables, events){

@@ -1,3 +1,10 @@
+#' Create disease variables
+#'
+#' Creates all variables associated with disease.
+#'
+#' @param parameters Model parameters
+#'
+#' @return A list of disease variables
 create_disease_variables <- function(parameters){
   disease_variables <- list()
 
@@ -10,6 +17,17 @@ create_disease_variables <- function(parameters){
   return(disease_variables)
 }
 
+#' Condition exposure
+#'
+#' Implements exposure to one of three conditions (diarrhoea, malaria, pneumonia). Selects
+#' those infected, selects which disease they have been infected with and schedules the disease
+#' life course.
+#'
+#' @param condition Condition: diarrhoea, malaria or pneumonia
+#' @param individuals Model individuals
+#' @param variables Model variables
+#' @param parameters Model parameters
+#' @param events Model events
 condition_exposure <- function(condition, individuals, variables, parameters, events){
   function(api){
     # Get susceptible indices
@@ -35,7 +53,7 @@ condition_exposure <- function(condition, individuals, variables, parameters, ev
         infection_prob[,i] <- rate_to_prob(infection_rate)
       }
       # Draw those infected
-      infected <- runif(length(susceptibles), 0, 1) < rowSums(infection_prob)
+      infected <- stats::runif(length(susceptibles), 0, 1) < rowSums(infection_prob)
 
       if(sum(infected) > 0){
         # Get indices of people to infect
@@ -54,6 +72,13 @@ condition_exposure <- function(condition, individuals, variables, parameters, ev
   }
 }
 
+#' Schedule the disease life course
+#'
+#' @inheritParams condition_exposure
+#' @param infection_disease Inidces of disease type
+#' @param p Condition-specific subset of parameters
+#' @param target Indices of children
+#' @param api Model API
 infection_life_course <- function(condition, infection_disease, p, target, api, individuals, variables, events){
   # Record which disease children are infected with
   api$queue_variable_update(individuals$child, variables[[paste0(condition, "_disease_index")]], infection_disease, target)
@@ -62,13 +87,14 @@ infection_life_course <- function(condition, infection_disease, p, target, api, 
   api$queue_variable_update(individuals$child, variables[[paste0(condition, "_status")]], 1, target)
 
   # Schedule future changes
-  symptomatic_length <- rpois(length(target), lambda = p$clin_dur[infection_disease])
+  symptomatic_length <- stats::rpois(length(target), lambda = p$clin_dur[infection_disease])
   ## Schedule recovery
   api$schedule(events[[paste0(condition, "_recover")]], target, symptomatic_length)
 }
 
-
-### Rendering ##################################################################
+#' Render prevalence outputs for a condition
+#'
+#' @inheritParams condition_exposure
 render_prevalence <- function(condition, individuals, variables, parameters){
   function(api){
     prev <- 1 - mean(api$get_variable(individuals$child, variables[[paste0(condition, "_status")]]) == 0)
@@ -81,4 +107,4 @@ render_prevalence <- function(condition, individuals, variables, parameters){
     }
   }
 }
-################################################################################
+

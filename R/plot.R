@@ -18,5 +18,6 @@ plot_sim <- function(output, vars = NULL) {
     ggplot2::ylab("") +
     ggplot2::facet_wrap(~.data$variable, scales = "free_y") +
     ggplot2::theme_bw() +
-    ggplot2::theme(legend.position = "none")
+    ggplot2::theme(legend.position = "none",
+                   strip.background = ggplot2::element_rect(fill = "white"))
 }

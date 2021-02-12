@@ -28,6 +28,14 @@ create_variables <- function(parameters){
   # Create list of all variables
   variables <- c(demog_variables, disease_variables)
 
+  # Epidemiology
+  variables$het = individual::Variable$new("het", heterogeneity(size, parameters$het_sd))
+  # Interventions
+  variables$llin = individual::Variable$new("llin", stats::rbinom(size, 1, parameters$llin_coverage))
+  variables$rotavirus_vx = individual::Variable$new("rotavirus_vx", stats::rbinom(size, 1, parameters$rotavirus_vx_coverage))
+  variables$pneumococcal_vx = individual::Variable$new("pneumococcal_vx", stats::rbinom(size, 1, parameters$pneumococcal_vx_coverage))
+  variables$hib_vx = individual::Variable$new("hib_vx", stats::rbinom(size, 1, parameters$hib_vx_coverage))
+
   return(variables)
 }
 

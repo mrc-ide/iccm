@@ -13,6 +13,9 @@ create_disease_variables <- function(parameters){
   disease_variables$diarrhoea_status <- individual::Variable$new("diarrhoea_status", rep(0, parameters$population))
   ## Infection type
   disease_variables$diarrhoea_disease_index <- individual::Variable$new("diarrhoea_disease_index", rep(0, parameters$population))
+  ## Prior infections
+  disease_variables$diarrhoea_bacteria_prior <- individual::Variable$new("diarrhoea_bacteria_prior", rep(0, parameters$population))
+  disease_variables$diarrhoea_virus_prior <- individual::Variable$new("diarrhoea_virus_prior", rep(0, parameters$population))
 
   return(disease_variables)
 }
@@ -45,10 +48,21 @@ condition_exposure <- function(condition, individuals, variables, parameters, ev
 
       # Estimate infection probability for each disease within condition
       for(i in p$index){
-        mi <- maternal_immunity(ages, p$mi[i])
+        # Maternal immunity modifier
+        mi <- maternal_immunity(ages, p$mi_hl[i])
+        # Prior infections
+        pi <- api$get_variable(individuals$child, variables[[paste0(condition, "_", p$type[i],"_prior")]], susceptibles)
+        # Infection immunity modifier
+        ii <- exposure_immunity(pi, p$ii_shape[i], p$ii_rate[i])
+        # Individual level heterogeneity modifier
+        het <- api$get_variable(individuals$child, variables$het, susceptibles)
+        # Vaccine modifier
+        vi <- vaccine_impact(type = p$type[i], target = susceptibles, ages = ages, p = p, individuals = individuals, variables = variables, api = api)
+        # LLIN modifier
+        li <- llin_impact(type = p$type[i], target = susceptibles, p = p, individuals = individuals, variables = variables, api = api)
         # Estimate infection rate
-        # TODO: 1) Exposure driven immunity, 2) Heterogeneity, 3) intervention modifiers
-        infection_rate <- p$sigma[i] * mi
+        # TODO: 3) intervention modifiers: comminty effects: vaccination and llins and (treatment prophylaxsis)
+        infection_rate <- p$sigma[i] * mi * ii * het * vi * li
         # Estimate infection probability
         infection_prob[,i] <- rate_to_prob(infection_rate)
       }
@@ -59,7 +73,7 @@ condition_exposure <- function(condition, individuals, variables, parameters, ev
         # Get indices of people to infect
         to_infect <- susceptibles[infected]
         # Draw which disease
-        infection_prob <- infection_prob[infected, ]
+        infection_prob <- infection_prob[infected, ,drop = FALSE]
 
         infection_disease <- apply(infection_prob, 1, function(x){
           sample(p$index, 1, prob = x)
@@ -82,6 +96,14 @@ condition_exposure <- function(condition, individuals, variables, parameters, ev
 infection_life_course <- function(condition, infection_disease, p, target, api, individuals, variables, events){
   # Record which disease children are infected with
   api$queue_variable_update(individuals$child, variables[[paste0(condition, "_disease_index")]], infection_disease, target)
+  # Make record of infection in each child's exposure history
+  uid <- unique(infection_disease)
+  for(i in uid){
+    var_name <- paste0(condition, "_", p$type[i], "_prior")
+    sub_target <- target[infection_disease == i]
+    current_prior <- api$get_variable(individuals$child, variables[[var_name]], sub_target)
+    api$queue_variable_update(individuals$child, variables[[var_name]], current_prior + 1, sub_target)
+  }
 
   # Change status -> symptomatic
   api$queue_variable_update(individuals$child, variables[[paste0(condition, "_status")]], 1, target)
@@ -91,6 +113,9 @@ infection_life_course <- function(condition, infection_disease, p, target, api, 
   ## Schedule recovery
   api$schedule(events[[paste0(condition, "_recover")]], target, symptomatic_length)
 }
+
+
+
 
 #' Render prevalence outputs for a condition
 #'

@@ -31,7 +31,7 @@ recover_event <- function(condition, individuals, variables){
     function(api, target) {
       # Set status = 0 = susceptible
       api$queue_variable_update(individuals$child, variables[[paste0(condition, "_status")]], 0, target)
-       # Set disease indec = 0 = no disease
+       # Set disease index = 0 = no disease
       api$queue_variable_update(individuals$child, variables[[paste0(condition, "_disease_index")]], 0, target)
     })
 

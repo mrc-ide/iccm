@@ -59,17 +59,21 @@ replace_child <- function(api, target, individuals, variables, parameters) {
   api$queue_variable_update(individuals$child, variables$diarrhoea_disease_index, 0, target)
   api$queue_variable_update(individuals$child, variables$diarrhoea_bacteria_prior, 0, target)
   api$queue_variable_update(individuals$child, variables$diarrhoea_virus_prior, 0, target)
+  api$queue_variable_update(individuals$child, variables$diarrhoea_parasite_prior, 0, target)
+  api$queue_variable_update(individuals$child, variables$diarrhoea_rotavirus_prior, 0, target)
 
   n <- length(target)
-
   # re-draw individual level heterogeneity
-  api$queue_variable_update(individuals$child, variables$het, heterogeneity(n, parameters$het_sd), target)
+  new_het <- heterogeneity(n, parameters$het_sd)
+  api$queue_variable_update(individuals$child, variables$het, new_het, target)
 
   # re-draw interventions and vaccination
   api$queue_variable_update(individuals$child, variables$llin, stats::rbinom(n, 1, parameters$llin_coverage), target)
   api$queue_variable_update(individuals$child, variables$rotavirus_vx, stats::rbinom(n, 1, parameters$rotavirus_vx_coverage), target)
   api$queue_variable_update(individuals$child, variables$pneumococcal_vx, stats::rbinom(n, 1, parameters$pneumococcal_vx_coverage), target)
   api$queue_variable_update(individuals$child, variables$hib_vx, stats::rbinom(n, 1, parameters$hib_vx_coverage), target)
+
+  # TODO: Clear any scheduled disease progression
 
 }
 

@@ -4,7 +4,7 @@
 \alias{vaccine_impact}
 \title{Vaccine impact}
 \usage{
-vaccine_impact(type, target, ages, p, individuals, variables, api)
+vaccine_impact(type, index, target, ages, p, individuals, variables, api)
 }
 \arguments{
 \item{type}{Infection type}

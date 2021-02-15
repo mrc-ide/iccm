@@ -16,6 +16,8 @@ create_disease_variables <- function(parameters){
   ## Prior infections
   disease_variables$diarrhoea_bacteria_prior <- individual::Variable$new("diarrhoea_bacteria_prior", rep(0, parameters$population))
   disease_variables$diarrhoea_virus_prior <- individual::Variable$new("diarrhoea_virus_prior", rep(0, parameters$population))
+  disease_variables$diarrhoea_parasite_prior <- individual::Variable$new("diarrhoea_parasite_prior", rep(0, parameters$population))
+  disease_variables$diarrhoea_rotavirus_prior <- individual::Variable$new("diarrhoea_rotavirus_prior", rep(0, parameters$population))
 
   return(disease_variables)
 }
@@ -48,21 +50,24 @@ condition_exposure <- function(condition, individuals, variables, parameters, ev
 
       # Estimate infection probability for each disease within condition
       for(i in p$index){
+        type <- p$type[i]
         # Maternal immunity modifier
         mi <- maternal_immunity(ages, p$mi_hl[i])
         # Prior infections
-        pi <- api$get_variable(individuals$child, variables[[paste0(condition, "_", p$type[i],"_prior")]], susceptibles)
+        pi <- api$get_variable(individuals$child, variables[[paste0(condition, "_", type,"_prior")]], susceptibles)
         # Infection immunity modifier
         ii <- exposure_immunity(pi, p$ii_shape[i], p$ii_rate[i])
         # Individual level heterogeneity modifier
         het <- api$get_variable(individuals$child, variables$het, susceptibles)
         # Vaccine modifier
-        vi <- vaccine_impact(type = p$type[i], target = susceptibles, ages = ages, p = p, individuals = individuals, variables = variables, api = api)
+        vi <- vaccine_impact(type = type, index = i, target = susceptibles, ages = ages, p = p, individuals = individuals, variables = variables, api = api)
         # LLIN modifier
-        li <- llin_impact(type = p$type[i], target = susceptibles, p = p, individuals = individuals, variables = variables, api = api)
+        li <- llin_impact(type = type, target = susceptibles, p = p, individuals = individuals, variables = variables, api = api)
+        # Community impacts modifier (vaccine or LLIN)
+        ci <- community_impact(type = type, index = i, p = p)
         # Estimate infection rate
-        # TODO: 3) intervention modifiers: comminty effects: vaccination and llins and (treatment prophylaxsis)
-        infection_rate <- p$sigma[i] * mi * ii * het * vi * li
+        # TODO: treatment prophylaxsis
+        infection_rate <- p$sigma[i] * mi * ii * het * vi * li * ci
         # Estimate infection probability
         infection_prob[,i] <- rate_to_prob(infection_rate)
       }

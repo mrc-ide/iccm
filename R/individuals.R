@@ -30,6 +30,7 @@ create_variables <- function(parameters){
 
   # Epidemiology
   variables$het = individual::Variable$new("het", heterogeneity(size, parameters$het_sd))
+
   # Interventions
   variables$llin = individual::Variable$new("llin", stats::rbinom(size, 1, parameters$llin_coverage))
   variables$rotavirus_vx = individual::Variable$new("rotavirus_vx", stats::rbinom(size, 1, parameters$rotavirus_vx_coverage))

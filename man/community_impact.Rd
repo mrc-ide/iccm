@@ -9,6 +9,8 @@ community_impact(type, index, p)
 \arguments{
 \item{type}{Infection type}
 
+\item{index}{Infection type index}
+
 \item{p}{Condition specific parameters}
 }
 \description{

@@ -9,6 +9,8 @@ vaccine_impact(type, index, target, ages, p, individuals, variables, api)
 \arguments{
 \item{type}{Infection type}
 
+\item{index}{Infection type index}
+
 \item{target}{Individual indices}
 
 \item{ages}{Individuals ages}

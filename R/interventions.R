@@ -3,6 +3,7 @@
 #' Estimate modifier due to vaccine impact
 #'
 #' @param type Infection type
+#' @param index Infection type index
 #' @param target Individual indices
 #' @param ages Individuals ages
 #' @param p Condition specific parameters

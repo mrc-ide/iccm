@@ -25,7 +25,7 @@ create_events <- function(individuals, variables){
 #'
 #' @return Event
 recover_event <- function(condition, individuals, variables){
-  event<- individual::Event$new(paste0(condition, "_recover"))
+  event <- individual::Event$new(paste0(condition, "_recover"))
   # Add listener
   event$add_listener(
     function(api, target) {

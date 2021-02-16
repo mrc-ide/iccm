@@ -44,6 +44,8 @@ condition_exposure <- function(condition, individuals, variables, parameters, ev
 
       # Get ages (for maternal immunity estimation)
       ages <- get_age(api, individuals, variables, susceptibles)
+      # Individual level heterogeneity modifier
+      het <- api$get_variable(individuals$child, variables$het, susceptibles)
 
       # Create an empty matrix to store the infection probabilities for each child X disease
       infection_prob <- matrix(NA, nrow = length(susceptibles), ncol = p$groups)
@@ -57,8 +59,6 @@ condition_exposure <- function(condition, individuals, variables, parameters, ev
         pi <- api$get_variable(individuals$child, variables[[paste0(condition, "_", type,"_prior")]], susceptibles)
         # Infection immunity modifier
         ii <- exposure_immunity(pi, p$ii_shape[i], p$ii_rate[i])
-        # Individual level heterogeneity modifier
-        het <- api$get_variable(individuals$child, variables$het, susceptibles)
         # Vaccine modifier
         vi <- vaccine_impact(type = type, index = i, target = susceptibles, ages = ages, p = p, individuals = individuals, variables = variables, api = api)
         # LLIN modifier

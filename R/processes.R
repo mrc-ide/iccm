@@ -6,7 +6,7 @@
 #' @param events Model events
 #'
 #' @return List of model process functions
-create_processes <- function(parameters, variables, renderer){
+create_processes <- function(parameters, variables, renderer, events){
   processes <- list(
     # Demographic
     graduate(parameters, variables, renderer),

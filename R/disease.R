@@ -1,27 +1,3 @@
-#' Create disease variables
-#'
-#' Creates all variables associated with disease.
-#'
-#' @param parameters Model parameters
-#'
-#' @return A list of disease variables
-create_disease_variables <- function(parameters){
-  disease_variables <- list()
-
-  # Diarrhoea
-  ## Infection status
-  #disease_variables$diarrhoea_status <- individual::Variable$new("diarrhoea_status", rep(0, parameters$population))
-  ## Infection type
-  # disease_variables$diarrhoea_disease_index <- individual::Variable$new("diarrhoea_disease_index", rep(0, parameters$population))
-  ## Prior infections
-  disease_variables$diarrhoea_bacteria_prior <- individual::Variable$new("diarrhoea_bacteria_prior", rep(0, parameters$population))
-  disease_variables$diarrhoea_virus_prior <- individual::Variable$new("diarrhoea_virus_prior", rep(0, parameters$population))
-  disease_variables$diarrhoea_parasite_prior <- individual::Variable$new("diarrhoea_parasite_prior", rep(0, parameters$population))
-  disease_variables$diarrhoea_rotavirus_prior <- individual::Variable$new("diarrhoea_rotavirus_prior", rep(0, parameters$population))
-
-  return(disease_variables)
-}
-
 #' Condition exposure
 #'
 #' Implements exposure to one of three conditions (diarrhoea, malaria, pneumonia). Selects
@@ -130,13 +106,17 @@ infection_life_course <- function(condition, infection_type_index, priors, p, ta
 render_prevalence <- function(condition, variables, parameters, renderer){
   status <- paste0(condition, "_status")
   type <- paste0(condition, "_type")
+  name1 <- paste0(condition, "_", "prevalence")
+  names2 <- paste0(condition, "_", parameters[[condition]]$type, "_", "prevalence")
+  types <- parameters[[condition]]$type
+
   function(timestep){
     prev <- (parameters$population - variables$dia_status$get_size_of(values = "S")) / parameters$population
-    renderer$render(paste0(condition, "_", "prevalence"), prev, timestep)
+    renderer$render(name1, prev, timestep)
 
-    for(i in parameters[[condition]]$type){
-      sub_prev <- variables$dia_type$get_size_of(values = i) / parameters$population
-      renderer$render(paste0(condition, "_", i, "_", "prevalence"), sub_prev, timestep)
+    for(i in seq_along(types)){
+      sub_prev <- variables$dia_type$get_size_of(values = types[i]) / parameters$population
+      renderer$render(names2[i], sub_prev, timestep)
     }
   }
 }

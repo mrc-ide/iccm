@@ -28,12 +28,13 @@ create_event_listeners <- function(events, variables){
 #' @param variables Model variables
 #'
 #' @return Event
-recover_event <- function(variables, disease){
-  status_name <- paste0(disease, "_status")
-  type_name <- paste0(disease, "_type")
-  function(target){
+recover_event <- function(variables, condition){
+  status_name <- paste0(condition, "_status")
+  type_name <- paste0(condition, "_type")
+
+  function(timestep, target){
     # Set status = 0 = susceptible
-    variables[[status_name]]$queue_update(value = "S", index = target)
-    variables[[type_name]]$queue_update(values = "none", index = target)
+    variables[[status_name]]$queue_update("S", target)
+    variables[[type_name]]$queue_update("None", target)
   }
 }

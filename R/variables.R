@@ -15,7 +15,7 @@ create_variables <- function(parameters){
   dia_status <- individual::CategoricalVariable$new(categories = states, initial_values = rep("S", size))
     # Disease type
   dia_type <- individual::CategoricalVariable$new(categories = dia_types, initial_values = rep("None", size))
-    # TODO:: Prior exposure counters - update to be doubleMatrix variable
+    # TODO:: Prior exposure counters - update to be DoubleMatrixVariable
   dia_prior_bacteria <- individual::IntegerVariable$new(initial_values = rep(0, size))
   dia_prior_virus <- individual::IntegerVariable$new(initial_values = rep(0, size))
   dia_prior_parasite <- individual::IntegerVariable$new(initial_values = rep(0, size))

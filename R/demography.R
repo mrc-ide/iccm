@@ -91,7 +91,7 @@ get_age <- function(timestep, variables, index = NULL){
 #' Average ages and number of children in each year age-group.
 #'
 #' @inheritParams graduate
-render_demography <- function(individuals, variables, renderer){
+render_demography <- function(variables, renderer){
   function(timestep){
     age_days <- timestep - variables$birth_t$get_values()
     ages <- round(floor(age_days / 365))

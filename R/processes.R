@@ -11,7 +11,7 @@ create_processes <- function(parameters, variables, renderer, events){
     # Demographic
     graduate(parameters, variables, renderer),
     background_mortality(parameters, variables, renderer),
-    render_demography(individuals, variables, renderer),
+    render_demography(variables, renderer),
 
     # Disease
     condition_exposure("dia", variables, parameters, events),

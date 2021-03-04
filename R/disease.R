@@ -79,13 +79,16 @@ condition_exposure <- function(condition, variables, parameters, events){
 #' @param api Model API
 infection_life_course <- function(condition, infection_type_index, priors, p, target, variables, events){
   types <- p$type[infection_type_index]
+  ut <- unique(types)
   # Make record of infection in each child's exposure history
-  for(i in seq_along(p$type)){
-    sub_target <- individual::filter_bitset(target, which(types == p$type[i]))
-    # Record which disease children are infected with
-    variables[[paste0(condition, "_type")]]$queue_update(p$type[i], sub_target)
-    current_prior <- variables[[priors[i]]]$get_values(sub_target)
-    variables[[priors[i]]]$queue_update(current_prior + 1, sub_target)
+  for(i in seq_along(ut)){
+    sub_target <- individual::filter_bitset(target, which(types == ut[i]))
+    if(sub_target$size() > 0){
+      # Record which disease children are infected with
+      variables[[paste0(condition, "_type")]]$queue_update(ut[i], sub_target)
+      current_prior <- variables[[priors[i]]]$get_values(sub_target)
+      variables[[priors[i]]]$queue_update(current_prior + 1, sub_target)
+    }
   }
 
   # Change status -> symptomatic

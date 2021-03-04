@@ -5,7 +5,7 @@ test_that("format works", {
   # Mock up so when we call run_simulation, the internal call to individual::simulate
     # returns the test output (2x for the 2 calls)
   m <- mockery::mock(test_output, test_output)
-  mockery::stub(run_simulation, 'individual::simulate', m)
+  mockery::stub(run_simulation, "renderer$to_dataframe", m)
 
   # Run tests with output options for wide and long
   output_wide <- run_simulation(100, long = FALSE)

@@ -2,6 +2,7 @@ mock_category <- function(...) {
   v <- individual::CategoricalVariable$new(...)
   list(
     get_index_of = v$get_index_of,
+    get_size_of = v$get_size_of,
     queue_update = mockery::mock()
   )
 }
@@ -39,6 +40,11 @@ mock_event <- function(event) {
 
 expect_bitset_update <- function(mock, value, index, call = 1) {
   expect_equal(mockery::mock_args(mock)[[call]][[1]], value)
-  expect_equal(mockery::mock_args(mock)[[call]][[2]], index)
+  ind <- mockery::mock_args(mock)[[call]][[2]]
+  if("Bitset" %in% class(ind)){
+    expect_equal(mockery::mock_args(mock)[[call]][[2]]$to_vector(), index)
+  } else {
+    expect_equal(mockery::mock_args(mock)[[call]][[2]], index)
+  }
 }
 

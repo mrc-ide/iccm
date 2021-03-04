@@ -14,6 +14,14 @@ mock_double <- function(...) {
   )
 }
 
+mock_integer <- function(...) {
+  v <- individual::IntegerVariable$new(...)
+  list(
+    get_values = v$get_values,
+    queue_update = mockery::mock()
+  )
+}
+
 mock_render <- function(...) {
   v <- individual::Render$new(...)
   list(
@@ -27,5 +35,10 @@ mock_event <- function(event) {
     schedule = mockery::mock(),
     clear_schedule = mockery::mock()
   )
+}
+
+expect_bitset_update <- function(mock, value, index, call = 1) {
+  expect_equal(mockery::mock_args(mock)[[call]][[1]], value)
+  expect_equal(mockery::mock_args(mock)[[call]][[2]], index)
 }
 

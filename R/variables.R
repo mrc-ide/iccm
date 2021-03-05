@@ -48,16 +48,3 @@ create_variables <- function(parameters){
   return(variables)
 }
 
-create_prior_exposure_variables <- function(parameters){
-  prior_exposure <- list()
-
-  dia <- list()
-  for(d in seq_along(parameters$diarrhoea$type)){
-    dia[[d]] <- individual::IntegerVariable$new(initial_values = 0)
-  }
-  names(dia) <- parameters$diarrhoea$type
-
-  prior_exposure$dia <- dia
-
-  return(prior_exposure)
-}

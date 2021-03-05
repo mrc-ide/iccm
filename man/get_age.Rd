@@ -4,12 +4,10 @@
 \alias{get_age}
 \title{Get children's ages}
 \usage{
-get_age(api, individuals, variables, index = NULL)
+get_age(timestep, variables, index = NULL)
 }
 \arguments{
-\item{api}{Model API}
-
-\item{individuals}{Model individuals}
+\item{timestep}{Current time}
 
 \item{variables}{Model variables}
 

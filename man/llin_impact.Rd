@@ -4,7 +4,7 @@
 \alias{llin_impact}
 \title{LLIN impact}
 \usage{
-llin_impact(type, target, p, individuals, variables, api)
+llin_impact(type, target, p, variables)
 }
 \arguments{
 \item{type}{Infection type}
@@ -13,11 +13,7 @@ llin_impact(type, target, p, individuals, variables, api)
 
 \item{p}{Condition specific parameters}
 
-\item{individuals}{Model individuals}
-
 \item{variables}{Model variables}
-
-\item{api}{Model api}
 }
 \description{
 Estimate modifier due to LLIN impact

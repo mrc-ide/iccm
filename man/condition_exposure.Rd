@@ -4,12 +4,10 @@
 \alias{condition_exposure}
 \title{Condition exposure}
 \usage{
-condition_exposure(condition, individuals, variables, parameters, events)
+condition_exposure(condition, variables, parameters, events)
 }
 \arguments{
 \item{condition}{Condition: diarrhoea, malaria or pneumonia}
-
-\item{individuals}{Model individuals}
 
 \item{variables}{Model variables}
 

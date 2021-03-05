@@ -5,7 +5,6 @@
 #' life course.
 #'
 #' @param condition Condition: diarrhoea, malaria or pneumonia
-#' @param individuals Model individuals
 #' @param variables Model variables
 #' @param parameters Model parameters
 #' @param events Model events
@@ -73,10 +72,10 @@ condition_exposure <- function(condition, variables, parameters, events){
 #' Schedule the disease life course
 #'
 #' @inheritParams condition_exposure
-#' @param infection_disease Inidces of disease type
+#' @param infection_type_index Indices of disease type
+#' @param priors Name of prior exposure variables
 #' @param p Condition-specific subset of parameters
 #' @param target Indices of children
-#' @param api Model API
 infection_life_course <- function(condition, infection_type_index, priors, p, target, variables, events){
   types <- p$type[infection_type_index]
   ut <- unique(types)
@@ -105,6 +104,7 @@ infection_life_course <- function(condition, infection_type_index, priors, p, ta
 
 #' Render prevalence outputs for a condition
 #'
+#' @param renderer Model renderer
 #' @inheritParams condition_exposure
 render_prevalence <- function(condition, variables, parameters, renderer){
   status <- paste0(condition, "_status")

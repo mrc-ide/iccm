@@ -3,8 +3,8 @@
 #' Replace a child who reaches the maximum age in the simulation with a new child.
 #'
 #' @param parameters Model parameters
-#' @param individuals Model individuals
 #' @param variables Model variables
+#' @param renderer Model renderer
 graduate <- function(parameters, variables, renderer){
   function(timestep) {
 
@@ -49,8 +49,9 @@ background_mortality <- function(parameters, variables, renderer){
 
 #' Replace child with new
 #'
-#' @param api Model API
-#' @param target Indices of children to replace
+#' @param timestep Current time
+#' @param target Target indices
+#' @param parameters Model parameters
 #' @inheritParams graduate
 replace_child <- function(timestep, variables, target, parameters) {
   variables$birth_t$queue_update(value = timestep - parameters$age_lower, index = target)
@@ -79,7 +80,7 @@ replace_child <- function(timestep, variables, target, parameters) {
 
 #' Get children's ages
 #'
-#' @param api Model API
+#' @param timestep Current time
 #' @param index optionally return a subset of the variable vector
 #' @inheritParams graduate
 get_age <- function(timestep, variables, index = NULL){

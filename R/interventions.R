@@ -7,9 +7,7 @@
 #' @param target Individual indices
 #' @param ages Individuals ages
 #' @param p Condition specific parameters
-#' @param individuals Model individuals
 #' @param variables Model variables
-#' @param api Model api
 #'
 #' @return Vaccine modifier
 vaccine_impact <- function(type, index, target, ages, p, variables){
@@ -53,7 +51,7 @@ vaccine_effect <- function(ages, vx_start, vx_initial_efficacy, vx_hl){
 llin_impact <- function(type, target, p, variables){
   modifier <- rep(1, target$size())
   if(type == "pf"){
-    modifier = varaibles$llin$get_values(target) * p$llin_efficacy
+    modifier = variables$llin$get_values(target) * p$llin_efficacy
   }
   return(modifier)
 }

@@ -1,8 +1,8 @@
 #' Create list of model processes
 #'
 #' @param parameters Model parameters
-#' @param individuals Model individuals
 #' @param variables Model variables
+#' @param renderer Model renderer
 #' @param events Model events
 #'
 #' @return List of model process functions

@@ -4,16 +4,16 @@
 \alias{render_prevalence}
 \title{Render prevalence outputs for a condition}
 \usage{
-render_prevalence(condition, individuals, variables, parameters)
+render_prevalence(condition, variables, parameters, renderer)
 }
 \arguments{
 \item{condition}{Condition: diarrhoea, malaria or pneumonia}
 
-\item{individuals}{Model individuals}
-
 \item{variables}{Model variables}
 
 \item{parameters}{Model parameters}
+
+\item{renderer}{Model renderer}
 }
 \description{
 Render prevalence outputs for a condition

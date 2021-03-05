@@ -6,11 +6,10 @@
 \usage{
 infection_life_course(
   condition,
-  infection_disease,
+  infection_type_index,
+  priors,
   p,
   target,
-  api,
-  individuals,
   variables,
   events
 )
@@ -18,15 +17,13 @@ infection_life_course(
 \arguments{
 \item{condition}{Condition: diarrhoea, malaria or pneumonia}
 
-\item{infection_disease}{Inidces of disease type}
+\item{infection_type_index}{Indices of disease type}
+
+\item{priors}{Name of prior exposure variables}
 
 \item{p}{Condition-specific subset of parameters}
 
 \item{target}{Indices of children}
-
-\item{api}{Model API}
-
-\item{individuals}{Model individuals}
 
 \item{variables}{Model variables}
 

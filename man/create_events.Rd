@@ -4,12 +4,12 @@
 \alias{create_events}
 \title{Create events}
 \usage{
-create_events(individuals, variables)
+create_events(variables, parameters)
 }
 \arguments{
-\item{individuals}{Model individuals}
-
 \item{variables}{Model variables}
+
+\item{parameters}{Model parameters}
 }
 \value{
 List of events

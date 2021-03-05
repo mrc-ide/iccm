@@ -4,16 +4,14 @@
 \alias{replace_child}
 \title{Replace child with new}
 \usage{
-replace_child(api, target, individuals, variables, parameters)
+replace_child(timestep, variables, target, parameters)
 }
 \arguments{
-\item{api}{Model API}
-
-\item{target}{Indices of children to replace}
-
-\item{individuals}{Model individuals}
+\item{timestep}{Current time}
 
 \item{variables}{Model variables}
+
+\item{target}{Target indices}
 
 \item{parameters}{Model parameters}
 }

@@ -7,22 +7,20 @@
 #' @param target Individual indices
 #' @param ages Individuals ages
 #' @param p Condition specific parameters
-#' @param individuals Model individuals
 #' @param variables Model variables
-#' @param api Model api
 #'
 #' @return Vaccine modifier
-vaccine_impact <- function(type, index, target, ages, p, individuals, variables, api){
-  modifier <- rep(1, length(target))
+vaccine_impact <- function(type, index, target, ages, p, variables){
+  modifier <- rep(1, target$size())
   if(type %in% c("hib", "pneumococcus", "rotavirus")){
     if(type == "hib"){
-      vaccinated <- api$get_variable(individuals$child, variables$hib_vx, target)
+      vaccinated <- variables$hib_vx$get_values(target)
     }
     if(type == "pneumococcus"){
-      vaccinated <- api$get_variable(individuals$child, variables$pneumococcus_vx, target)
+      vaccinated <- variables$pneumococcus_vx$get_values(target)
     }
     if(type == "rotavirus"){
-      vaccinated <- api$get_variable(individuals$child, variables$rotavirus_vx, target)
+      vaccinated <- variables$rotavirus_vx$get_values(target)
     }
     modifier <- 1 - vaccinated * vaccine_effect(ages, p$vx_start[index], p$vx_initial_efficacy[index], p$vx_hl[index])
   }
@@ -50,10 +48,10 @@ vaccine_effect <- function(ages, vx_start, vx_initial_efficacy, vx_hl){
 #' Estimate modifier due to LLIN impact
 #'
 #' @inheritParams vaccine_impact
-llin_impact <- function(type, target, p, individuals, variables, api){
-  modifier <- rep(1, length(target))
+llin_impact <- function(type, target, p, variables){
+  modifier <- rep(1, target$size())
   if(type == "pf"){
-    modifier = api$get_variable(individuals$child, variables$llin, target) * p$llin_efficacy
+    modifier = variables$llin$get_values(target) * p$llin_efficacy
   }
   return(modifier)
 }

@@ -4,7 +4,7 @@
 \alias{vaccine_impact}
 \title{Vaccine impact}
 \usage{
-vaccine_impact(type, index, target, ages, p, individuals, variables, api)
+vaccine_impact(type, index, target, ages, p, variables)
 }
 \arguments{
 \item{type}{Infection type}
@@ -17,11 +17,7 @@ vaccine_impact(type, index, target, ages, p, individuals, variables, api)
 
 \item{p}{Condition specific parameters}
 
-\item{individuals}{Model individuals}
-
 \item{variables}{Model variables}
-
-\item{api}{Model api}
 }
 \value{
 Vaccine modifier

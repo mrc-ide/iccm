@@ -5,29 +5,20 @@ test_that("vaccine effect works", {
   expect_equal(vaccine_effect(ages = 0:100, vx_start = 0, vx_initial_efficacy = 0.9, vx_hl = Inf), rep(0.9, 101))
 })
 
-p <- get_parameters()
-p$population <- 2
-states <- create_states(p)
-variables <- create_variables(p)
-events <- create_events(individuals, variables)
-individuals <- create_individuals(states, variables, events)
-processes <- create_processes(p, individuals, variables, events)
+timesteps <- 100
+parameters = get_parameters()
+parameters$population <- 3
+variables <- create_variables(parameters)
 
 test_that("vaccine impact works", {
-  api <- mock_api(list(child = list(
-    NULLSTATE = c(1, 2),
-    rotavirus_vx = c(0, 1))),
-    parameters = p, timestep = 0)
-
-  vi <- vaccine_impact("rotavirus", 4, 1:2, c(100, 100), p$diarrhoea, individuals, variables, api)
-  expect_equal(vi, 1 - c(0, vaccine_effect(ages = 100, vx_start = p$diarrhoea$vx_start[4],
-                                       vx_initial_efficacy = p$diarrhoea$vx_initial_efficacy[4],
-                                       vx_hl = p$diarrhoea$vx_hl[4])))
+  variables$rotavirus_vx <- mock_integer(rep(1, 4))
+  vi <- vaccine_impact(type = "rotavirus", index = 4, target = individual::filter_bitset(variables$dia_status$get_index_of(values = "S"), 1), ages = 200, parameters$dia, variables)
+  expect_equal(vi, 1 - vaccine_effect(ages = 200, vx_start = parameters$dia$vx_start[4],
+                                       vx_initial_efficacy = parameters$dia$vx_initial_efficacy[4],
+                                       vx_hl = parameters$dia$vx_hl[4]))
 })
 
 test_that("community impact works", {
-  expect_equal(community_impact("rotavirus", 4, p$diarrhoea), 1 - p$diarrhoea$vx_ci[4])
+  expect_equal(community_impact("rotavirus", 4, parameters$dia), 1 - parameters$dia$vx_ci[4])
 })
 
-#test_that("llin impact works", {
-#})

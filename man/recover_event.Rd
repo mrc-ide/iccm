@@ -4,14 +4,12 @@
 \alias{recover_event}
 \title{Recovery event}
 \usage{
-recover_event(condition, individuals, variables)
+recover_event(variables, condition)
 }
 \arguments{
-\item{condition}{Condition recovered from}
-
-\item{individuals}{Model individuals}
-
 \item{variables}{Model variables}
+
+\item{condition}{Condition recovered from}
 }
 \value{
 Event

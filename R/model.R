@@ -14,18 +14,20 @@ run_simulation <- function(timesteps, parameters = NULL, long = TRUE){
   if(is.null(parameters)){
     parameters = get_parameters()
   } else {
-  #  parameters = get_parameters(overrides = parameters)
+    #  parameters = get_parameters(overrides = parameters)
   }
 
-  states <- create_states(parameters)
   variables <- create_variables(parameters)
-  events <- create_events(individuals, variables)
-  individuals <- create_individuals(states, variables, events)
-  processes <- create_processes(parameters, individuals, variables, events)
+  events <- create_events(variables, parameters)
+  create_event_listeners(events, variables)
+  renderer <- individual::Render$new(timesteps)
+  processes <- create_processes(parameters, variables, renderer, events)
 
-  output <- individual::simulate(individuals = individuals,
-                       processes = processes,
-                       end_timestep = timesteps)
+  individual::simulation_loop(variables = variables,
+                                        events = events,
+                                        processes = processes,
+                                        timesteps = timesteps)
+  output <- renderer$to_dataframe()
 
   if(long){
     output <- convert_to_long(output)

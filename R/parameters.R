@@ -27,7 +27,7 @@ get_parameters <- function(){
     hib_vx_coverage = 0.1
   )
 
-  parameters$diarrhoea <- list(
+  parameters$dia <- list(
     groups = 4,
     type = c("bacteria", "virus", "parasite", "rotavirus"),
     index = c(1, 2, 3, 4),

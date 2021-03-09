@@ -4,7 +4,7 @@
 \alias{plot_sim}
 \title{Plot simulation output}
 \usage{
-plot_sim(output, vars = NULL)
+plot_sim(output, return_list = FALSE)
 }
 \arguments{
 \item{output}{Long simulation output}

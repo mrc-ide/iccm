@@ -4,12 +4,12 @@
 \alias{plot_sim}
 \title{Plot simulation output}
 \usage{
-plot_sim(output, vars = NULL)
+plot_sim(output, return_list = FALSE)
 }
 \arguments{
 \item{output}{Long simulation output}
 
-\item{vars}{Variables to select}
+\item{return_list}{Return list of component plots}
 }
 \value{
 Output plot, one panel for each variable

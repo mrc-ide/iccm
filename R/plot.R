@@ -1,23 +1,62 @@
 #' Plot simulation output
 #'
 #' @param output Long simulation output
-#' @param vars Variables to select
+#' @param return_list Return list of component plots
 #'
 #' @return Output plot, one panel for each variable
 #' @export
-plot_sim <- function(output, vars = NULL) {
-  if(is.null(vars)){
-    pd <- output
-  } else {
-    pd <- dplyr::filter(output, .data$variable %in% vars)
+plot_sim <- function(output, return_list = FALSE) {
+  plots <- list(
+    age_plot = sub_plot(output,
+                        "Ages",
+                        c("age_0", "age_1","age_2", "age_3", "age_4"),
+                        c("0-1", "1-2", "2-3", "3-4", "4-5"),
+                        "N"),
+    dia_prev_plot = sub_plot(output,
+                             "Diarrhoea prevalence",
+                             c("dia_prevalence",
+                               "dia_bacteria_prevalence",
+                               "dia_virus_prevalence",
+                               "dia_parasite_prevalence",
+                               "dia_rotavirus_prevalence"),
+                             c("All", "Bacteria", "Virus","Parasite", "Rotavirus"),
+                             "Prevalence"),
+    events_plot = sub_plot(output, "Events",
+                           c("graduation", "background_mortality"),
+                           c("Graduation", "Background mortality"),
+                           "N"),
+    n_plot =  sub_plot(output, "N", "N", "N","N"),
+    average_age_plot =  sub_plot(output, "Average age", "average_age", "Average age", "Years")
+  )
+
+  if(!return_list){
+    plots <- patchwork::wrap_plots(plots)
   }
 
-  ggplot2::ggplot(pd, ggplot2::aes(x = .data$timestep, y = .data$y, col = .data$variable)) +
+  return(plots)
+}
+
+
+#' Sub plot
+#'
+#' Create sub-plots from names variables
+#'
+#' @param output Model output (long format)
+#' @param group_vars Names of variables to plot together
+#' @param group_name Name of group
+#' @param var_names Vector of variable names to relabel variables with
+#' @param ylab Y axis label
+#'
+#' @return A sub plot
+sub_plot <- function(output, group_name, group_vars, var_names, ylab){
+  subpd <- dplyr::filter(output, .data$variable %in% group_vars) %>%
+    dplyr::mutate(variable = factor(.data$variable, levels = group_vars, labels = var_names))
+
+  ggplot2::ggplot(subpd, ggplot2::aes(x = .data$timestep, y = .data$y, col = .data$variable)) +
     ggplot2::geom_line() +
+    ggplot2::scale_color_discrete(name = "") +
     ggplot2::xlab("Time") +
-    ggplot2::ylab("") +
-    ggplot2::facet_wrap(~.data$variable, scales = "free_y") +
+    ggplot2::ylab(ylab) +
     ggplot2::theme_bw() +
-    ggplot2::theme(legend.position = "none",
-                   strip.background = ggplot2::element_rect(fill = "white"))
+    ggplot2::ggtitle(group_name)
 }

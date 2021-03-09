@@ -1,7 +1,7 @@
 #' Plot simulation output
 #'
 #' @param output Long simulation output
-#' @param vars Variables to select
+#' @param return_list Return list of component plots
 #'
 #' @return Output plot, one panel for each variable
 #' @export
@@ -45,11 +45,12 @@ plot_sim <- function(output, return_list = FALSE) {
 #' @param group_vars Names of variables to plot together
 #' @param group_name Name of group
 #' @param var_names Vector of variable names to relabel variables with
+#' @param ylab Y axis label
 #'
 #' @return A sub plot
 sub_plot <- function(output, group_name, group_vars, var_names, ylab){
-  subpd <- dplyr::filter(output, variable %in% group_vars) %>%
-    dplyr::mutate(variable = factor(variable, levels = group_vars, labels = var_names))
+  subpd <- dplyr::filter(output, .data$variable %in% group_vars) %>%
+    dplyr::mutate(variable = factor(.data$variable, levels = group_vars, labels = var_names))
 
   ggplot2::ggplot(subpd, ggplot2::aes(x = .data$timestep, y = .data$y, col = .data$variable)) +
     ggplot2::geom_line() +

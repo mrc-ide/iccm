@@ -14,6 +14,8 @@ sub_plot(output, group_name, group_vars, var_names, ylab)
 \item{group_vars}{Names of variables to plot together}
 
 \item{var_names}{Vector of variable names to relabel variables with}
+
+\item{ylab}{Y axis label}
 }
 \value{
 A sub plot

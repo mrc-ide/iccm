@@ -4,12 +4,12 @@
 \alias{render_demography}
 \title{Render demographic outputs}
 \usage{
-render_demography(individuals, variables)
+render_demography(variables, renderer)
 }
 \arguments{
-\item{individuals}{Model individuals}
-
 \item{variables}{Model variables}
+
+\item{renderer}{Model renderer}
 }
 \description{
 Average ages and number of children in each year age-group.

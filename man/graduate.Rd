@@ -4,14 +4,14 @@
 \alias{graduate}
 \title{Graduation}
 \usage{
-graduate(parameters, individuals, variables)
+graduate(parameters, variables, renderer)
 }
 \arguments{
 \item{parameters}{Model parameters}
 
-\item{individuals}{Model individuals}
-
 \item{variables}{Model variables}
+
+\item{renderer}{Model renderer}
 }
 \description{
 Replace a child who reaches the maximum age in the simulation with a new child.

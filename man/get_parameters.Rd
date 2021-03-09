@@ -4,10 +4,7 @@
 \alias{get_parameters}
 \title{Get model parameters}
 \usage{
-get_parameters(overrides = list())
-}
-\arguments{
-\item{overrides}{a named list of parameter values to use instead of defaults.}
+get_parameters()
 }
 \description{
 Create a named list of parameters for use in the model.

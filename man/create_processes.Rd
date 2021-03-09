@@ -4,14 +4,16 @@
 \alias{create_processes}
 \title{Create list of model processes}
 \usage{
-create_processes(parameters, individuals, variables)
+create_processes(parameters, variables, renderer, events)
 }
 \arguments{
 \item{parameters}{Model parameters}
 
-\item{individuals}{Model individuals}
-
 \item{variables}{Model variables}
+
+\item{renderer}{Model renderer}
+
+\item{events}{Model events}
 }
 \value{
 List of model process functions

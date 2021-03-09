@@ -4,14 +4,14 @@
 \alias{background_mortality}
 \title{Background mortality}
 \usage{
-background_mortality(parameters, individuals, variables)
+background_mortality(parameters, variables, renderer)
 }
 \arguments{
 \item{parameters}{Model parameters}
 
-\item{individuals}{Model individuals}
-
 \item{variables}{Model variables}
+
+\item{renderer}{Model renderer}
 }
 \description{
 Replace a child who dies from the background mortality rate. This is currently

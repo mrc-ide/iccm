@@ -1,15 +1,22 @@
 #' Create list of model processes
 #'
 #' @param parameters Model parameters
-#' @param individuals Model individuals
 #' @param variables Model variables
+#' @param renderer Model renderer
+#' @param events Model events
 #'
 #' @return List of model process functions
-create_processes <- function(parameters, individuals, variables){
+create_processes <- function(parameters, variables, renderer, events){
   processes <- list(
-    graduate(parameters, individuals, variables),
-    background_mortality(parameters, individuals, variables),
-    render_demography(individuals, variables)
+    # Demographic
+    graduate(parameters, variables, renderer),
+    background_mortality(parameters, variables, renderer),
+    render_demography(variables, renderer),
+
+    # Disease
+    condition_exposure("dia", variables, parameters, events),
+
+    render_prevalence("dia", variables, parameters, renderer)
   )
 }
 

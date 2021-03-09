@@ -10,18 +10,24 @@
 #' @examples
 #' simulation1 <- run_simulation(timesteps = 365)
 run_simulation <- function(timesteps, parameters = NULL, long = TRUE){
+  # TODO: need to fix this is using nested list of parameters
   if(is.null(parameters)){
     parameters = get_parameters()
+  } else {
+    #  parameters = get_parameters(overrides = parameters)
   }
 
-  states <- create_states(parameters)
   variables <- create_variables(parameters)
-  individuals <- create_individuals(states, variables)
-  processes <- create_processes(parameters, individuals, variables)
+  events <- create_events(variables, parameters)
+  create_event_listeners(events, variables)
+  renderer <- individual::Render$new(timesteps)
+  processes <- create_processes(parameters, variables, renderer, events)
 
-  output <- individual::simulate(individuals = individuals,
-                       processes = processes,
-                       end_timestep = timesteps)
+  individual::simulation_loop(variables = variables,
+                                        events = events,
+                                        processes = processes,
+                                        timesteps = timesteps)
+  output <- renderer$to_dataframe()
 
   if(long){
     output <- convert_to_long(output)

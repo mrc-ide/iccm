@@ -24,6 +24,7 @@ Imports:
     ggplot2,
     magrittr,
     rlang,
+    patchwork
 Suggests: 
   testthat,
   mockery

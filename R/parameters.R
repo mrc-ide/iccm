@@ -22,7 +22,7 @@ get_parameters <- function(){
     het_sd = 1.6,
     # Interventions
     llin_coverage = 0.5,
-    rotavirus_vx_coverage = 1,
+    rotavirus_vx_coverage = 0,
     pneumococcal_vx_coverage = 0.1,
     hib_vx_coverage = 0.1
   )
@@ -31,21 +31,34 @@ get_parameters <- function(){
     groups = 4,
     type = c("bacteria", "virus", "parasite", "rotavirus"),
     index = c(1, 2, 3, 4),
+<<<<<<< HEAD
     sigma = c(0.01, 0.02, 0.02, 0.04),
+=======
+    sigma = c(0.02, 0.02, 0.02, 0.02),
+>>>>>>> develop
     # Average duration of clinical episode
     clin_dur = c(14, 14, 14, 14),
     # Maternal immunity
     ## Half life
+<<<<<<< HEAD
     mi_hl =  c(100, 200, 200, 100),
     # Infection immunity
     ## shape
     ii_shape = c(7, 5, 5, 4),
     ## rate
     ii_rate = c(10, 0.5, 0.5, 6),
+=======
+    mi_hl =  c(100, 100, 100, 100),
+    # Infection immunity
+    ## shape
+    ii_shape = c(5, 5, 5, 5),
+    ## rate
+    ii_rate = c(1, 1, 1, 1),
+>>>>>>> develop
     # Vaccination
     vx_start = c(0, 0, 0, 0),
-    vx_initial_efficacy = c(0, 0, 0, 1),
-    vx_hl = c(0, 0, 0, 365 * 100),
+    vx_initial_efficacy = c(0, 0, 0, 0),
+    vx_hl = c(0, 0, 0, 0),
     # TODO this should be a function of coverage:
     vx_ci = c(0, 0, 0, 0)
   )

@@ -15,7 +15,7 @@ condition_exposure <- function(condition, variables, parameters, events){
 
   function(timestep){
     # Get susceptible indices
-    susceptibles <- variables$dia_status$get_index_of(values = "S")
+    susceptibles <- variables[[status]]$get_index_of(values = "S")
 
     if(susceptibles$size() > 0){
       # Get ages (for maternal immunity estimation)
@@ -47,27 +47,34 @@ condition_exposure <- function(condition, variables, parameters, events){
         # Estimate infection probability
         infection_prob[,i] <- rate_to_prob(infection_rate)
       }
+      print(colMeans(infection_prob))
+
       # Draw those infected
       infected <- which(stats::runif(susceptibles$size(), 0, 1) < rowSums(infection_prob))
-
       if(length(infected) > 0){
-        # Get indices of people to infect
-        to_infect <- individual::filter_bitset(susceptibles, infected)
+        ## Get indices of people to infect
+        #to_infect <- individual::filter_bitset(susceptibles, infected)
 
         # Draw which disease
         infection_prob <- infection_prob[infected, ,drop = FALSE]
-
-        infection_type_index <- apply(infection_prob, 1, function(x){
-          sample(p$index, 1, prob = x)
+        infection_type <- apply(infection_prob, 1, function(x){
+          sample(p$type, 1, prob = x)
         })
 
-        # Schedule disease life course
-        infection_life_course(condition, infection_type_index, priors, p, to_infect,
-                              variables, events)
+        for(i in seq_along(p$type)){
+          to_infect <- individual::filter_bitset(susceptibles, which(infection_type == p$type[i]))
+          if(to_infect$size() > 0){
+            # Schedule disease life course
+            infection_life_course(condition, p$type[i], to_infect, priors[i], p$clin_dur[i], variables, events)
+          }
+        }
       }
+
+
     }
   }
 }
+
 
 #' Schedule the disease life course
 #'
@@ -76,25 +83,17 @@ condition_exposure <- function(condition, variables, parameters, events){
 #' @param priors Name of prior exposure variables
 #' @param p Condition-specific subset of parameters
 #' @param target Indices of children
-infection_life_course <- function(condition, infection_type_index, priors, p, target, variables, events){
-  types <- p$type[infection_type_index]
-  ut <- unique(types)
-  # Make record of infection in each child's exposure history
-  for(i in seq_along(ut)){
-    sub_target <- individual::filter_bitset(target, which(types == ut[i]))
-    if(sub_target$size() > 0){
-      # Record which disease children are infected with
-      variables[[paste0(condition, "_type")]]$queue_update(ut[i], sub_target)
-      current_prior <- variables[[priors[i]]]$get_values(sub_target)
-      variables[[priors[i]]]$queue_update(current_prior + 1, sub_target)
-    }
-  }
+infection_life_course <- function(condition, type, target, prior_name, duration, variables, events){
+  # Record which disease children are infected with
+  variables[[paste0(condition, "_type")]]$queue_update(type, target)
+  current_prior <- variables[[prior_name]]$get_values(target)
+  variables[[prior_name]]$queue_update(current_prior + 1, target)
 
   # Change status -> symptomatic
   variables[[paste0(condition, "_status")]]$queue_update("I", target)
 
   # Schedule future changes
-  symptomatic_length <- stats::rpois(target$size(), lambda = p$clin_dur[infection_type_index])
+  symptomatic_length <- stats::rpois(target$size(), lambda = duration)
   ## Schedule recovery
   events[[paste0(condition, "_recover")]]$schedule(target, symptomatic_length)
 }

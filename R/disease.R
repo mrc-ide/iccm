@@ -117,6 +117,9 @@ render_prevalence <- function(condition, variables, parameters, renderer){
     prev <- (parameters$population - variables$dia_status$get_size_of(values = "S")) / parameters$population
     renderer$render(name1, prev, timestep)
 
+    pe <- mean(variables$dia_prior_virus$get_values())
+    renderer$render("prior_exposure_virus", pe, timestep)
+
     for(i in seq_along(types)){
       sub_prev <- variables$dia_type$get_size_of(values = types[i]) / parameters$population
       renderer$render(names2[i], sub_prev, timestep)

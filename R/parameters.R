@@ -31,17 +31,17 @@ get_parameters <- function(){
     groups = 4,
     type = c("bacteria", "virus", "parasite", "rotavirus"),
     index = c(1, 2, 3, 4),
-    sigma = c(0.01, 0.02, 0.03, 0.04),
+    sigma = c(0.01, 0.02, 0.02, 0.04),
     # Average duration of clinical episode
     clin_dur = c(14, 14, 14, 14),
     # Maternal immunity
     ## Half life
-    mi_hl =  c(100, 200, 100, 100),
+    mi_hl =  c(100, 200, 200, 100),
     # Infection immunity
     ## shape
-    ii_shape = c(7, 5, 6, 4),
+    ii_shape = c(7, 5, 5, 4),
     ## rate
-    ii_rate = c(10, 0.5, 3, 6),
+    ii_rate = c(10, 0.5, 0.5, 6),
     # Vaccination
     vx_start = c(0, 0, 0, 0),
     vx_initial_efficacy = c(0, 0, 0, 1),

@@ -7,28 +7,47 @@ create_variables <- function(parameters){
   # Demography variables
   initial_age <- floor(rtexp(size, rate = 1 / parameters$average_age, lower = parameters$age_lower, upper = parameters$age_upper))
   birth_t <- individual::DoubleVariable$new(-initial_age)
-
   # Disease vaiables
   states <- c("S", "A", "I", "V")
   dia_types <- c("None", parameters$dia$type)
-    # Infection status
+  # Infection status
   dia_status <- individual::CategoricalVariable$new(categories = states, initial_values = rep("S", size))
-    # Disease type
+  # Disease type
   dia_type <- individual::CategoricalVariable$new(categories = dia_types, initial_values = rep("None", size))
-    # TODO:: Prior exposure counters - update to be DoubleMatrixVariable
-  dia_prior_bacteria <- individual::IntegerVariable$new(initial_values = rep(0, size))
-  dia_prior_virus <- individual::IntegerVariable$new(initial_values = rep(0, size))
-  dia_prior_parasite <- individual::IntegerVariable$new(initial_values = rep(0, size))
-  dia_prior_rotavirus <- individual::IntegerVariable$new(initial_values = rep(0, size))
 
   # Epidemiology
-  het <- individual::DoubleVariable$new(heterogeneity(size, parameters$het_sd))
+  est_het <- heterogeneity(size, parameters$het_sd)
+  het <- individual::DoubleVariable$new(est_het)
 
   # Interventions
   llin <- individual::IntegerVariable$new(stats::rbinom(size, 1, parameters$llin_coverage))
   rotavirus_vx <- individual::IntegerVariable$new(stats::rbinom(size, 1, parameters$rotavirus_vx_coverage))
   pneumococcal_vx <- individual::IntegerVariable$new(stats::rbinom(size, 1, parameters$pneumococcal_vx_coverage))
   hib_vx <- individual::IntegerVariable$new(stats::rbinom(size, 1, parameters$hib_vx_coverage))
+
+  # Initialise prior exposures
+  # TODO:: Prior exposure counters - update to be DoubleMatrixVariable
+  dp <- matrix(rep(0, size * 4), ncol = 4)
+  for(i in 1:4){
+    vx <- 1 - vaccine_effect(1:(365*5), parameters$dia$vx_start[i], parameters$dia$vx_initial_efficacy[i], parameters$dia$vx_hl[i])
+    mi <- maternal_immunity(1:(365*5), parameters$dia$mi_hl[i])
+    sigma <- parameters$dia$sigma[i]
+    ii_shape <- parameters$dia$ii_shape[i]
+    ii_rate <- parameters$dia$ii_rate[i]
+    for(j in 1:size){
+      dp[j, i] <- round(eq_prior_indiv(initial_age[j],
+                                sigma,
+                                est_het[j],
+                                vx,
+                                mi,
+                                ii_shape,
+                                ii_rate))
+    }
+  }
+  dia_prior_bacteria <- individual::IntegerVariable$new(initial_values = dp[,1])
+  dia_prior_virus <- individual::IntegerVariable$new(initial_values = dp[,2])
+  dia_prior_parasite <- individual::IntegerVariable$new(initial_values = dp[,3])
+  dia_prior_rotavirus <- individual::IntegerVariable$new(initial_values = dp[,4])
 
   variables <- list(
     birth_t = birth_t,

@@ -15,7 +15,7 @@ condition_exposure <- function(condition, variables, parameters, events){
 
   function(timestep){
     # Get susceptible indices
-    susceptibles <- variables$dia_status$get_index_of(values = "S")
+    susceptibles <- variables[[status]]$get_index_of(values = "S")
 
     if(susceptibles$size() > 0){
       # Get ages (for maternal immunity estimation)
@@ -24,7 +24,7 @@ condition_exposure <- function(condition, variables, parameters, events){
       het <- variables$het$get_values(susceptibles)
 
       # Create an empty matrix to store the infection probabilities for each child X disease
-      infection_prob <- matrix(NA, nrow = susceptibles$size(), ncol = p$groups)
+      infection_prob <- matrix(0, nrow = susceptibles$size(), ncol = p$groups)
 
       # Estimate infection probability for each disease within condition
       for(i in seq_along(p$type)){
@@ -34,7 +34,7 @@ condition_exposure <- function(condition, variables, parameters, events){
         # Prior infections
         pi <- variables[[priors[i]]]$get_values(susceptibles)
         # Infection immunity modifier
-        ii <- exposure_immunity(pi, p$ii_shape[i], p$ii_rate[i])
+        ii <-  exposure_immunity(pi, p$ii_shape[i], p$ii_rate[i])
         # Vaccine modifier
         vi <- vaccine_impact(type = type, index = i, target = susceptibles, ages = ages, p = p, variables = variables)
         # LLIN modifier
@@ -47,56 +47,53 @@ condition_exposure <- function(condition, variables, parameters, events){
         # Estimate infection probability
         infection_prob[,i] <- rate_to_prob(infection_rate)
       }
+
+      #ti <- susceptibles$sample(mean(infection_prob[,i]))
+      #infection_life_course(condition, p$type[1], ti, priors[i], p$clin_dur[i], variables, events)
+
       # Draw those infected
       infected <- which(stats::runif(susceptibles$size(), 0, 1) < rowSums(infection_prob))
-
-      if(length(infected) > 0){
-        # Get indices of people to infect
-        to_infect <- individual::filter_bitset(susceptibles, infected)
-
+    if(length(infected) > 0){
         # Draw which disease
         infection_prob <- infection_prob[infected, ,drop = FALSE]
-
-        infection_type_index <- apply(infection_prob, 1, function(x){
-          sample(p$index, 1, prob = x)
+        infection_type <- apply(infection_prob, 1, function(x){
+          sample(p$type, 1, prob = x)
         })
+        for(i in seq_along(p$type)){
+          to_infect <- individual::filter_bitset(susceptibles, infected[which(infection_type == p$type[i])])
+          if(to_infect$size() > 0){
+              # Schedule disease life course
+            infection_life_course(condition, p$type[i], to_infect, priors[i], p$clin_dur[i], variables, events)
+          }
+        }
+     }
 
-        # Schedule disease life course
-        infection_life_course(condition, infection_type_index, priors, p, to_infect,
-                              variables, events)
-      }
+
     }
   }
 }
 
+
 #' Schedule the disease life course
 #'
 #' @inheritParams condition_exposure
-#' @param infection_type_index Indices of disease type
-#' @param priors Name of prior exposure variables
-#' @param p Condition-specific subset of parameters
-#' @param target Indices of children
-infection_life_course <- function(condition, infection_type_index, priors, p, target, variables, events){
-  types <- p$type[infection_type_index]
-  ut <- unique(types)
-  # Make record of infection in each child's exposure history
-  for(i in seq_along(ut)){
-    sub_target <- individual::filter_bitset(target, which(types == ut[i]))
-    if(sub_target$size() > 0){
-      # Record which disease children are infected with
-      variables[[paste0(condition, "_type")]]$queue_update(ut[i], sub_target)
-      current_prior <- variables[[priors[i]]]$get_values(sub_target)
-      variables[[priors[i]]]$queue_update(current_prior + 1, sub_target)
-    }
-  }
+#' @param type Infection type
+#' @param prior_name Name of prior variable
+#' @param duration Durations of clinical episodes
+#' @param target Target children
+infection_life_course <- function(condition, type, target, prior_name, duration, variables, events){
+  # Record which disease children are infected with
+  variables[[paste0(condition, "_type")]]$queue_update(type, target)
+  current_prior <- variables[[prior_name]]$get_values(target)
+  variables[[prior_name]]$queue_update(current_prior + 1, target)
 
   # Change status -> symptomatic
   variables[[paste0(condition, "_status")]]$queue_update("I", target)
 
   # Schedule future changes
-  symptomatic_length <- stats::rpois(target$size(), lambda = p$clin_dur[infection_type_index])
+  symptomatic_length <- stats::rpois(target$size(), lambda = duration)
   ## Schedule recovery
-  events[[paste0(condition, "_recover")]]$schedule(target, symptomatic_length)
+  events[[paste0(condition, "_recover")]]$schedule(target, delay = symptomatic_length)
 }
 
 
@@ -112,14 +109,21 @@ render_prevalence <- function(condition, variables, parameters, renderer){
   name1 <- paste0(condition, "_", "prevalence")
   names2 <- paste0(condition, "_", parameters[[condition]]$type, "_", "prevalence")
   types <- parameters[[condition]]$type
+  priors <- paste0(condition, "_prior_", parameters[[condition]]$type)
+  names3 <- paste0(condition, "_", parameters[[condition]]$type, "_", "prior")
 
   function(timestep){
     prev <- (parameters$population - variables$dia_status$get_size_of(values = "S")) / parameters$population
     renderer$render(name1, prev, timestep)
 
+
+
     for(i in seq_along(types)){
       sub_prev <- variables$dia_type$get_size_of(values = types[i]) / parameters$population
       renderer$render(names2[i], sub_prev, timestep)
+
+      pe <- mean(variables[[priors[i]]]$get_values())
+      renderer$render(names3[i], pe, timestep)
     }
   }
 }

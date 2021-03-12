@@ -4,7 +4,7 @@
 \alias{background_mortality}
 \title{Background mortality}
 \usage{
-background_mortality(parameters, variables, renderer)
+background_mortality(parameters, variables, renderer, events)
 }
 \arguments{
 \item{parameters}{Model parameters}
@@ -12,6 +12,8 @@ background_mortality(parameters, variables, renderer)
 \item{variables}{Model variables}
 
 \item{renderer}{Model renderer}
+
+\item{events}{Model events}
 }
 \description{
 Replace a child who dies from the background mortality rate. This is currently

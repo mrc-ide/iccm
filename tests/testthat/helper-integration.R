@@ -40,11 +40,9 @@ mock_event <- function(event) {
 
 expect_bitset_update <- function(mock, value, index, call = 1) {
   expect_equal(mockery::mock_args(mock)[[call]][[1]], value)
-  ind <- mockery::mock_args(mock)[[call]][[2]]
-  if("Bitset" %in% class(ind)){
+  if("Bitset" %in% is(mockery::mock_args(mock)[[call]][[2]])){
     expect_equal(mockery::mock_args(mock)[[call]][[2]]$to_vector(), index)
   } else {
     expect_equal(mockery::mock_args(mock)[[call]][[2]], index)
   }
 }
-

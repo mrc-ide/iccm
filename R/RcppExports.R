@@ -5,6 +5,7 @@
 #'
 #' @param age Age
 #' @param sigma FOI
+#' @param het Heterogeneity
 #' @param vx vaccine impact wrt age (pre compute across whole age range)
 #' @param mi Maternal immunity impact (pre computre across whole age range)
 #' @param ii_shape Infection immunity shape parameter

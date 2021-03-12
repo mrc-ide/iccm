@@ -34,6 +34,7 @@ test_that("replace child works", {
   p$llin_coverage = 1
   variables <- create_variables(p)
   timestep <- 1
+  events <- create_events(variables, p)
 
   # Mock up variables
   variables$dia_prior_bacteria <- mock_integer(c(1, 2, 3))
@@ -52,7 +53,7 @@ test_that("replace child works", {
   mockery::stub(replace_child, "heterogeneity", c(0.5, 1.5))
 
   # Replace the first 2 children
-  replace_child(timestep, variables, 1:2, p)
+  replace_child(timestep, variables, 1:2, p, events)
 
   # Checks
   expect_bitset_update(variables$dia_status$queue_update, "S", 1:2)
@@ -86,7 +87,9 @@ test_that("background mortality", {
   p$population <- 3
   renderer <- mock_render(1)
   variables <- create_variables(p)
-  bm <- background_mortality(p, variables, renderer)
+  events <- create_events(variables, p)
+
+  bm <- background_mortality(p, variables, renderer, events)
 
   replace_child_mock <- mockery::mock()
   mockery::stub(bm, "replace_child", replace_child_mock)
@@ -94,7 +97,7 @@ test_that("background mortality", {
   bm(1)
 
   mockery::expect_args(renderer$render, 1, "background_mortality", 1, 1)
-  mockery::expect_args(replace_child_mock, 1, 1, variables, 2, p)
+  mockery::expect_args(replace_child_mock, 1, 1, variables, 2, p, events)
 })
 
 test_that("graduation", {
@@ -102,14 +105,16 @@ test_that("graduation", {
   p$population <- 3
   renderer <- mock_render(1)
   variables <- create_variables(p)
+  events <- create_events(variables, p)
+
   variables$birth_t <- mock_double(-c((365 * 5) - 1, 100, 200))
 
-  gr <- graduate(p, variables, renderer)
+  gr <- graduate(p, variables, renderer, events)
 
   replace_child_mock <- mockery::mock()
   mockery::stub(gr, "replace_child", replace_child_mock)
   gr(0)
 
   mockery::expect_args(renderer$render, 1, "graduation", 1, 0)
-  mockery::expect_args(replace_child_mock, 1, 0, variables, 1, p)
+  mockery::expect_args(replace_child_mock, 1, 0, variables, 1, p, events)
 })

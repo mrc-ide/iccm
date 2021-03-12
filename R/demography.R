@@ -5,6 +5,7 @@
 #' @param parameters Model parameters
 #' @param variables Model variables
 #' @param renderer Model renderer
+#' @param events Model events
 graduate <- function(parameters, variables, renderer, events){
   function(timestep) {
 

@@ -77,10 +77,10 @@ condition_exposure <- function(condition, variables, parameters, events){
 #' Schedule the disease life course
 #'
 #' @inheritParams condition_exposure
-#' @param infection_type_index Indices of disease type
-#' @param priors Name of prior exposure variables
-#' @param p Condition-specific subset of parameters
-#' @param target Indices of children
+#' @param type Infection type
+#' @param prior_name Name of prior variable
+#' @param duration Durations of clinical episodes
+#' @param target Target children
 infection_life_course <- function(condition, type, target, prior_name, duration, variables, events){
   # Record which disease children are infected with
   variables[[paste0(condition, "_type")]]$queue_update(type, target)

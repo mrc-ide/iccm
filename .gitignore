@@ -3,3 +3,7 @@
 .RData
 .Ruserdata
 run_scripts/
+*.o
+*.so
+*.dll
+

@@ -9,7 +9,7 @@
 #' @param mi Maternal immunity impact (pre computre across whole age range)
 #' @param ii_shape Infection immunity shape parameter
 #' @param ii_rate Infection immunity rate parameter
-eq_initialise <- function(age, sigma, het, vx, mi, ii_shape, ii_rate) {
-    .Call(`_iccm_eq_initialise`, age, sigma, het, vx, mi, ii_shape, ii_rate)
+eq_prior_indiv <- function(age, sigma, het, vx, mi, ii_shape, ii_rate) {
+    .Call(`_iccm_eq_prior_indiv`, age, sigma, het, vx, mi, ii_shape, ii_rate)
 }
 

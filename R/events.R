@@ -32,7 +32,7 @@ recover_event <- function(variables, condition){
   type_name <- paste0(condition, "_type")
 
   function(timestep, target){
-    # Set status = 0 = susceptible
+    # Set status = susceptible
     variables[[status_name]]$queue_update("S", target)
     variables[[type_name]]$queue_update("None", target)
   }

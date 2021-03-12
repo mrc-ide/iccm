@@ -5,9 +5,9 @@
 
 using namespace Rcpp;
 
-// eq_initialise
-double eq_initialise(int age, double sigma, double het, std::vector<double> vx, std::vector<double> mi, double ii_shape, double ii_rate);
-RcppExport SEXP _iccm_eq_initialise(SEXP ageSEXP, SEXP sigmaSEXP, SEXP hetSEXP, SEXP vxSEXP, SEXP miSEXP, SEXP ii_shapeSEXP, SEXP ii_rateSEXP) {
+// eq_prior_indiv
+double eq_prior_indiv(int age, double sigma, double het, std::vector<double> vx, std::vector<double> mi, double ii_shape, double ii_rate);
+RcppExport SEXP _iccm_eq_prior_indiv(SEXP ageSEXP, SEXP sigmaSEXP, SEXP hetSEXP, SEXP vxSEXP, SEXP miSEXP, SEXP ii_shapeSEXP, SEXP ii_rateSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -18,13 +18,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<double> >::type mi(miSEXP);
     Rcpp::traits::input_parameter< double >::type ii_shape(ii_shapeSEXP);
     Rcpp::traits::input_parameter< double >::type ii_rate(ii_rateSEXP);
-    rcpp_result_gen = Rcpp::wrap(eq_initialise(age, sigma, het, vx, mi, ii_shape, ii_rate));
+    rcpp_result_gen = Rcpp::wrap(eq_prior_indiv(age, sigma, het, vx, mi, ii_shape, ii_rate));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_iccm_eq_initialise", (DL_FUNC) &_iccm_eq_initialise, 7},
+    {"_iccm_eq_prior_indiv", (DL_FUNC) &_iccm_eq_prior_indiv, 7},
     {NULL, NULL, 0}
 };
 

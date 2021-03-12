@@ -7,7 +7,6 @@ create_variables <- function(parameters){
   # Demography variables
   initial_age <- floor(rtexp(size, rate = 1 / parameters$average_age, lower = parameters$age_lower, upper = parameters$age_upper))
   birth_t <- individual::DoubleVariable$new(-initial_age)
-
   # Disease vaiables
   states <- c("S", "A", "I", "V")
   dia_types <- c("None", parameters$dia$type)
@@ -36,7 +35,7 @@ create_variables <- function(parameters){
     ii_shape <- parameters$dia$ii_shape[i]
     ii_rate <- parameters$dia$ii_rate[i]
     for(j in 1:size){
-      dp[j, i] <- round(eq_initialise(initial_age[j],
+      dp[j, i] <- round(eq_prior_indiv(initial_age[j],
                                 sigma,
                                 est_het[j],
                                 vx,

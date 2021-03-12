@@ -5,7 +5,7 @@
 #' @param parameters Model parameters
 #' @param variables Model variables
 #' @param renderer Model renderer
-graduate <- function(parameters, variables, renderer){
+graduate <- function(parameters, variables, renderer, events){
   function(timestep) {
 
     # Find children who have reached the maximum age
@@ -18,7 +18,7 @@ graduate <- function(parameters, variables, renderer){
 
     # Replace graduating individuals
     if(n_graduate > 0){
-      replace_child(timestep, variables, which(to_graduate), parameters)
+      replace_child(timestep, variables, which(to_graduate), parameters, events)
     }
   }
 }
@@ -29,7 +29,7 @@ graduate <- function(parameters, variables, renderer){
 #' a constant probability estimated using the average_age parameter.
 #'
 #' @inheritParams graduate
-background_mortality <- function(parameters, variables, renderer){
+background_mortality <- function(parameters, variables, renderer, events){
   function(timestep) {
     # Randomly draw background mortality
     background_death <- stats::rbinom(parameters$population, 1, rate_to_prob(1 / parameters$average_age))
@@ -42,7 +42,7 @@ background_mortality <- function(parameters, variables, renderer){
 
     # Replace individuals who have died
     if(sum(n_die) > 0){
-      replace_child(timestep, variables, which(background_death == 1), parameters)
+      replace_child(timestep, variables, which(background_death == 1), parameters, events)
     }
   }
 }
@@ -53,7 +53,7 @@ background_mortality <- function(parameters, variables, renderer){
 #' @param target Target indices
 #' @param parameters Model parameters
 #' @inheritParams graduate
-replace_child <- function(timestep, variables, target, parameters) {
+replace_child <- function(timestep, variables, target, parameters, events) {
   variables$birth_t$queue_update(value = timestep - parameters$age_lower, index = target)
   # Reset infection status
   variables$dia_status$queue_update("S", target)
@@ -75,7 +75,7 @@ replace_child <- function(timestep, variables, target, parameters) {
   variables$hib_vx$queue_update(stats::rbinom(n, 1, parameters$hib_vx_coverage), target)
 
   # TODO: Clear any scheduled disease progression
-
+  events$dia_recover$clear_schedule(target)
 }
 
 #' Get children's ages

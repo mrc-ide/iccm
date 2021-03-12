@@ -10,7 +10,7 @@ using namespace Rcpp;
 //' @param ii_shape Infection immunity shape parameter
 //' @param ii_rate Infection immunity rate parameter
 // [[Rcpp::export]]
-double eq_initialise(int age,
+double eq_prior_indiv(int age,
                      double sigma,
                      double het,
                      std::vector<double> vx,

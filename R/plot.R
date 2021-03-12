@@ -7,11 +7,6 @@
 #' @export
 plot_sim <- function(output, return_list = FALSE) {
   plots <- list(
-    age_plot = sub_plot(output,
-                        "Ages",
-                        c("age_0", "age_1","age_2", "age_3", "age_4"),
-                        c("0-1", "1-2", "2-3", "3-4", "4-5"),
-                        "N"),
     dia_prev_plot = sub_plot(output,
                              "Diarrhoea prevalence",
                              c("dia_prevalence",
@@ -21,6 +16,14 @@ plot_sim <- function(output, return_list = FALSE) {
                                "dia_rotavirus_prevalence"),
                              c("All", "Bacteria", "Virus","Parasite", "Rotavirus"),
                              "Prevalence"),
+    dia_inc_plot = sub_plot(output,
+                             "Diarrhoea incidence",
+                             c("dia_bacteria_incidence",
+                               "dia_virus_incidence",
+                               "dia_parasite_incidence",
+                               "dia_rotavirus_incidence"),
+                             c("Bacteria", "Virus","Parasite", "Rotavirus"),
+                             "Incidence"),
     dia_prior_plot = sub_plot(output,
                              "Diarrhoea prior",
                              c("dia_bacteria_prior",
@@ -34,6 +37,11 @@ plot_sim <- function(output, return_list = FALSE) {
                            c("Graduation", "Background mortality"),
                            "N"),
     n_plot =  sub_plot(output, "N", "N", "N","N"),
+    age_plot = sub_plot(output,
+                        "Ages",
+                        c("age_0", "age_1","age_2", "age_3", "age_4"),
+                        c("0-1", "1-2", "2-3", "3-4", "4-5"),
+                        "N"),
     average_age_plot =  sub_plot(output, "Average age", "average_age", "Average age", "Years")
   )
 

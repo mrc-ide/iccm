@@ -4,7 +4,7 @@
 \alias{condition_exposure}
 \title{Condition exposure}
 \usage{
-condition_exposure(condition, variables, parameters, events)
+condition_exposure(condition, variables, parameters, events, renderer)
 }
 \arguments{
 \item{condition}{Condition: diarrhoea, malaria or pneumonia}
@@ -14,6 +14,8 @@ condition_exposure(condition, variables, parameters, events)
 \item{parameters}{Model parameters}
 
 \item{events}{Model events}
+
+\item{renderer}{Model renderer}
 }
 \description{
 Implements exposure to one of three conditions (diarrhoea, malaria, pneumonia). Selects

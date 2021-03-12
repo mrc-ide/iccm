@@ -11,7 +11,9 @@ infection_life_course(
   prior_name,
   duration,
   variables,
-  events
+  events,
+  renderer,
+  timestep
 )
 }
 \arguments{
@@ -28,6 +30,10 @@ infection_life_course(
 \item{variables}{Model variables}
 
 \item{events}{Model events}
+
+\item{renderer}{Model renderer}
+
+\item{timestep}{Timestep}
 }
 \description{
 Schedule the disease life course

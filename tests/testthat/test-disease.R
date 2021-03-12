@@ -8,12 +8,13 @@ renderer <- individual::Render$new(timesteps)
 processes <- create_processes(parameters, variables, renderer, events)
 
 test_that("infection life course works", {
+  renderer <- mock_render(3)
   #variables$dia_status <- mock_category(c("S", "A", "I", "V"), c("S", "S", "S"))
   variables$dia_type <- mock_category(c("None", parameters$dia$type), c("None", "None", "None"))
 
   tar <- variables$dia_status$get_index_of(values = "S")
-  infection_life_course("dia", "virus", tar, "dia_prior_virus", 10, variables, events)
-
+  infection_life_course("dia", "virus", tar, "dia_prior_virus", 10, variables, events, renderer, 1)
+  mockery::expect_args(renderer$render, 1, "dia_virus_incidence", 3, 1)
   expect_bitset_update(variables$dia_type$queue_update, parameters$dia$type[2], tar$to_vector())
 })
 

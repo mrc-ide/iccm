@@ -8,7 +8,8 @@
 #' @param variables Model variables
 #' @param parameters Model parameters
 #' @param events Model events
-condition_exposure <- function(condition, variables, parameters, events){
+#' @param renderer Model renderer
+condition_exposure <- function(condition, variables, parameters, events, renderer){
   p <- parameters[[condition]]
   status <- paste0(condition, "_status")
   priors <- paste0(condition, "_prior_", parameters[[condition]]$type)
@@ -48,9 +49,6 @@ condition_exposure <- function(condition, variables, parameters, events){
         infection_prob[,i] <- rate_to_prob(infection_rate)
       }
 
-      #ti <- susceptibles$sample(mean(infection_prob[,i]))
-      #infection_life_course(condition, p$type[1], ti, priors[i], p$clin_dur[i], variables, events)
-
       # Draw those infected
       infected <- which(stats::runif(susceptibles$size(), 0, 1) < rowSums(infection_prob))
     if(length(infected) > 0){
@@ -63,7 +61,7 @@ condition_exposure <- function(condition, variables, parameters, events){
           to_infect <- individual::filter_bitset(susceptibles, infected[which(infection_type == p$type[i])])
           if(to_infect$size() > 0){
               # Schedule disease life course
-            infection_life_course(condition, p$type[i], to_infect, priors[i], p$clin_dur[i], variables, events)
+            infection_life_course(condition, p$type[i], to_infect, priors[i], p$clin_dur[i], variables, events, renderer, timestep)
           }
         }
      }
@@ -81,7 +79,8 @@ condition_exposure <- function(condition, variables, parameters, events){
 #' @param prior_name Name of prior variable
 #' @param duration Durations of clinical episodes
 #' @param target Target children
-infection_life_course <- function(condition, type, target, prior_name, duration, variables, events){
+#' @param timestep Timestep
+infection_life_course <- function(condition, type, target, prior_name, duration, variables, events, renderer, timestep){
   # Record which disease children are infected with
   variables[[paste0(condition, "_type")]]$queue_update(type, target)
   current_prior <- variables[[prior_name]]$get_values(target)
@@ -94,6 +93,8 @@ infection_life_course <- function(condition, type, target, prior_name, duration,
   symptomatic_length <- stats::rpois(target$size(), lambda = duration)
   ## Schedule recovery
   events[[paste0(condition, "_recover")]]$schedule(target, delay = symptomatic_length)
+
+  renderer$render(paste0(condition, "_", type, "_incidence"), target$size(), timestep)
 }
 
 

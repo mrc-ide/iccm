@@ -2,6 +2,8 @@
 #' @description
 #' Create a named list of parameters for use in the model.
 #'
+#' @param user_overwrite User overwrites to default parameters
+#'
 #' The parameters are defined below.
 #'
 #' \strong{Demography:}
@@ -10,7 +12,7 @@
 #' * average_age - The average lifespan of an individual within the population
 #' * age_upper - The upper limit to modelled ages
 #'
-get_parameters <- function(){
+get_parameters <- function(user_overwrite = NULL){
 
   parameters <- list(
     # Demography
@@ -49,5 +51,39 @@ get_parameters <- function(){
     # TODO this should be a function of coverage:
     vx_ci = c(0, 0, 0, 0)
   )
+
+  # Overwrite_defaults
+  if(!is.null(user_overwrite)){
+    parameters <- overwrite_params(parameters, user_overwrite)
+  }
+
+  return(parameters)
+}
+
+#' Extract names from nested list
+#'
+#' @param x List
+#'
+#' @return Names from nested list. Levels are separated by ".".
+nested_list_names <- function(x){
+  names(rapply(x, function(y)  utils::head(y, 1)))
+}
+
+#' Overwrite default parameters
+#'
+#' @param parameters Default parameters
+#' @param user_overwrite User input (nested) list of parameters
+#'
+#' @return Set of user-modified simulation parameters
+overwrite_params <- function(parameters, user_overwrite){
+  stopifnot(is.list(user_overwrite))
+  # Check user input parameter names are all recognised
+  missing <- setdiff(nested_list_names(user_overwrite), nested_list_names(parameters))
+  if(length(missing) > 0){
+    missing_names <- gsub("[.]", "$", missing)
+    stop("User input parameter(s) not recognised: ", paste(missing_names, collapse = " "))
+  }
+  # Overwrite defaults
+  parameters <- utils::modifyList(parameters, user_overwrite)
   return(parameters)
 }

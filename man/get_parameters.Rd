@@ -4,10 +4,10 @@
 \alias{get_parameters}
 \title{Get model parameters}
 \usage{
-get_parameters()
+get_parameters(user_overwrite = NULL)
 }
-\description{
-Create a named list of parameters for use in the model.
+\arguments{
+\item{user_overwrite}{User overwrites to default parameters
 
 The parameters are defined below.
 
@@ -16,5 +16,8 @@ The parameters are defined below.
 \item pop - Population size
 \item average_age - The average lifespan of an individual within the population
 \item age_upper - The upper limit to modelled ages
+}}
 }
+\description{
+Create a named list of parameters for use in the model.
 }

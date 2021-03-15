@@ -12,9 +12,9 @@
 run_simulation <- function(timesteps, parameters = NULL, long = TRUE){
   # TODO: need to fix this is using nested list of parameters
   if(is.null(parameters)){
-    parameters = get_parameters()
+    parameters <- get_parameters()
   } else {
-    #  parameters = get_parameters(overrides = parameters)
+    parameters = get_parameters(user_overwrite = parameters)
   }
 
   variables <- create_variables(parameters)

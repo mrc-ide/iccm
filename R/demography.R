@@ -9,17 +9,20 @@
 graduate <- function(parameters, variables, renderer, events){
   function(timestep) {
 
+    graduated <- individual::Bitset$new(parameters$population)
     # Find children who have reached the maximum age
-    to_graduate <- get_age(timestep, variables) == parameters$age_upper
+    to_graduate <- which(get_age(timestep, variables) == parameters$age_upper)
+    graduated$insert(to_graduate)
 
     # Number graduating in this timestep
-    n_graduate <- sum(to_graduate)
+    n_graduate <- graduated$size()
+
     # Save graduations
     renderer$render('graduation', n_graduate, timestep)
 
     # Replace graduating individuals
     if(n_graduate > 0){
-      replace_child(timestep, variables, which(to_graduate), parameters, events)
+      replace_child(graduated, timestep, variables,  parameters, events)
     }
   }
 }
@@ -32,18 +35,21 @@ graduate <- function(parameters, variables, renderer, events){
 #' @inheritParams graduate
 background_mortality <- function(parameters, variables, renderer, events){
   function(timestep) {
+
+    died <- individual::Bitset$new(parameters$population)
     # Randomly draw background mortality
-    background_death <- stats::rbinom(parameters$population, 1, rate_to_prob(1 / parameters$average_age))
+    to_die <- sample.int(parameters$population, stats::rbinom(1, parameters$population, rate_to_prob(1 / parameters$average_age)))
+    died$insert(to_die)
 
     # Number dying from background mortality
-    n_die <- sum(background_death)
+    n_die <- died$size()
 
     # Save deaths
     renderer$render('background_mortality', n_die, timestep)
 
     # Replace individuals who have died
     if(sum(n_die) > 0){
-      replace_child(timestep, variables, which(background_death == 1), parameters, events)
+      replace_child(died, timestep, variables, parameters, events)
     }
   }
 }
@@ -54,7 +60,7 @@ background_mortality <- function(parameters, variables, renderer, events){
 #' @param target Target indices
 #' @param parameters Model parameters
 #' @inheritParams graduate
-replace_child <- function(timestep, variables, target, parameters, events) {
+replace_child <- function(target, timestep, variables, parameters, events) {
   variables$birth_t$queue_update(value = timestep - parameters$age_lower, index = target)
   # Reset infection status
   variables$dia_status$queue_update("S", target)
@@ -64,7 +70,7 @@ replace_child <- function(timestep, variables, target, parameters, events) {
   variables$dia_prior_parasite$queue_update(0, target)
   variables$dia_prior_rotavirus$queue_update(0, target)
 
-  n <- length(target)
+  n <- target$size()
   # re-draw individual level heterogeneity
   new_het <- heterogeneity(n, parameters$het_sd)
   variables$het$queue_update(new_het, target)

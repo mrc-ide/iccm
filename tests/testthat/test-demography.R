@@ -52,8 +52,11 @@ test_that("replace child works", {
   # Stub out the random het draw
   mockery::stub(replace_child, "heterogeneity", c(0.5, 1.5))
 
+  to_replace <- individual::Bitset$new(p$population)
+  to_replace <- to_replace$insert(1:2)
+
   # Replace the first 2 children
-  replace_child(timestep, variables, 1:2, p, events)
+  replace_child(to_replace,  timestep, variables, p, events)
 
   # Checks
   expect_bitset_update(variables$dia_status$queue_update, "S", 1:2)
@@ -87,17 +90,19 @@ test_that("background mortality", {
   p$population <- 3
   renderer <- mock_render(1)
   variables <- create_variables(p)
+  variables$dia_status <- mock_category( c("S", "A", "I", "V"), c("I", "I", "I"))
   events <- create_events(variables, p)
 
+  # Create the background mortality function
   bm <- background_mortality(p, variables, renderer, events)
 
-  replace_child_mock <- mockery::mock()
-  mockery::stub(bm, "replace_child", replace_child_mock)
-  mockery::stub(bm, "stats::rbinom", c(0, 1, 0))
+  # Stub to force #2 to die
+  mockery::stub(bm, "sample.int", 2)
   bm(1)
 
   mockery::expect_args(renderer$render, 1, "background_mortality", 1, 1)
-  mockery::expect_args(replace_child_mock, 1, 1, variables, 2, p, events)
+  # Check changes have filtered through to replace child
+  expect_bitset_update(variables$dia_status$queue_update, "S", 2)
 })
 
 test_that("graduation", {
@@ -106,15 +111,14 @@ test_that("graduation", {
   renderer <- mock_render(1)
   variables <- create_variables(p)
   events <- create_events(variables, p)
-
+  variables$dia_status <- mock_category( c("S", "A", "I", "V"), c("I", "I", "I"))
   variables$birth_t <- mock_double(-c((365 * 5) - 1, 100, 200))
 
+  # Create the graduation mortality function
   gr <- graduate(p, variables, renderer, events)
-
-  replace_child_mock <- mockery::mock()
-  mockery::stub(gr, "replace_child", replace_child_mock)
   gr(0)
 
   mockery::expect_args(renderer$render, 1, "graduation", 1, 0)
-  mockery::expect_args(replace_child_mock, 1, 0, variables, 1, p, events)
+  # Check changes have filtered through to replace child
+  expect_bitset_update(variables$dia_status$queue_update, "S", 1)
 })

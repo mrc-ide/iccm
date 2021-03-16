@@ -4,14 +4,14 @@
 \alias{replace_child}
 \title{Replace child with new}
 \usage{
-replace_child(timestep, variables, target, parameters, events)
+replace_child(target, timestep, variables, parameters, events)
 }
 \arguments{
+\item{target}{Target indices}
+
 \item{timestep}{Current time}
 
 \item{variables}{Model variables}
-
-\item{target}{Target indices}
 
 \item{parameters}{Model parameters}
 

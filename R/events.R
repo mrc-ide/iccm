@@ -34,7 +34,7 @@ recover_event <- function(variables, condition){
   function(timestep, target){
     # Set status = susceptible
     variables[[status_name]]$queue_update("S", target)
-    variables[[type_name]]$queue_update("None", target)
+    variables[[type_name]]$queue_update(0, target)
   }
 }
 

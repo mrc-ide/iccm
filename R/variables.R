@@ -9,11 +9,11 @@ create_variables <- function(parameters){
   birth_t <- individual::DoubleVariable$new(-initial_age)
   # Disease vaiables
   states <- c("S", "A", "I", "V")
-  dia_types <- c("None", parameters$dia$type)
+  #dia_types <- c("None", parameters$dia$type)
   # Infection status
   dia_status <- individual::CategoricalVariable$new(categories = states, initial_values = rep("S", size))
   # Disease type
-  dia_type <- individual::CategoricalVariable$new(categories = dia_types, initial_values = rep("None", size))
+  dia_type <- individual::IntegerVariable$new(rep(0, size))
 
   # Epidemiology
   est_het <- heterogeneity(size, parameters$het_sd)

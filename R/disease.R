@@ -59,7 +59,8 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
         disease_index <- apply(infection_prob, 1, sample_disease, n = length(p$type))
 
         # Update infected individuals
-        update_disease_record(p$type[disease_index], to_infect, disease_record_label, variables)
+        variables[[disease_record_label]]$queue_update(disease_index, to_infect)
+        #update_disease_record(p$type[disease_index], to_infect, disease_record_label, variables)
         increment_prior_exposure_counter(to_infect, disease_index, prior_labels, variables)
         variables[[status_label]]$queue_update("I", to_infect)
         clinical_duration <- rpois(to_infect$size(), p$clin_dur[disease_index])
@@ -84,12 +85,11 @@ progress_severe <- function(condition, parameters, variables){
   disease_record_label <- paste0(condition, "_type")
 
   function(timestep){
-    for(i in seq_along(p$type)){
-      sub_target <- variables[[status_label]]$get_index_of(values = "I")
-      sub_target <- sub_target$and(variables[[disease_record_label]]$get_index_of(p$type[i]))
-      sub_target <- sub_target$sample(p$daily_prob_severe[i])
-      variables[[status_label]]$queue_update("V", sub_target)
-    }
+    target <- variables[[status_label]]$get_index_of(values = "I")
+    indices <- variables[[disease_record_label]]$get_values(target)
+    probs <- p$daily_prob_severe[indices]
+    target <- target$sample(probs)
+    variables[[status_label]]$queue_update("V", target)
   }
 }
 
@@ -100,12 +100,14 @@ die <- function(condition, parameters, variables, events, renderer){
   render_labels <- paste0(condition, "_", p$type, "_", "mortality")
 
   function(timestep){
+    target <- variables[[status_label]]$get_index_of(values = "V")
+    indices <- variables[[disease_record_label]]$get_values(target)
+    probs <- p$daily_prob_death[indices]
+    target <- target$sample(probs)
+    replace_child(target, timestep, variables, parameters, events)
+    death_cause <- variables[[disease_record_label]]$get_values(target)
     for(i in seq_along(p$type)){
-      sub_target <- variables[[status_label]]$get_index_of(values = "V")
-      sub_target <- sub_target$and(variables[[disease_record_label]]$get_index_of(p$type[i]))
-      sub_target <- sub_target$sample(p$daily_prob_death[i])
-      renderer$render(render_labels[i], sub_target$size(), timestep)
-      replace_child(sub_target, timestep, variables, parameters, events)
+      renderer$render(render_labels[i], sum(death_cause == i), timestep)
     }
   }
 }
@@ -127,8 +129,9 @@ render_prevalence <- function(condition, variables, parameters, renderer){
     prev <- (parameters$population - variables$dia_status$get_size_of(values = "S")) / parameters$population
     renderer$render(name1, prev, timestep)
 
+    type_prev <- variables$dia_type$get_values()
     for(i in seq_along(types)){
-      sub_prev <- variables$dia_type$get_size_of(values = types[i]) / parameters$population
+      sub_prev <- sum(type_prev == i) / parameters$population
       renderer$render(names2[i], sub_prev, timestep)
 
       pe <- mean(variables[[priors[i]]]$get_values())

@@ -61,56 +61,15 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
         # Update infected individuals
         update_disease_record(p$type[disease_index], to_infect, disease_record_label, variables)
         increment_prior_exposure_counter(to_infect, disease_index, prior_labels, variables)
-        infection_life_course(to_infect, disease_index, status_label, condition, p, variables, events, renderer, timestep)
-
-
+        variables[[status_label]]$queue_update("I", to_infect)
+        clinical_duration <- rpois(to_infect$size(), p$clin_dur[disease_index])
+        events[[paste0(condition, "_recover")]]$schedule(to_infect, delay = clinical_duration)
+        render_incidence(p$type[disease_index], condition, timestep, renderer)
       }
     }
   }
 }
 
-
-#' Schedule the disease life course
-#'
-#' @inheritParams condition_exposure
-#' @param type Infection type
-#' @param prior_name Name of prior variable
-#' @param duration Durations of clinical episodes
-#' @param target Target children
-#' @param timestep Timestep
-infection_life_course <- function(target, disease_index, status_label, condition, p, variables, events, renderer, timestep){
-  n <- length(disease_index)
-  clinical_duration <- rpois(n, p$clin_dur[disease_index])
-  # asymptomatic_durations <- rpois(n, p$asymp_dur[disease_index])
-  symptomatic <- runif(n) < rep(1, n)
-  time_until_severe <- days_until(p$daily_prob_severe[disease_index])
-  time_until_death <- time_until_severe + days_until(p$daily_prob_death[disease_index])
-
-  outcome <- dplyr::case_when(
-    # I -> R
-    symptomatic & time_until_severe > clinical_duration ~ 1,
-    # I -> V -> R
-    symptomatic & time_until_severe <= clinical_duration & time_until_death > clinical_duration ~ 2,
-    # I -> V -> D
-    symptomatic & time_until_death <= clinical_duration ~ 3)
-
-  # Change status -> symptomatic (current all)
-  variables[[status_label]]$queue_update("I", target)
-  # Schedule recovery
-  to_recover_index = outcome %in% c(1, 2)
-  to_recover = individual::filter_bitset(target, which(to_recover_index))
-  events[[paste0(condition, "_recover")]]$schedule(to_recover, delay = clinical_duration[to_recover_index])
-  # Schedule Severe
-  to_severe_index <- outcome %in% c(2, 3)
-  to_severe = individual::filter_bitset(target, which(to_severe_index))
-  events[[paste0(condition, "_progress_severe")]]$schedule(to_severe, delay = time_until_severe[to_severe_index])
-  # Schedule Death
-  to_die_index <- outcome == 3
-  to_die = individual::filter_bitset(target, which(to_die_index))
-  events$dia_death$schedule(to_die, delay = time_until_death[to_die_index])
-
-  render_incidence(p$type[disease_index], condition, timestep, renderer)
-}
 
 render_incidence <- function(diseases, condition, timestep, renderer){
   inc_tab <- as.data.frame(table(diseases))
@@ -119,8 +78,37 @@ render_incidence <- function(diseases, condition, timestep, renderer){
   }
 }
 
+progress_severe <- function(condition, parameters, variables){
+  p <- parameters[[condition]]
+  status_label <- paste0(condition, "_status")
+  disease_record_label <- paste0(condition, "_type")
 
+  function(timestep){
+    for(i in seq_along(p$type)){
+      sub_target <- variables[[status_label]]$get_index_of(values = "I")
+      sub_target <- sub_target$and(variables[[disease_record_label]]$get_index_of(p$type[i]))
+      sub_target <- sub_target$sample(p$daily_prob_severe[i])
+      variables[[status_label]]$queue_update("V", sub_target)
+    }
+  }
+}
 
+die <- function(condition, parameters, variables, events, renderer){
+  p <- parameters[[condition]]
+  status_label <- paste0(condition, "_status")
+  disease_record_label <- paste0(condition, "_type")
+  render_labels <- paste0(condition, "_", p$type, "_", "mortality")
+
+  function(timestep){
+    for(i in seq_along(p$type)){
+      sub_target <- variables[[status_label]]$get_index_of(values = "V")
+      sub_target <- sub_target$and(variables[[disease_record_label]]$get_index_of(p$type[i]))
+      sub_target <- sub_target$sample(p$daily_prob_death[i])
+      renderer$render(render_labels[i], sub_target$size(), timestep)
+      replace_child(sub_target, timestep, variables, parameters, events)
+    }
+  }
+}
 
 #' Render prevalence outputs for a condition
 #'

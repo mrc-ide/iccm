@@ -4,12 +4,12 @@
 \alias{vaccine_impact}
 \title{Vaccine impact}
 \usage{
-vaccine_impact(type, index, target, ages, p, variables)
+vaccine_impact(disease, index, target, ages, p, variables)
 }
 \arguments{
-\item{type}{Infection type}
+\item{disease}{Infection disease}
 
-\item{index}{Infection type index}
+\item{index}{Infection disease index}
 
 \item{target}{Individual indices}
 

@@ -34,7 +34,7 @@ background_mortality <- function(parameters, variables, renderer, events){
 #' @param target Target indices
 #' @param parameters Model parameters
 #' @inheritParams background_mortality
-replace_child <- function(target, timestep, variables, parameters, events, graduation = FALSE) {
+replace_child <- function(target, timestep, variables, parameters, events) {
   variables$birth_t$queue_update(value = timestep - parameters$age_lower, index = target)
   graduate_t <- parameters$age_upper - parameters$age_lower
   events$graduate$clear_schedule(target)

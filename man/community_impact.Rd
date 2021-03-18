@@ -4,12 +4,12 @@
 \alias{community_impact}
 \title{Intervention community impact modifier}
 \usage{
-community_impact(type, index, p)
+community_impact(disease, index, p)
 }
 \arguments{
-\item{type}{Infection type}
+\item{disease}{Infection disease}
 
-\item{index}{Infection type index}
+\item{index}{Infection disease index}
 
 \item{p}{Condition specific parameters}
 }

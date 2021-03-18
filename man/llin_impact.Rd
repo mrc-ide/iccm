@@ -4,10 +4,10 @@
 \alias{llin_impact}
 \title{LLIN impact}
 \usage{
-llin_impact(type, target, p, variables)
+llin_impact(disease, target, p, variables)
 }
 \arguments{
-\item{type}{Infection type}
+\item{disease}{Infection disease}
 
 \item{target}{Individual indices}
 

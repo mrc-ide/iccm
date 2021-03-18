@@ -7,7 +7,7 @@
 increment_prior_exposure_counter(
   new_infections,
   target,
-  prior_labels,
+  condition_prior_disease,
   variables
 )
 }
@@ -16,7 +16,7 @@ increment_prior_exposure_counter(
 
 \item{target}{Bitset of newly infected individuals}
 
-\item{prior_labels}{Names of prior variables}
+\item{condition_prior_disease}{Names of prior variables}
 
 \item{variables}{Model variables}
 }

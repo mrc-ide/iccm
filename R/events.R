@@ -69,7 +69,6 @@ recover_event <- function(variables, condition){
 #'
 #' Replaces a child that has reached age five with a newborn
 #'
-#' @param condition Condition recovered from
 #' @inheritParams create_event_listeners
 #'
 #' @return Event

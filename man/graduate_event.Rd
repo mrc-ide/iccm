@@ -14,8 +14,6 @@ graduate_event(variables, parameters, events, renderer)
 \item{events}{Model events}
 
 \item{renderer}{Model renderer}
-
-\item{condition}{Condition recovered from}
 }
 \value{
 Event

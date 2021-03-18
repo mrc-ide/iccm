@@ -20,6 +20,7 @@ run_simulation <- function(timesteps, parameters = NULL, long = TRUE){
   variables <- create_variables(parameters)
   events <- create_events(variables, parameters)
   renderer <- individual::Render$new(timesteps)
+  initialise_events(events, variables, parameters)
   create_event_listeners(events, variables, parameters, renderer)
   processes <- create_processes(parameters, variables, renderer, events)
 

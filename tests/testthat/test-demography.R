@@ -105,20 +105,3 @@ test_that("background mortality", {
   expect_bitset_update(variables$dia_status$queue_update, "S", 2)
 })
 
-test_that("graduation", {
-  p <- get_parameters()
-  p$population <- 3
-  renderer <- mock_render(1)
-  variables <- create_variables(p)
-  events <- create_events(variables, p)
-  variables$dia_status <- mock_category( c("S", "A", "I", "V"), c("I", "I", "I"))
-  variables$birth_t <- mock_double(-c((365 * 5) - 1, 100, 200))
-
-  # Create the graduation mortality function
-  gr <- graduate(p, variables, renderer, events)
-  gr(0)
-
-  mockery::expect_args(renderer$render, 1, "graduation", 1, 0)
-  # Check changes have filtered through to replace child
-  expect_bitset_update(variables$dia_status$queue_update, "S", 1)
-})

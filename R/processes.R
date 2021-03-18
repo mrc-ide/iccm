@@ -16,7 +16,7 @@ create_processes <- function(parameters, variables, renderer, events){
     render_prevalence("dia", variables, parameters, renderer),
     render_prior_exposure("dia", variables, parameters, renderer),
     # Demographic
-    graduate(parameters, variables, renderer, events),
+    #graduate(parameters, variables, renderer, events),
     background_mortality(parameters, variables, renderer, events),
     render_demography(variables, renderer)
   )

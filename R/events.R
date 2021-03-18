@@ -15,7 +15,7 @@ create_events <- function(variables, parameters){
   return(events)
 }
 
-create_event_listeners <- function(events, variables){
+create_event_listeners <- function(events, variables, parameters, renderer){
   events$dia_recover$add_listener(recover_event(variables, "dia"))
 }
 
@@ -34,6 +34,7 @@ recover_event <- function(variables, condition){
   function(timestep, target){
     # Set status = susceptible
     variables[[status_name]]$queue_update("S", target)
-    variables[[type_name]]$queue_update("None", target)
+    variables[[type_name]]$queue_update(0, target)
   }
 }
+

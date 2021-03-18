@@ -36,6 +36,8 @@ get_parameters <- function(user_overwrite = NULL){
     sigma = c(0.005, 0.005, 0.005, 0.005),
     # Average duration of clinical episode
     clin_dur = c(14, 14, 14, 14),
+    daily_prob_severe = c(0.1, 0.2, 0.3, 0),
+    daily_prob_death = c(0.01, 0.02, 0.03, 0),
     # Maternal immunity
     ## Half life
     mi_hl = c(100, 100, 100, 100),

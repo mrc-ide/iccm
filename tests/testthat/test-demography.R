@@ -42,7 +42,7 @@ test_that("replace child works", {
   variables$dia_prior_parasite <- mock_integer(c(1, 2, 3))
   variables$dia_prior_rotavirus <- mock_integer(c(1, 2, 3))
   variables$dia_status <- mock_category( c("S", "A", "I", "V"), c("I", "I", "I"))
-  variables$dia_type <- mock_category(c("None", p$dia$type), c("virus", "virus", "virus"))
+  variables$dia_type <- mock_integer(c(2, 2, 2))
   variables$birth_t <- mock_double(c(100, 100, 100))
   variables$llin <- mock_integer(c(0, 0, 0))
   variables$rotavirus_vx <- mock_integer(c(0, 0, 0))
@@ -60,7 +60,7 @@ test_that("replace child works", {
 
   # Checks
   expect_bitset_update(variables$dia_status$queue_update, "S", 1:2)
-  expect_bitset_update(variables$dia_type$queue_update, "None", 1:2)
+  expect_bitset_update(variables$dia_type$queue_update, 0, 1:2)
   expect_bitset_update(variables$dia_prior_bacteria$queue_update, 0, 1:2)
   expect_bitset_update(variables$dia_prior_virus$queue_update, 0, 1:2)
   expect_bitset_update(variables$dia_prior_parasite$queue_update, 0, 1:2)

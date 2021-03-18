@@ -60,91 +60,78 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
 
         # Update infected individuals
         variables[[disease_record_label]]$queue_update(disease_index, to_infect)
-        #update_disease_record(p$type[disease_index], to_infect, disease_record_label, variables)
-        increment_prior_exposure_counter(to_infect, disease_index, prior_labels, variables)
+        increment_prior_exposure_counter(disease_index, to_infect, prior_labels, variables)
         variables[[status_label]]$queue_update("I", to_infect)
         clinical_duration <- rpois(to_infect$size(), p$clin_dur[disease_index])
         events[[paste0(condition, "_recover")]]$schedule(to_infect, delay = clinical_duration)
-        render_incidence(p$type[disease_index], condition, timestep, renderer)
+        render_incidence(disease_index, condition, p$type, timestep, renderer)
       }
     }
   }
 }
 
-
-render_incidence <- function(diseases, condition, timestep, renderer){
-  inc_tab <- as.data.frame(table(diseases))
-  for(i in 1:nrow(inc_tab)){
-    renderer$render(paste0(condition, "_", inc_tab[i,1], "_incidence"), inc_tab[i,2], timestep)
-  }
-}
-
+#' Progress to severe disease
+#'
+#' Sample infected individuals to progress to severe disease
+#'
+#' @inheritParams condition_exposure
 progress_severe <- function(condition, parameters, variables){
-  p <- parameters[[condition]]
+  dps <- parameters[[condition]]$daily_prob_severe
   status_label <- paste0(condition, "_status")
   disease_record_label <- paste0(condition, "_type")
 
   function(timestep){
+    # Symptomatic individuals
     target <- variables[[status_label]]$get_index_of(values = "I")
+    # Disease indices
     indices <- variables[[disease_record_label]]$get_values(target)
-    probs <- p$daily_prob_severe[indices]
+    # Disease-specific probability of becoming severe
+    probs <- dps[indices]
+    # Sample and progress
     target <- target$sample(probs)
     variables[[status_label]]$queue_update("V", target)
   }
 }
 
+#' Death from disease
+#'
+#' Sample severely-infected individuals to die
+#'
+#' @inheritParams condition_exposure
 die <- function(condition, parameters, variables, events, renderer){
-  p <- parameters[[condition]]
+  dpd <- parameters[[condition]]$daily_prob_death
+  types <- parameters[[condition]]$type
   status_label <- paste0(condition, "_status")
   disease_record_label <- paste0(condition, "_type")
-  render_labels <- paste0(condition, "_", p$type, "_", "mortality")
+  render_labels <- paste0(condition, "_", types, "_", "mortality")
 
   function(timestep){
+    # Individuals with severe illness
     target <- variables[[status_label]]$get_index_of(values = "V")
+    # Disease indices
     indices <- variables[[disease_record_label]]$get_values(target)
-    probs <- p$daily_prob_death[indices]
+    # Disease-specific probability of dieing | severe illness
+    probs <- dpd[indices]
+    # Sample and death
     target <- target$sample(probs)
     replace_child(target, timestep, variables, parameters, events)
+    # Record disease-specific mortality
     death_cause <- variables[[disease_record_label]]$get_values(target)
-    for(i in seq_along(p$type)){
+    for(i in seq_along(types)){
       renderer$render(render_labels[i], sum(death_cause == i), timestep)
     }
   }
 }
 
-#' Render prevalence outputs for a condition
+#' Record new infections in individual's history of infection.
 #'
-#' @param renderer Model renderer
+#' @param target Bitset of newly infected individuals
+#' @param new_infections Indices of new infections
+#' @param prior_labels Names of prior variables
 #' @inheritParams condition_exposure
-render_prevalence <- function(condition, variables, parameters, renderer){
-  status <- paste0(condition, "_status")
-  type <- paste0(condition, "_type")
-  name1 <- paste0(condition, "_", "prevalence")
-  names2 <- paste0(condition, "_", parameters[[condition]]$type, "_", "prevalence")
-  types <- parameters[[condition]]$type
-  priors <- paste0(condition, "_prior_", parameters[[condition]]$type)
-  names3 <- paste0(condition, "_", parameters[[condition]]$type, "_", "prior")
-
-  function(timestep){
-    prev <- (parameters$population - variables$dia_status$get_size_of(values = "S")) / parameters$population
-    renderer$render(name1, prev, timestep)
-
-    type_prev <- variables$dia_type$get_values()
-    for(i in seq_along(types)){
-      sub_prev <- sum(type_prev == i) / parameters$population
-      renderer$render(names2[i], sub_prev, timestep)
-
-      pe <- mean(variables[[priors[i]]]$get_values())
-      renderer$render(names3[i], pe, timestep)
-    }
-  }
-}
-
-
-
-increment_prior_exposure_counter <- function(target, disease_index, prior_labels, variables){
+increment_prior_exposure_counter <- function(new_infections, target, prior_labels, variables){
   for(i in seq_along(prior_labels)){
-    sub_target <- individual::filter_bitset(target, which(disease_index == i))
+    sub_target <- individual::filter_bitset(target, which(new_infections == i))
     if(sub_target$size() > 0){
       current_prior <- variables[[prior_labels[i]]]$get_values(sub_target)
       variables[[prior_labels[i]]]$queue_update(current_prior + 1, sub_target)
@@ -152,20 +139,65 @@ increment_prior_exposure_counter <- function(target, disease_index, prior_labels
   }
 }
 
-update_disease_record <- function(disease, target, disease_record_label, variables){
-  unique_diseases <- unique(disease)
-  for(i in seq_along(unique_diseases)){
-    sub_target <- individual::filter_bitset(target, which(disease == unique_diseases[i]))
-    variables[[disease_record_label]]$queue_update(unique_diseases[i], sub_target)
-  }
-}
-
+#' Sample disease if infected with a condition
+#'
+#' @param p Disease-specific infection probabilities
+#' @param n Number of diseases
+#'
+#' @return Sampled disease that will infect the individual
 sample_disease <- function(p, n){
   sample.int(n = n, size = 1, prob = p)
 }
 
-days_until <- function(daily_probability){
-  daily_probability[daily_probability == 0] <- 0.00000000000001
-  days <- rgeom(length(daily_probability), daily_probability)
-  return(days)
+#' Record prevalence
+#'
+#' Record overall (condition) and disaggregated (disease) prevalence
+#'
+#' @param renderer Model renderer
+#' @inheritParams condition_exposure
+render_prevalence <- function(condition, variables, parameters, renderer){
+  types <- parameters[[condition]]$type
+  type_label <- paste0(condition, "_type")
+  prev_label <- paste0(condition, "_", "prevalence")
+  prev_labels <- paste0(condition, "_", types, "_", "prevalence")
+
+  function(timestep){
+    current_types <- variables[[type_label]]$get_values()
+    renderer$render(prev_label, mean(current_types != 0), timestep)
+    for(i in seq_along(types)){
+      renderer$render(prev_labels[i], mean(current_types == i), timestep)
+    }
+  }
 }
+
+#' Record incidence
+#'
+#' Record overall (condition) and disaggregated (disease) incidence of new infection
+#'
+#' @param renderer Model renderer
+#' @inheritParams condition_exposure
+render_incidence <- function(new_infections, condition, diseases, timestep, renderer){
+  renderer$render(paste0(condition, "_incidence"), length(new_infections), timestep)
+  for(i in seq_along(diseases)){
+    renderer$render(paste0(condition, "_", diseases[i], "_incidence"), sum(new_infections == i), timestep)
+  }
+}
+
+#' Record prior exposure
+#'
+#' Record the average number of prior disease-specific infections
+#'
+#' @param renderer Model renderer
+#' @inheritParams condition_exposure
+render_prior_exposure <- function(condition, variables, parameters, renderer){
+  diseases <- parameters[[condition]]$type
+  prior_names <- paste0(condition,  "_prior_", diseases)
+  function(timestep){
+    for(i in seq_along(diseases)){
+      renderer$render(prior_names[i], mean(variables[[prior_names[i]]]$get_values()), timestep)
+    }
+  }
+}
+
+
+

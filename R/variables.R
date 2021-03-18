@@ -7,7 +7,7 @@ create_variables <- function(parameters){
   # Demography variables
   initial_age <- floor(rtexp(size, rate = 1 / parameters$average_age, lower = parameters$age_lower, upper = parameters$age_upper))
   birth_t <- individual::DoubleVariable$new(-initial_age)
-  # Disease vaiables
+  # Disease variables
   states <- c("S", "A", "I", "V")
   #dia_types <- c("None", parameters$dia$type)
   # Infection status

@@ -31,7 +31,7 @@ get_parameters <- function(user_overwrite = NULL){
 
   parameters$dia <- list(
     groups = 4,
-    type = c("bacteria", "virus", "parasite", "rotavirus"),
+    disease = c("bacteria", "virus", "parasite", "rotavirus"),
     index = c(1, 2, 3, 4),
     sigma = c(0.005, 0.005, 0.005, 0.005),
     # Average duration of clinical episode

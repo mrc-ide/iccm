@@ -19,7 +19,6 @@ create_events <- function(variables, parameters){
   return(events)
 }
 
-
 #' Add event listeners
 #'
 #' These are the functions that are called when an event is triggered
@@ -55,13 +54,13 @@ initialise_events <- function(events, variables, parameters){
 #'
 #' @return Event
 recover_event <- function(variables, condition){
-  status_name <- paste0(condition, "_status")
-  type_name <- paste0(condition, "_type")
+  condition_status <- paste0(condition, "_status")
+  condition_disease <- paste0(condition, "_disease")
 
   function(timestep, target){
     # Set status = susceptible
-    variables[[status_name]]$queue_update("S", target)
-    variables[[type_name]]$queue_update(0, target)
+    variables[[condition_status]]$queue_update("S", target)
+    variables[[condition_disease]]$queue_update(0, target)
   }
 }
 

@@ -18,7 +18,7 @@ background_mortality <- function(parameters, variables, renderer, events){
     # Number dying from background mortality
     n_die <- died$size()
 
-    # Save deaths
+    # Output deaths
     renderer$render('background_mortality', n_die, timestep)
 
     # Replace individuals who have died
@@ -34,14 +34,15 @@ background_mortality <- function(parameters, variables, renderer, events){
 #' @param target Target indices
 #' @param parameters Model parameters
 #' @inheritParams background_mortality
-replace_child <- function(target, timestep, variables, parameters, events) {
+replace_child <- function(target, timestep, variables, parameters, events, graduation = FALSE) {
   variables$birth_t$queue_update(value = timestep - parameters$age_lower, index = target)
   graduate_t <- parameters$age_upper - parameters$age_lower
   events$graduate$clear_schedule(target)
   events$graduate$schedule(target, delay = rep(graduate_t, target$size()))
+
   # Reset infection status
   variables$dia_status$queue_update("S", target)
-  variables$dia_type$queue_update(0, target)
+  variables$dia_disease$queue_update(0, target)
   variables$dia_prior_bacteria$queue_update(0, target)
   variables$dia_prior_virus$queue_update(0, target)
   variables$dia_prior_parasite$queue_update(0, target)

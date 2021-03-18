@@ -2,24 +2,24 @@
 #'
 #' Estimate modifier due to vaccine impact
 #'
-#' @param type Infection type
-#' @param index Infection type index
+#' @param disease Infection disease
+#' @param index Infection disease index
 #' @param target Individual indices
 #' @param ages Individuals ages
 #' @param p Condition specific parameters
 #' @param variables Model variables
 #'
 #' @return Vaccine modifier
-vaccine_impact <- function(type, index, target, ages, p, variables){
+vaccine_impact <- function(disease, index, target, ages, p, variables){
   modifier <- rep(1, target$size())
-  if(type %in% c("hib", "pneumococcus", "rotavirus")){
-    if(type == "hib"){
+  if(disease %in% c("hib", "pneumococcus", "rotavirus")){
+    if(disease == "hib"){
       vaccinated <- variables$hib_vx$get_values(target)
     }
-    if(type == "pneumococcus"){
+    if(disease == "pneumococcus"){
       vaccinated <- variables$pneumococcus_vx$get_values(target)
     }
-    if(type == "rotavirus"){
+    if(disease == "rotavirus"){
       vaccinated <- variables$rotavirus_vx$get_values(target)
     }
     modifier <- 1 - vaccinated * vaccine_effect(ages, p$vx_start[index], p$vx_initial_efficacy[index], p$vx_hl[index])
@@ -48,9 +48,9 @@ vaccine_effect <- function(ages, vx_start, vx_initial_efficacy, vx_hl){
 #' Estimate modifier due to LLIN impact
 #'
 #' @inheritParams vaccine_impact
-llin_impact <- function(type, target, p, variables){
+llin_impact <- function(disease, target, p, variables){
   modifier <- rep(1, target$size())
-  if(type == "pf"){
+  if(disease == "pf"){
     modifier = variables$llin$get_values(target) * p$llin_efficacy
   }
   return(modifier)
@@ -59,12 +59,12 @@ llin_impact <- function(type, target, p, variables){
 #' Intervention community impact modifier
 #'
 #' @inheritParams vaccine_impact
-community_impact <- function(type, index, p){
+community_impact <- function(disease, index, p){
   community_modifier <- 1
-  if(type %in% c("hib", "pneumococcus", "rotavirus")){
+  if(disease %in% c("hib", "pneumococcus", "rotavirus")){
     community_modifier <- 1 -p$vx_ci[index]
   }
-  if(type == "llin"){
+  if(disease == "llin"){
     community_modifier <- 1- p$llin_ci
   }
   return(community_modifier)

@@ -8,9 +8,9 @@ test_that("format works", {
   mockery::stub(run_simulation, "renderer$to_dataframe", m)
 
   # Run tests with output options for wide and long
-  output_wide <- run_simulation(100, long = FALSE)
+  output_wide <- run_simulation(10, parameters = list(population = 5), long = FALSE)
   expect_equal(dim(output_wide), dim(test_output))
 
-  output_long <- run_simulation(100, long = TRUE)
+  output_long <- run_simulation(10, parameters = list(population = 5), long = TRUE)
   expect_equal(dim(output_long), c(20, 3))
 })

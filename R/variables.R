@@ -13,7 +13,7 @@ create_variables <- function(parameters){
   # Infection status
   dia_status <- individual::CategoricalVariable$new(categories = states, initial_values = rep("S", size))
   # Disease type
-  dia_type <- individual::IntegerVariable$new(rep(0, size))
+  dia_disease <- individual::IntegerVariable$new(rep(0, size))
 
   # Epidemiology
   est_het <- heterogeneity(size, parameters$het_sd)
@@ -52,7 +52,7 @@ create_variables <- function(parameters){
   variables <- list(
     birth_t = birth_t,
     dia_status = dia_status,
-    dia_type = dia_type,
+    dia_disease = dia_disease,
     dia_prior_bacteria = dia_prior_bacteria,
     dia_prior_virus = dia_prior_virus,
     dia_prior_parasite = dia_prior_parasite,

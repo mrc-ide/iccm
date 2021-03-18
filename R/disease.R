@@ -11,13 +11,14 @@
 #' @param renderer Model renderer
 condition_exposure <- function(condition, variables, parameters, events, renderer){
   p <- parameters[[condition]]
-  disease_record_label <- paste0(condition, "_type")
-  status_label <- paste0(condition, "_status")
-  prior_labels <- paste0(condition, "_prior_", parameters[[condition]]$type)
+  condition_disease <- paste0(condition, "_disease")
+  condition_status <- paste0(condition, "_status")
+  condition_prior_disease <- paste0(condition, "_prior_", parameters[[condition]]$disease)
+  condition_recover <- paste0(condition, "_recover")
 
   function(timestep){
     # Get susceptible indices
-    susceptibles <- variables[[status_label]]$get_index_of(values = "S")
+    susceptibles <- variables[[condition_status]]$get_index_of(values = "S")
 
     if(susceptibles$size() > 0){
       # Get ages (for maternal immunity estimation)
@@ -29,20 +30,20 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
       infection_prob <- matrix(0, nrow = susceptibles$size(), ncol = p$groups)
 
       # Estimate infection probability for each disease within condition
-      for(i in seq_along(p$type)){
-        type <- p$type[i]
+      for(i in seq_along(p$disease)){
+        disease <- p$disease[i]
         # Maternal immunity modifier
         mi <- maternal_immunity(ages, p$mi_hl[i])
         # Prior infections
-        pi <- variables[[prior_labels[i]]]$get_values(susceptibles)
+        pi <- variables[[condition_prior_disease[i]]]$get_values(susceptibles)
         # Infection immunity modifier
         ii <-  exposure_immunity(pi, p$ii_shape[i], p$ii_rate[i])
         # Vaccine modifier
-        vi <- vaccine_impact(type = type, index = i, target = susceptibles, ages = ages, p = p, variables = variables)
+        vi <- vaccine_impact(disease = disease, index = i, target = susceptibles, ages = ages, p = p, variables = variables)
         # LLIN modifier
-        li <- llin_impact(type = type, target = susceptibles, p = p, variables = variables)
+        li <- llin_impact(disease = disease, target = susceptibles, p = p, variables = variables)
         # Community impacts modifier (vaccine or LLIN)
-        ci <- community_impact(type = type, index = i, p = p)
+        ci <- community_impact(disease = disease, index = i, p = p)
         # Estimate infection rate
         # TODO: treatment prophylaxsis
         infection_rate <- p$sigma[i] * mi * ii * het * vi * li * ci
@@ -56,15 +57,15 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
         to_infect <- individual::filter_bitset(susceptibles, which(infected))
         # Draw which disease
         infection_prob <- infection_prob[infected, , drop = FALSE]
-        disease_index <- apply(infection_prob, 1, sample_disease, n = length(p$type))
+        disease_index <- apply(infection_prob, 1, sample_disease, n = length(p$disease))
 
         # Update infected individuals
-        variables[[disease_record_label]]$queue_update(disease_index, to_infect)
-        increment_prior_exposure_counter(disease_index, to_infect, prior_labels, variables)
-        variables[[status_label]]$queue_update("I", to_infect)
+        variables[[condition_disease]]$queue_update(disease_index, to_infect)
+        increment_prior_exposure_counter(disease_index, to_infect, condition_prior_disease, variables)
+        variables[[condition_status]]$queue_update("I", to_infect)
         clinical_duration <- stats::rpois(to_infect$size(), p$clin_dur[disease_index])
-        events[[paste0(condition, "_recover")]]$schedule(to_infect, delay = clinical_duration)
-        render_incidence(disease_index, condition, p$type, timestep, renderer)
+        events[[condition_recover]]$schedule(to_infect, delay = clinical_duration)
+        render_incidence(disease_index, condition, p$disease, timestep, renderer)
       }
     }
   }
@@ -77,19 +78,19 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
 #' @inheritParams condition_exposure
 progress_severe <- function(condition, parameters, variables){
   dps <- parameters[[condition]]$daily_prob_severe
-  status_label <- paste0(condition, "_status")
-  disease_record_label <- paste0(condition, "_type")
+  condition_status <- paste0(condition, "_status")
+  condition_disease <- paste0(condition, "_disease")
 
   function(timestep){
     # Symptomatic individuals
-    target <- variables[[status_label]]$get_index_of(values = "I")
+    target <- variables[[condition_status]]$get_index_of(values = "I")
     # Disease indices
-    indices <- variables[[disease_record_label]]$get_values(target)
+    indices <- variables[[condition_disease]]$get_values(target)
     # Disease-specific probability of becoming severe
     probs <- dps[indices]
     # Sample and progress
     target <- target$sample(probs)
-    variables[[status_label]]$queue_update("V", target)
+    variables[[condition_status]]$queue_update("V", target)
   }
 }
 
@@ -100,25 +101,25 @@ progress_severe <- function(condition, parameters, variables){
 #' @inheritParams condition_exposure
 die <- function(condition, parameters, variables, events, renderer){
   dpd <- parameters[[condition]]$daily_prob_death
-  types <- parameters[[condition]]$type
-  status_label <- paste0(condition, "_status")
-  disease_record_label <- paste0(condition, "_type")
-  render_labels <- paste0(condition, "_", types, "_", "mortality")
+  diseases <- parameters[[condition]]$disease
+  condition_status <- paste0(condition, "_status")
+  condition_disease <- paste0(condition, "_disease")
+  condition_disease_mortality <- paste0(condition, "_", diseases, "_", "mortality")
 
   function(timestep){
     # Individuals with severe illness
-    target <- variables[[status_label]]$get_index_of(values = "V")
+    target <- variables[[condition_status]]$get_index_of(values = "V")
     # Disease indices
-    indices <- variables[[disease_record_label]]$get_values(target)
+    indices <- variables[[condition_disease]]$get_values(target)
     # Disease-specific probability of dieing | severe illness
     probs <- dpd[indices]
     # Sample and death
     target <- target$sample(probs)
     replace_child(target, timestep, variables, parameters, events)
     # Record disease-specific mortality
-    death_cause <- variables[[disease_record_label]]$get_values(target)
-    for(i in seq_along(types)){
-      renderer$render(render_labels[i], sum(death_cause == i), timestep)
+    death_cause <- variables[[condition_disease]]$get_values(target)
+    for(i in seq_along(diseases)){
+      renderer$render(condition_disease_mortality[i], sum(death_cause == i), timestep)
     }
   }
 }
@@ -127,14 +128,14 @@ die <- function(condition, parameters, variables, events, renderer){
 #'
 #' @param target Bitset of newly infected individuals
 #' @param new_infections Indices of new infections
-#' @param prior_labels Names of prior variables
+#' @param condition_prior_disease Names of prior variables
 #' @inheritParams condition_exposure
-increment_prior_exposure_counter <- function(new_infections, target, prior_labels, variables){
-  for(i in seq_along(prior_labels)){
+increment_prior_exposure_counter <- function(new_infections, target, condition_prior_disease, variables){
+  for(i in seq_along(condition_prior_disease)){
     sub_target <- individual::filter_bitset(target, which(new_infections == i))
     if(sub_target$size() > 0){
-      current_prior <- variables[[prior_labels[i]]]$get_values(sub_target)
-      variables[[prior_labels[i]]]$queue_update(current_prior + 1, sub_target)
+      current_prior <- variables[[condition_prior_disease[i]]]$get_values(sub_target)
+      variables[[condition_prior_disease[i]]]$queue_update(current_prior + 1, sub_target)
     }
   }
 }
@@ -155,16 +156,16 @@ sample_disease <- function(p, n){
 #'
 #' @inheritParams condition_exposure
 render_prevalence <- function(condition, variables, parameters, renderer){
-  types <- parameters[[condition]]$type
-  type_label <- paste0(condition, "_type")
-  prev_label <- paste0(condition, "_", "prevalence")
-  prev_labels <- paste0(condition, "_", types, "_", "prevalence")
+  diseases <- parameters[[condition]]$disease
+  condition_disease <- paste0(condition, "_disease")
+  condition_prevalence <- paste0(condition, "_", "prevalence")
+  condition_diseases_prevalence <- paste0(condition, "_", diseases, "_", "prevalence")
 
   function(timestep){
-    current_types <- variables[[type_label]]$get_values()
-    renderer$render(prev_label, mean(current_types != 0), timestep)
-    for(i in seq_along(types)){
-      renderer$render(prev_labels[i], mean(current_types == i), timestep)
+    current_diseases <- variables[[condition_disease]]$get_values()
+    renderer$render(condition_prevalence, mean(current_diseases != 0), timestep)
+    for(i in seq_along(diseases)){
+      renderer$render(condition_diseases_prevalence[i], mean(current_diseases == i), timestep)
     }
   }
 }
@@ -191,11 +192,11 @@ render_incidence <- function(new_infections, condition, diseases, timestep, rend
 #' @param renderer Model renderer
 #' @inheritParams condition_exposure
 render_prior_exposure <- function(condition, variables, parameters, renderer){
-  diseases <- parameters[[condition]]$type
-  prior_names <- paste0(condition,  "_prior_", diseases)
+  diseases <- parameters[[condition]]$disease
+  condion_prior_disease <- paste0(condition,  "_prior_", diseases)
   function(timestep){
     for(i in seq_along(diseases)){
-      renderer$render(prior_names[i], mean(variables[[prior_names[i]]]$get_values()), timestep)
+      renderer$render(condion_prior_disease[i], mean(variables[[condion_prior_disease[i]]]$get_values()), timestep)
     }
   }
 }

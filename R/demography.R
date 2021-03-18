@@ -1,38 +1,12 @@
-#' Graduation
-#'
-#' Replace a child who reaches the maximum age in the simulation with a new child.
-#'
-#' @param parameters Model parameters
-#' @param variables Model variables
-#' @param renderer Model renderer
-#' @param events Model events
-graduate <- function(parameters, variables, renderer, events){
-  function(timestep) {
-
-    graduated <- individual::Bitset$new(parameters$population)
-    # Find children who have reached the maximum age
-    to_graduate <- which(get_age(timestep, variables) == parameters$age_upper)
-    graduated$insert(to_graduate)
-
-    # Number graduating in this timestep
-    n_graduate <- graduated$size()
-
-    # Save graduations
-    renderer$render('graduation', n_graduate, timestep)
-
-    # Replace graduating individuals
-    if(n_graduate > 0){
-      replace_child(graduated, timestep, variables,  parameters, events)
-    }
-  }
-}
-
 #' Background mortality
 #'
 #' Replace a child who dies from the background mortality rate. This is currently
 #' a constant probability estimated using the average_age parameter.
 #'
-#' @inheritParams graduate
+#' @param parameters Model parameters
+#' @param variables Model variables
+#' @param renderer Model renderer
+#' @param events Model events
 background_mortality <- function(parameters, variables, renderer, events){
   function(timestep) {
 
@@ -59,9 +33,12 @@ background_mortality <- function(parameters, variables, renderer, events){
 #' @param timestep Current time
 #' @param target Target indices
 #' @param parameters Model parameters
-#' @inheritParams graduate
+#' @inheritParams background_mortality
 replace_child <- function(target, timestep, variables, parameters, events) {
   variables$birth_t$queue_update(value = timestep - parameters$age_lower, index = target)
+  graduate_t <- parameters$age_upper - parameters$age_lower
+  events$graduate$clear_schedule(target)
+  events$graduate$schedule(target, delay = rep(graduate_t, target$size()))
   # Reset infection status
   variables$dia_status$queue_update("S", target)
   variables$dia_type$queue_update(0, target)
@@ -89,7 +66,7 @@ replace_child <- function(target, timestep, variables, parameters, events) {
 #'
 #' @param timestep Current time
 #' @param index optionally return a subset of the variable vector
-#' @inheritParams graduate
+#' @inheritParams background_mortality
 get_age <- function(timestep, variables, index = NULL){
   timestep - variables$birth_t$get_values(index = index)
 }
@@ -98,7 +75,7 @@ get_age <- function(timestep, variables, index = NULL){
 #'
 #' Average ages and number of children in each year age-group.
 #'
-#' @inheritParams graduate
+#' @inheritParams background_mortality
 render_demography <- function(variables, renderer){
   function(timestep){
     age_days <- timestep - variables$birth_t$get_values()

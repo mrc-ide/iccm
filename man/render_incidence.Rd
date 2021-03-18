@@ -7,7 +7,13 @@
 render_incidence(new_infections, condition, diseases, timestep, renderer)
 }
 \arguments{
+\item{new_infections}{Indices of new infections}
+
 \item{condition}{Condition: diarrhoea, malaria or pneumonia}
+
+\item{diseases}{vector of diseases for condition}
+
+\item{timestep}{Current time}
 
 \item{renderer}{Model renderer}
 }

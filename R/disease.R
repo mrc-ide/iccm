@@ -62,7 +62,7 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
         variables[[disease_record_label]]$queue_update(disease_index, to_infect)
         increment_prior_exposure_counter(disease_index, to_infect, prior_labels, variables)
         variables[[status_label]]$queue_update("I", to_infect)
-        clinical_duration <- rpois(to_infect$size(), p$clin_dur[disease_index])
+        clinical_duration <- stats::rpois(to_infect$size(), p$clin_dur[disease_index])
         events[[paste0(condition, "_recover")]]$schedule(to_infect, delay = clinical_duration)
         render_incidence(disease_index, condition, p$type, timestep, renderer)
       }
@@ -153,7 +153,6 @@ sample_disease <- function(p, n){
 #'
 #' Record overall (condition) and disaggregated (disease) prevalence
 #'
-#' @param renderer Model renderer
 #' @inheritParams condition_exposure
 render_prevalence <- function(condition, variables, parameters, renderer){
   types <- parameters[[condition]]$type
@@ -174,7 +173,9 @@ render_prevalence <- function(condition, variables, parameters, renderer){
 #'
 #' Record overall (condition) and disaggregated (disease) incidence of new infection
 #'
-#' @param renderer Model renderer
+#' @param new_infections Indices of new infections
+#' @param diseases vector of diseases for condition
+#' @param timestep Current time
 #' @inheritParams condition_exposure
 render_incidence <- function(new_infections, condition, diseases, timestep, renderer){
   renderer$render(paste0(condition, "_incidence"), length(new_infections), timestep)

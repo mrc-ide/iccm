@@ -8,10 +8,10 @@ create_variables <- function(parameters){
   initial_age <- floor(rtexp(size, rate = 1 / parameters$average_age, lower = parameters$age_lower, upper = parameters$age_upper))
   birth_t <- individual::DoubleVariable$new(-initial_age)
   # Disease variables
-  states <- c("S", "A", "I", "V")
+  #states <- c("S", "A", "I", "V")
   #dia_types <- c("None", parameters$dia$type)
   # Infection status
-  dia_status <- individual::CategoricalVariable$new(categories = states, initial_values = rep("S", size))
+  dia_status <- individual::IntegerVariable$new(rep(0, size))
   # Disease type
   dia_disease <- individual::IntegerVariable$new(rep(0, size))
 

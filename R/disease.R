@@ -18,7 +18,7 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
 
   function(timestep){
     # Get susceptible indices
-    susceptibles <- variables[[condition_status]]$get_index_of(values = "S")
+    susceptibles <- variables[[condition_status]]$get_index_of(0)
 
     if(susceptibles$size() > 0){
       # Get ages (for maternal immunity estimation)
@@ -62,7 +62,7 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
         # Update infected individuals
         variables[[condition_disease]]$queue_update(disease_index, to_infect)
         increment_prior_exposure_counter(disease_index, to_infect, condition_prior_disease, variables)
-        variables[[condition_status]]$queue_update("I", to_infect)
+        variables[[condition_status]]$queue_update(2, to_infect)
         clinical_duration <- stats::rpois(to_infect$size(), p$clin_dur[disease_index])
         events[[condition_recover]]$schedule(to_infect, delay = clinical_duration)
         render_incidence(disease_index, condition, p$disease, timestep, renderer)
@@ -83,14 +83,14 @@ progress_severe <- function(condition, parameters, variables){
 
   function(timestep){
     # Symptomatic individuals
-    target <- variables[[condition_status]]$get_index_of(values = "I")
+    target <- variables[[condition_status]]$get_index_of(2)
     # Disease indices
     indices <- variables[[condition_disease]]$get_values(target)
     # Disease-specific probability of becoming severe
     probs <- dps[indices]
     # Sample and progress
     target <- target$sample(probs)
-    variables[[condition_status]]$queue_update("V", target)
+    variables[[condition_status]]$queue_update(3, target)
   }
 }
 
@@ -108,7 +108,7 @@ die <- function(condition, parameters, variables, events, renderer){
 
   function(timestep){
     # Individuals with severe illness
-    target <- variables[[condition_status]]$get_index_of(values = "V")
+    target <- variables[[condition_status]]$get_index_of(3)
     # Disease indices
     indices <- variables[[condition_disease]]$get_values(target)
     # Disease-specific probability of dieing | severe illness

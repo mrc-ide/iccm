@@ -4,7 +4,7 @@
 \alias{progress_severe}
 \title{Progress to severe disease}
 \usage{
-progress_severe(condition, parameters, variables)
+progress_severe(condition, parameters, variables, events)
 }
 \arguments{
 \item{condition}{Condition: diarrhoea, malaria or pneumonia}
@@ -12,6 +12,8 @@ progress_severe(condition, parameters, variables)
 \item{parameters}{Model parameters}
 
 \item{variables}{Model variables}
+
+\item{events}{Model events}
 }
 \description{
 Sample infected individuals to progress to severe disease

@@ -10,7 +10,7 @@ processes <- create_processes(parameters, variables, renderer, events)
 test_that("prevalence rendering works", {
   renderer <- mock_render(2)
   parameters$population <- 4
-  variables$dia_status <- mock_category( c("S", "A", "I", "V"), c("I", "I", "I", "S"))
+  variables$dia_status <- mock_integer( c(2, 2, 2, 1))
   variables$dia_disease <- mock_integer(c(2, 2, 3, 0))
   variables$dia_prior_bacteria <- mock_integer(rep(0,4))
   variables$dia_prior_virus <- mock_integer(rep(0,4))
@@ -29,11 +29,11 @@ test_that("prevalence rendering works", {
 
 test_that("recover event works", {
   parameters$population <- 4
-  variables$dia_status <- mock_category( c("S", "A", "I", "V"), c("I", "I", "I", "S"))
+  variables$dia_status <- mock_integer( c(2, 2, 2, 1))
   variables$dia_disease <- mock_integer(c(2, 2, 3, 0))
   recovery_event <- recover_event(variables, "dia")
   recovery_event(1, 1)
 
-  mockery::expect_args(variables$dia_status$queue_update, 1, "S", 1)
+  mockery::expect_args(variables$dia_status$queue_update, 1, 0, 1)
   mockery::expect_args(variables$dia_disease$queue_update, 1, 0, 1)
 })

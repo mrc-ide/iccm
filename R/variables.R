@@ -4,16 +4,22 @@
 create_variables <- function(parameters){
   size <- parameters$population
 
-  # Demography variables
+  # Demography
   initial_age <- floor(rtexp(size, rate = 1 / parameters$average_age, lower = parameters$age_lower, upper = parameters$age_upper))
   birth_t <- individual::DoubleVariable$new(-initial_age)
-  # Disease variables
-  #states <- c("S", "A", "I", "V")
-  #dia_types <- c("None", parameters$dia$type)
-  # Infection status
+
+  # Disease
+  ## Infection status
   dia_status <- individual::IntegerVariable$new(rep(0, size))
-  # Disease type
+  ## Disease type
   dia_disease <- individual::IntegerVariable$new(rep(0, size))
+  ## Start time of any active infection symptoms
+  dia_symptom_start <- individual::IntegerVariable$new(rep(NA, size))
+
+  # Treatment seeking
+  est_provider_preference <- sample_preference(size, parameters)
+  provider_preference <- individual::CategoricalVariable$new(c("None", "HF", "CHW", "Private"), est_provider_preference)
+  awaiting_followup <- individual::IntegerVariable$new(rep(0, size))
 
   # Epidemiology
   est_het <- heterogeneity(size, parameters$het_sd)
@@ -25,7 +31,7 @@ create_variables <- function(parameters){
   pneumococcal_vx <- individual::IntegerVariable$new(stats::rbinom(size, 1, parameters$pneumococcal_vx_coverage))
   hib_vx <- individual::IntegerVariable$new(stats::rbinom(size, 1, parameters$hib_vx_coverage))
 
-  # Initialise prior exposures
+  # Prior exposures
   # TODO:: Prior exposure counters - update to be DoubleMatrixVariable
   dp <- matrix(rep(0, size * 4), ncol = 4)
   for(i in 1:4){
@@ -53,6 +59,9 @@ create_variables <- function(parameters){
     birth_t = birth_t,
     dia_status = dia_status,
     dia_disease = dia_disease,
+    dia_symptom_start = dia_symptom_start,
+    provider_preference = provider_preference,
+    awaiting_followup = awaiting_followup,
     dia_prior_bacteria = dia_prior_bacteria,
     dia_prior_virus = dia_prior_virus,
     dia_prior_parasite = dia_prior_parasite,

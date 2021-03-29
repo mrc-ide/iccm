@@ -51,7 +51,55 @@ get_parameters <- function(user_overwrite = NULL){
     vx_initial_efficacy = c(0, 0, 0, 0),
     vx_hl = c(0, 0, 0, 0),
     # TODO this should be a function of coverage:
-    vx_ci = c(0, 0, 0, 0)
+    vx_ci = c(0, 0, 0, 0),
+    symptom_time_refer = 5
+  )
+
+  parameters$treatment_seeking <- list(
+    prob_seek_treatment = 0,
+    prob_seek_treatment_severe = 1,
+    treat_seeking_behaviour_delay = 1,
+    provider_preference_weights = c(1, 1, 1)
+  )
+
+  parameters$dx_tx <- list(
+    rdt_sensitivity = 1,
+    rdt_specificity = 1,
+    ors_efficacy = 0.75
+  )
+
+  parameters$hf <- list(
+    hf = 1,
+    travel_time = 3,
+    efficacy = 1,
+    severe_diarrhoea_sensitivity = 1,
+    severe_diarrhoea_specificity = 1,
+    severe_diarrhoea_efficacy = 1,
+    diarrhoea_sensitivity = 1,
+    diarrhoea_specificity = 1
+  )
+
+  parameters$chw <- list(
+    chw = 0,
+    travel_time = 1,
+    efficacy = 1,
+    severe_diarrhoea_sensitivity = 1,
+    severe_diarrhoea_specificity = 1,
+    severe_diarrhoea_efficacy = 1,
+    diarrhoea_sensitivity = 1,
+    diarrhoea_specificity = 1,
+    followup_period = 14
+  )
+
+  parameters$private <- list(
+    private = 0,
+    travel_time = 1,
+    efficacy = 1,
+    severe_diarrhoea_sensitivity = 1,
+    severe_diarrhoea_specificity = 1,
+    severe_diarrhoea_efficacy = 1,
+    diarrhoea_sensitivity = 1,
+    diarrhoea_specificity = 1
   )
 
   # Overwrite_defaults

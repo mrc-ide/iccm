@@ -8,48 +8,47 @@
 #' @param positive Status categories associated that are true +ves
 #'
 #' @return Boolean vector, TRUE = positive test, FALSE = negative test
-dx <- function(status, sens, spec, positive = c("A", "I", "V")){
+dx <- function(status, sens, spec, positive = 1:3){
   prob <- rep(0, length(status))
   index <- status %in% positive
   prob[index] <- sens # True positive
   prob[!index] <- 1 - spec # False positive
-  dx_result <- runif(length(prob), 0, 1) < prob
+  dx_result <- stats::runif(length(prob), 0, 1) < prob
   return(dx_result)
 }
 
-#' Treatment result
+#' Give ORS
 #'
-#' @param disease Disease
-#' @param efficacy Treatment efficacy against target disease
-#' @param target_disease target_diseases
+#' Provides oral rehydration salts (ORS) to a child
 #'
-#' @return Boolean vector, TRUE = cure, FALSE = no treatment impact
-tx <- function(disease, efficacy, target_disease){
-  prob <- rep(0, length(disease))
-  prob[disease %in% target_disease] <- efficacy
-  tx_result <- runif(length(prob), 0, 1) < prob
-  return(tx_result)
+#' @param target Target children
+#' @param parameters Model parameters
+#' @param variables Model variable
+#' @param events Model events
+#' @param timestep Model timestep
+give_ors <- function(target, parameters, variables, events, timestep){
+  target <- target$sample(parameters$dx_tx$ors_efficacy)
+  cure(target, "dia", variables, events)
 }
 
-#' Provider result
+#' Give treatment for severe diarrhoea
 #'
-#' A function to capture the efficacy of the provider - currently encapsulates all aspects of "human error".
+#' Provides treatment for severe diarrhoea
 #'
-#' @param disease Disease
-#' @param efficacy Provider efficacy
-#'
-#' @return
-#' @export
-#'
-#' @examples
-px <- function(disease, efficacy){
-  prob <- rep(efficacy, length(disease))
-  provider_result <- runif(length(prob), 0, 1) < prob
-  return(provider_result)
+#' @inheritParams give_ors
+give_severe_treatment_diarrhoea <- function(target, parameters, variables, events, timestep){
+  target <- target$sample(parameters$hf$severe_diarrhoea_efficacy)
+  cure(target, "dia", variables, events)
 }
 
-treat <- function(variables){
-  # Anything severe takes precedent
-  #status_dia <-
-
+#' Cure a condition
+#'
+#' @param condition Condition to cure
+#' @inheritParams give_ors
+cure <- function(target, condition, variables, events){
+  variables[[paste0(condition, "_status")]]$queue_update(0, target)
+  variables[[paste0(condition, "_disease")]]$queue_update(0, target)
+  variables[[paste0(condition, "_symptom_start")]]$queue_update(NA, target)
+  events[[paste0(condition, "_recover")]]$clear_schedule(target)
 }
+

@@ -9,11 +9,19 @@ create_events <- function(variables, parameters){
   # Symptomatic to susceptible
   dia_recover <- individual::TargetedEvent$new(parameters$population)
 
+  # Treatment
+  hf_treatment <- individual::TargetedEvent$new(parameters$population)
+  chw_treatment <- individual::TargetedEvent$new(parameters$population)
+  private_treatment <- individual::TargetedEvent$new(parameters$population)
+
   # Demographic
   graduate <- individual::TargetedEvent$new(parameters$population)
 
   events <- list(
     dia_recover = dia_recover,
+    hf_treatment = hf_treatment,
+    chw_treatment = chw_treatment,
+    private_treatment = private_treatment,
     graduate = graduate
   )
   return(events)
@@ -29,6 +37,9 @@ create_events <- function(variables, parameters){
 #' @param renderer Model renderer
 create_event_listeners <- function(events, variables, parameters, renderer){
   events$dia_recover$add_listener(recover_event(variables, "dia"))
+  events$hf_treatment$add_listener(hf_treat(variables, parameters, renderer, events))
+  events$chw_treatment$add_listener(chw_treat(variables, parameters, renderer, events))
+  events$private_treatment$add_listener(private_treat(variables, parameters, renderer, events))
   events$graduate$add_listener(graduate_event(variables, parameters, events, renderer))
 }
 
@@ -59,7 +70,7 @@ recover_event <- function(variables, condition){
 
   function(timestep, target){
     # Set status = susceptible
-    variables[[condition_status]]$queue_update("S", target)
+    variables[[condition_status]]$queue_update(0, target)
     variables[[condition_disease]]$queue_update(0, target)
   }
 }

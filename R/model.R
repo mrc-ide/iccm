@@ -28,7 +28,8 @@ run_simulation <- function(timesteps, parameters = NULL, long = TRUE){
                                         events = events,
                                         processes = processes,
                                         timesteps = timesteps)
-  output <- renderer$to_dataframe()
+  output <- renderer$to_dataframe() %>%
+    replace_render_na()
 
   if(long){
     output <- convert_to_long(output)

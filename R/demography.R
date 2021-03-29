@@ -43,6 +43,7 @@ replace_child <- function(target, timestep, variables, parameters, events) {
   # Reset infection status
   variables$dia_status$queue_update(0, target)
   variables$dia_disease$queue_update(0, target)
+  variables$dia_symptom_start$queue_update(NA, target)
   variables$dia_prior_bacteria$queue_update(0, target)
   variables$dia_prior_virus$queue_update(0, target)
   variables$dia_prior_parasite$queue_update(0, target)

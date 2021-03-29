@@ -78,6 +78,7 @@ hf_treat <- function(variables, parameters, renderer, events){
                            spec = parameters$hf$pneumonia_specificity,
                            positive = 1:3)
         pneumonia_px <- px(variables$pneumonia_disease$get_values(target), efficacy = parameters$hf$efficacy)
+
         pneumonia_to_treat <- individual::filter_bitset(target, which(pneumonia_dx & pneumonia_px))
         give_amoxy(pneumonia_to_treat)
       }
@@ -91,7 +92,7 @@ hf_treat <- function(variables, parameters, renderer, events){
       dia_to_treat <- individual::filter_bitset(target, which(dia_dx & dia_px))
       give_ors(dia_to_treat, parameters, variables, events, timestep)
       n_ors_given <- n_ors_given + dia_to_treat$size()
-    }
+  }
     renderer$render("hf_ors", n_ors_given, timestep)
   }
 }
@@ -121,13 +122,16 @@ chw_treat <- function(variables, parameters, renderer, events){
     dia_severe_px <- px(variables$dia_disease$get_values(target), efficacy = parameters$chw$efficacy)
     dia_symptom_length <- time_since_onset(target, "dia", variables, timestep) > parameters$dia$symptom_time_refer
     dia_severe_to_refer <- individual::filter_bitset(target, which((dia_severe_dx & dia_severe_px) | dia_symptom_length))
-    give_ors(dia_severe_to_refer, parameters, variables, events, timestep)
-    n_ors_given <- n_ors_given + dia_severe_to_refer$size()
 
-    # TODO: referral - this will need to be for any severe
-    if(parameters$hf$hf){
-      renderer$render("chw_referral", dia_severe_to_refer$size(), timestep)
-      events$hf_treatment$schedule(dia_severe_to_refer, delay = parameters$hf$travel_time + 1)
+    if(dia_severe_to_refer$size() > 0){
+      give_ors(dia_severe_to_refer, parameters, variables, events, timestep)
+      n_ors_given <- n_ors_given + dia_severe_to_refer$size()
+
+      # TODO: referral - this will need to be for any severe
+      if(parameters$hf$hf){
+        renderer$render("chw_referral", dia_severe_to_refer$size(), timestep)
+        events$hf_treatment$schedule(dia_severe_to_refer, delay = parameters$hf$travel_time + 1)
+      }
     }
     ############################################################################
 

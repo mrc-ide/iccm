@@ -27,7 +27,7 @@ dx <- function(status, sens, spec, positive = 1:3){
 #' @param events Model events
 #' @param timestep Model timestep
 give_ors <- function(target, parameters, variables, events, timestep){
-  target <- target$sample(parameters$dx_tx$ors_efficacy)
+  target <- target$copy()$sample(parameters$dx_tx$ors_efficacy)
   cure(target, "dia", variables, events)
 }
 
@@ -37,7 +37,7 @@ give_ors <- function(target, parameters, variables, events, timestep){
 #'
 #' @inheritParams give_ors
 give_severe_treatment_diarrhoea <- function(target, parameters, variables, events, timestep){
-  target <- target$sample(parameters$hf$severe_diarrhoea_efficacy)
+  target <- target$copy()$sample(parameters$hf$severe_diarrhoea_efficacy)
   cure(target, "dia", variables, events)
 }
 

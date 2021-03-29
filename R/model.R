@@ -20,6 +20,7 @@ run_simulation <- function(timesteps, parameters = NULL, long = TRUE){
   variables <- create_variables(parameters)
   events <- create_events(variables, parameters)
   renderer <- individual::Render$new(timesteps)
+  initialise_render_defaults(renderer)
   initialise_events(events, variables, parameters)
   create_event_listeners(events, variables, parameters, renderer)
   processes <- create_processes(parameters, variables, renderer, events)
@@ -28,8 +29,8 @@ run_simulation <- function(timesteps, parameters = NULL, long = TRUE){
                                         events = events,
                                         processes = processes,
                                         timesteps = timesteps)
-  output <- renderer$to_dataframe() %>%
-    replace_render_na()
+  output <- renderer$to_dataframe()# %>%
+    #replace_render_na()
 
   if(long){
     output <- convert_to_long(output)

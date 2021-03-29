@@ -76,3 +76,16 @@ create_variables <- function(parameters){
   return(variables)
 }
 
+
+#' Add default values to render variables that won't get called every timestep
+#'
+#' @param renderer Model renderer
+#' @param zero_default Variables to set a default 0
+initialise_render_defaults <- function(renderer, zero_default = c("chw_patients", "chw_ors", "chw_followup", "chw_referral",
+                                         "private_patients", "private_ors",
+                                         "hf_patients", "hf_ors", "hf_severe_diarrhoea_tx",
+                                         "graduation")){
+  for(var in zero_default){
+    renderer$set_default(var, 0)
+  }
+}

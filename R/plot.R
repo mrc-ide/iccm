@@ -59,6 +59,7 @@ plot_sim <- function(output, return_list = FALSE) {
                        c("private_ors", "private_patients"),
                        c("ORS", "Patients"),
                        "N"),
+    fever_plot =  sub_plot(output, "Fevers", "Fever_prevalence", "Fever", "Prevalence"),
     events_plot = sub_plot(output, "Events",
                            c("graduation", "background_mortality"),
                            c("Graduation", "Background mortality"),

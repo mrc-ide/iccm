@@ -67,11 +67,13 @@ initialise_events <- function(events, variables, parameters){
 recover_event <- function(variables, condition){
   condition_status <- paste0(condition, "_status")
   condition_disease <- paste0(condition, "_disease")
+  condition_fever <- paste0(condition, "_fever")
 
   function(timestep, target){
     # Set status = susceptible
     variables[[condition_status]]$queue_update(0, target)
     variables[[condition_disease]]$queue_update(0, target)
+    variables[[condition_fever]]$queue_update(0, target)
   }
 }
 

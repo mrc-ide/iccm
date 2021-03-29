@@ -15,6 +15,8 @@ create_variables <- function(parameters){
   dia_disease <- individual::IntegerVariable$new(rep(0, size))
   ## Start time of any active infection symptoms
   dia_symptom_start <- individual::IntegerVariable$new(rep(NA, size))
+  ## Fever indicator
+  dia_fever <- individual::IntegerVariable$new(rep(0, size))
 
   # Treatment seeking
   est_provider_preference <- sample_preference(size, parameters)
@@ -60,6 +62,7 @@ create_variables <- function(parameters){
     dia_status = dia_status,
     dia_disease = dia_disease,
     dia_symptom_start = dia_symptom_start,
+    dia_fever = dia_fever,
     provider_preference = provider_preference,
     awaiting_followup = awaiting_followup,
     dia_prior_bacteria = dia_prior_bacteria,

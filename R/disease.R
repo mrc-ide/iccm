@@ -13,6 +13,7 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
   p <- parameters[[condition]]
   condition_disease <- paste0(condition, "_disease")
   condition_status <- paste0(condition, "_status")
+  condition_fever <- paste0(condition, "_fever")
   condition_prior_disease <- paste0(condition, "_prior_", parameters[[condition]]$disease)
   condition_recover <- paste0(condition, "_recover")
   condition_symptom_start <- paste0(condition, "_symptom_start")
@@ -65,6 +66,8 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
         increment_prior_exposure_counter(disease_index, to_infect, condition_prior_disease, variables)
         variables[[condition_status]]$queue_update(2, to_infect)
         variables[[condition_symptom_start]]$queue_update(timestep, to_infect)
+        to_fever <- to_infect$copy()$sample(p$prob_fever[disease_index])
+        variables[[condition_fever]]$queue_update(1, to_fever)
         clinical_duration <- stats::rpois(to_infect$size(), p$clin_dur[disease_index])
         events[[condition_recover]]$schedule(to_infect, delay = clinical_duration)
         render_incidence(disease_index, condition, p$disease, timestep, renderer)
@@ -92,6 +95,7 @@ progress_severe <- function(condition, parameters, variables, events){
   dps <- parameters[[condition]]$daily_prob_severe
   condition_status <- paste0(condition, "_status")
   condition_disease <- paste0(condition, "_disease")
+  condition_fever <- paste0(condition, "_fever")
 
   function(timestep){
     # Symptomatic individuals
@@ -103,6 +107,7 @@ progress_severe <- function(condition, parameters, variables, events){
     # Sample and progress
     target <- target$sample(probs)
     variables[[condition_status]]$queue_update(3, target)
+    variables[[condition_fever]]$queue_update(1, target)
 
     # Schedule treatment
     to_treat <- target$sample(parameters$treatment_seeking$prob_seek_treatment_severe)
@@ -237,5 +242,14 @@ render_prior_exposure <- function(condition, variables, parameters, renderer){
   }
 }
 
-
+#' Record fever prevalence
+#'
+#' Record prevalence of fever
+#' @inheritParams condition_exposure
+render_fevers <- function(variables, parameters, renderer){
+  function(timestep){
+    x <- variables$dia_fever$get_index_of(1)
+    renderer$render("Fever_prevalence", x$size() / parameters$population, timestep)
+  }
+}
 

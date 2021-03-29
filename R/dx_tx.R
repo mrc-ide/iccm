@@ -49,6 +49,7 @@ cure <- function(target, condition, variables, events){
   variables[[paste0(condition, "_status")]]$queue_update(0, target)
   variables[[paste0(condition, "_disease")]]$queue_update(0, target)
   variables[[paste0(condition, "_symptom_start")]]$queue_update(NA, target)
+  variables[[paste0(condition, "_fever")]]$queue_update(0, target)
   events[[paste0(condition, "_recover")]]$clear_schedule(target)
 }
 

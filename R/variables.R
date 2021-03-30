@@ -87,7 +87,9 @@ create_variables <- function(parameters){
 initialise_render_defaults <- function(renderer, zero_default = c("chw_patients", "chw_ors", "chw_followup", "chw_referral",
                                          "private_patients", "private_ors",
                                          "hf_patients", "hf_ors", "hf_severe_diarrhoea_tx",
-                                         "graduation")){
+                                         "graduation", "dia_bacteria_mortality",
+                                         "dia_virus_mortality", "dia_parasite_mortality",
+                                         "dia_rotavirus_mortality")){
   for(var in zero_default){
     renderer$set_default(var, 0)
   }

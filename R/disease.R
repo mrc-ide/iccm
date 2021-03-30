@@ -73,14 +73,17 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
         render_incidence(disease_index, condition, p$disease, timestep, renderer)
 
         # Schedule treatment
-        to_treat <- to_infect$sample(parameters$treatment_seeking$prob_seek_treatment)
-        to_treat_hf <- variables$provider_preference$get_index_of("HF")$and(to_treat)
-        to_treat_chw <- variables$provider_preference$get_index_of("CHW")$and(to_treat)
-        to_treat_private <- variables$provider_preference$get_index_of("Private")$and(to_treat)
+        to_treat <- to_infect$copy()$sample(parameters$treatment_seeking$prob_seek_treatment)
 
-        events$hf_treatment$schedule(to_treat_hf, delay = parameters$hf$travel_time + 1 + stats::rpois(to_treat_hf$size(), parameters$treatment_seeking$treat_seeking_behaviour_delay))
-        events$chw_treatment$schedule(to_treat_chw, delay = parameters$chw$travel_time + 1 + stats::rpois(to_treat_chw$size(), parameters$treatment_seeking$treat_seeking_behaviour_delay))
-        events$private_treatment$schedule(to_treat_private, delay = parameters$private$travel_time + 1 + stats::rpois(to_treat_private$size(), parameters$treatment_seeking$treat_seeking_behaviour_delay))
+        if(to_treat$size() > 0){
+          to_treat_hf <- variables$provider_preference$get_index_of("HF")$and(to_treat)
+          to_treat_chw <- variables$provider_preference$get_index_of("CHW")$and(to_treat)
+          to_treat_private <- variables$provider_preference$get_index_of("Private")$and(to_treat)
+
+          events$hf_treatment$schedule(to_treat_hf, delay = parameters$hf$travel_time + 1 + stats::rpois(to_treat_hf$size(), parameters$treatment_seeking$treat_seeking_behaviour_delay))
+          events$chw_treatment$schedule(to_treat_chw, delay = parameters$chw$travel_time + 1 + stats::rpois(to_treat_chw$size(), parameters$treatment_seeking$treat_seeking_behaviour_delay))
+          events$private_treatment$schedule(to_treat_private, delay = parameters$private$travel_time + 1 + stats::rpois(to_treat_private$size(), parameters$treatment_seeking$treat_seeking_behaviour_delay))
+        }
       }
     }
   }
@@ -106,18 +109,21 @@ progress_severe <- function(condition, parameters, variables, events){
     probs <- dps[indices]
     # Sample and progress
     target <- target$sample(probs)
-    variables[[condition_status]]$queue_update(3, target)
-    variables[[condition_fever]]$queue_update(1, target)
 
-    # Schedule treatment
-    to_treat <- target$sample(parameters$treatment_seeking$prob_seek_treatment_severe)
-    to_treat_hf <- variables$provider_preference$get_index_of("HF")$and(target)
-    to_treat_chw <- variables$provider_preference$get_index_of("CHW")$and(target)
-    to_treat_private <- variables$provider_preference$get_index_of("Private")$and(target)
+    if(target$size() > 0){
+      variables[[condition_status]]$queue_update(3, target)
+      variables[[condition_fever]]$queue_update(1, target)
 
-    events$hf_treatment$schedule(to_treat_hf, delay = parameters$hf$travel_time + 1)
-    events$chw_treatment$schedule(to_treat_chw, delay = parameters$chw$travel_time + 1)
-    events$private_treatment$schedule(to_treat_private, delay = parameters$private$travel_time + 1)
+      # Schedule treatment
+      to_treat <- target$sample(parameters$treatment_seeking$prob_seek_treatment_severe)
+      to_treat_hf <- variables$provider_preference$get_index_of("HF")$and(target)
+      to_treat_chw <- variables$provider_preference$get_index_of("CHW")$and(target)
+      to_treat_private <- variables$provider_preference$get_index_of("Private")$and(target)
+
+      events$hf_treatment$schedule(to_treat_hf, delay = parameters$hf$travel_time + 1)
+      events$chw_treatment$schedule(to_treat_chw, delay = parameters$chw$travel_time + 1)
+      events$private_treatment$schedule(to_treat_private, delay = parameters$private$travel_time + 1)
+    }
   }
 }
 
@@ -142,11 +148,13 @@ die <- function(condition, parameters, variables, events, renderer){
     probs <- dpd[indices]
     # Sample and death
     target <- target$sample(probs)
-    replace_child(target, timestep, variables, parameters, events)
-    # Record disease-specific mortality
-    death_cause <- variables[[condition_disease]]$get_values(target)
-    for(i in seq_along(diseases)){
-      renderer$render(condition_disease_mortality[i], sum(death_cause == i), timestep)
+    if(target$size() > 0 ){
+      replace_child(target, timestep, variables, parameters, events)
+      # Record disease-specific mortality
+      death_cause <- variables[[condition_disease]]$get_values(target)
+      for(i in seq_along(diseases)){
+        renderer$render(condition_disease_mortality[i], sum(death_cause == i), timestep)
+      }
     }
   }
 }

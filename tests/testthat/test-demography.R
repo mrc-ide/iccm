@@ -41,7 +41,7 @@ test_that("replace child works", {
   variables$dia_prior_virus <- mock_integer(c(1, 2, 3))
   variables$dia_prior_parasite <- mock_integer(c(1, 2, 3))
   variables$dia_prior_rotavirus <- mock_integer(c(1, 2, 3))
-  variables$dia_status <- mock_category( c("S", "A", "I", "V"), c("I", "I", "I"))
+  variables$dia_status <- mock_integer(c(3, 3, 3))
   variables$dia_disease <- mock_integer(c(2, 2, 2))
   variables$birth_t <- mock_double(c(100, 100, 100))
   variables$llin <- mock_integer(c(0, 0, 0))
@@ -59,7 +59,7 @@ test_that("replace child works", {
   replace_child(to_replace,  timestep, variables, p, events)
 
   # Checks
-  expect_bitset_update(variables$dia_status$queue_update, "S", 1:2)
+  expect_bitset_update(variables$dia_status$queue_update, 0, 1:2)
   expect_bitset_update(variables$dia_disease$queue_update, 0, 1:2)
   expect_bitset_update(variables$dia_prior_bacteria$queue_update, 0, 1:2)
   expect_bitset_update(variables$dia_prior_virus$queue_update, 0, 1:2)
@@ -90,7 +90,7 @@ test_that("background mortality", {
   p$population <- 3
   renderer <- mock_render(1)
   variables <- create_variables(p)
-  variables$dia_status <- mock_category( c("S", "A", "I", "V"), c("I", "I", "I"))
+  variables$dia_status <- mock_integer(c(2, 2, 2))
   events <- create_events(variables, p)
 
   # Create the background mortality function
@@ -102,6 +102,6 @@ test_that("background mortality", {
 
   mockery::expect_args(renderer$render, 1, "background_mortality", 1, 1)
   # Check changes have filtered through to replace child
-  expect_bitset_update(variables$dia_status$queue_update, "S", 2)
+  expect_bitset_update(variables$dia_status$queue_update, 0, 2)
 })
 

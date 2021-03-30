@@ -8,3 +8,4 @@ convert_to_long <- function(output){
     tidyr::pivot_longer(cols = -.data$timestep, names_to = "variable", values_to = "y") %>%
     dplyr::arrange(.data$variable, .data$timestep)
 }
+

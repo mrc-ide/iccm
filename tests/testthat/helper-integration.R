@@ -19,6 +19,7 @@ mock_integer <- function(...) {
   v <- individual::IntegerVariable$new(...)
   list(
     get_values = v$get_values,
+    get_index_of = v$get_index_of,
     queue_update = mockery::mock()
   )
 }

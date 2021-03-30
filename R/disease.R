@@ -13,12 +13,14 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
   p <- parameters[[condition]]
   condition_disease <- paste0(condition, "_disease")
   condition_status <- paste0(condition, "_status")
+  condition_fever <- paste0(condition, "_fever")
   condition_prior_disease <- paste0(condition, "_prior_", parameters[[condition]]$disease)
   condition_recover <- paste0(condition, "_recover")
+  condition_symptom_start <- paste0(condition, "_symptom_start")
 
   function(timestep){
     # Get susceptible indices
-    susceptibles <- variables[[condition_status]]$get_index_of(values = "S")
+    susceptibles <- variables[[condition_status]]$get_index_of(0)
 
     if(susceptibles$size() > 0){
       # Get ages (for maternal immunity estimation)
@@ -62,10 +64,26 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
         # Update infected individuals
         variables[[condition_disease]]$queue_update(disease_index, to_infect)
         increment_prior_exposure_counter(disease_index, to_infect, condition_prior_disease, variables)
-        variables[[condition_status]]$queue_update("I", to_infect)
+        variables[[condition_status]]$queue_update(2, to_infect)
+        variables[[condition_symptom_start]]$queue_update(timestep, to_infect)
+        to_fever <- to_infect$copy()$sample(p$prob_fever[disease_index])
+        variables[[condition_fever]]$queue_update(1, to_fever)
         clinical_duration <- stats::rpois(to_infect$size(), p$clin_dur[disease_index])
         events[[condition_recover]]$schedule(to_infect, delay = clinical_duration)
         render_incidence(disease_index, condition, p$disease, timestep, renderer)
+
+        # Schedule treatment
+        to_treat <- to_infect$copy()$sample(parameters$treatment_seeking$prob_seek_treatment)
+
+        if(to_treat$size() > 0){
+          to_treat_hf <- variables$provider_preference$get_index_of("HF")$and(to_treat)
+          to_treat_chw <- variables$provider_preference$get_index_of("CHW")$and(to_treat)
+          to_treat_private <- variables$provider_preference$get_index_of("Private")$and(to_treat)
+
+          events$hf_treatment$schedule(to_treat_hf, delay = parameters$hf$travel_time + 1 + stats::rpois(to_treat_hf$size(), parameters$treatment_seeking$treat_seeking_behaviour_delay))
+          events$chw_treatment$schedule(to_treat_chw, delay = parameters$chw$travel_time + 1 + stats::rpois(to_treat_chw$size(), parameters$treatment_seeking$treat_seeking_behaviour_delay))
+          events$private_treatment$schedule(to_treat_private, delay = parameters$private$travel_time + 1 + stats::rpois(to_treat_private$size(), parameters$treatment_seeking$treat_seeking_behaviour_delay))
+        }
       }
     }
   }
@@ -76,21 +94,36 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
 #' Sample infected individuals to progress to severe disease
 #'
 #' @inheritParams condition_exposure
-progress_severe <- function(condition, parameters, variables){
+progress_severe <- function(condition, parameters, variables, events){
   dps <- parameters[[condition]]$daily_prob_severe
   condition_status <- paste0(condition, "_status")
   condition_disease <- paste0(condition, "_disease")
+  condition_fever <- paste0(condition, "_fever")
 
   function(timestep){
     # Symptomatic individuals
-    target <- variables[[condition_status]]$get_index_of(values = "I")
+    target <- variables[[condition_status]]$get_index_of(2)
     # Disease indices
     indices <- variables[[condition_disease]]$get_values(target)
     # Disease-specific probability of becoming severe
     probs <- dps[indices]
     # Sample and progress
     target <- target$sample(probs)
-    variables[[condition_status]]$queue_update("V", target)
+
+    if(target$size() > 0){
+      variables[[condition_status]]$queue_update(3, target)
+      variables[[condition_fever]]$queue_update(1, target)
+
+      # Schedule treatment
+      to_treat <- target$sample(parameters$treatment_seeking$prob_seek_treatment_severe)
+      to_treat_hf <- variables$provider_preference$get_index_of("HF")$and(target)
+      to_treat_chw <- variables$provider_preference$get_index_of("CHW")$and(target)
+      to_treat_private <- variables$provider_preference$get_index_of("Private")$and(target)
+
+      events$hf_treatment$schedule(to_treat_hf, delay = parameters$hf$travel_time + 1)
+      events$chw_treatment$schedule(to_treat_chw, delay = parameters$chw$travel_time + 1)
+      events$private_treatment$schedule(to_treat_private, delay = parameters$private$travel_time + 1)
+    }
   }
 }
 
@@ -108,18 +141,20 @@ die <- function(condition, parameters, variables, events, renderer){
 
   function(timestep){
     # Individuals with severe illness
-    target <- variables[[condition_status]]$get_index_of(values = "V")
+    target <- variables[[condition_status]]$get_index_of(3)
     # Disease indices
     indices <- variables[[condition_disease]]$get_values(target)
     # Disease-specific probability of dieing | severe illness
     probs <- dpd[indices]
     # Sample and death
     target <- target$sample(probs)
-    replace_child(target, timestep, variables, parameters, events)
-    # Record disease-specific mortality
-    death_cause <- variables[[condition_disease]]$get_values(target)
-    for(i in seq_along(diseases)){
-      renderer$render(condition_disease_mortality[i], sum(death_cause == i), timestep)
+    if(target$size() > 0 ){
+      replace_child(target, timestep, variables, parameters, events)
+      # Record disease-specific mortality
+      death_cause <- variables[[condition_disease]]$get_values(target)
+      for(i in seq_along(diseases)){
+        renderer$render(condition_disease_mortality[i], sum(death_cause == i), timestep)
+      }
     }
   }
 }
@@ -148,6 +183,20 @@ increment_prior_exposure_counter <- function(new_infections, target, condition_p
 #' @return Sampled disease that will infect the individual
 sample_disease <- function(p, n){
   sample.int(n = n, size = 1, prob = p)
+}
+
+#' Time since onset
+#'
+#' Estimate the time since the onset of symptoms for a given condition
+#'
+#' @param target Target children
+#' @param condition Condition
+#' @param variables Model variables
+#' @param timestep Timestep
+#'
+#' @return Vector of times
+time_since_onset <- function(target, condition, variables, timestep){
+  timestep - variables[[paste0(condition, "_symptom_start")]]$get_values(target)
 }
 
 #' Record prevalence
@@ -201,5 +250,14 @@ render_prior_exposure <- function(condition, variables, parameters, renderer){
   }
 }
 
-
+#' Record fever prevalence
+#'
+#' Record prevalence of fever
+#' @inheritParams condition_exposure
+render_fevers <- function(variables, parameters, renderer){
+  function(timestep){
+    x <- variables$dia_fever$get_index_of(1)
+    renderer$render("Fever_prevalence", x$size() / parameters$population, timestep)
+  }
+}
 

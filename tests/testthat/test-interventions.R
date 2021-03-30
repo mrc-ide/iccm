@@ -12,7 +12,7 @@ variables <- create_variables(parameters)
 
 test_that("vaccine impact works", {
   variables$rotavirus_vx <- mock_integer(rep(1, 4))
-  vi <- vaccine_impact(disease = "rotavirus", index = 4, target = individual::filter_bitset(variables$dia_status$get_index_of(values = "S"), 1), ages = 200, parameters$dia, variables)
+  vi <- vaccine_impact(disease = "rotavirus", index = 4, target = individual::filter_bitset(variables$dia_status$get_index_of(0), 1), ages = 200, parameters$dia, variables)
   expect_equal(vi, 1 - vaccine_effect(ages = 200, vx_start = parameters$dia$vx_start[4],
                                        vx_initial_efficacy = parameters$dia$vx_initial_efficacy[4],
                                        vx_hl = parameters$dia$vx_hl[4]))

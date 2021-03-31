@@ -184,11 +184,11 @@ test_that("Condition exposure works correctly", {
 
   cf <- condition_exposure(condition = "dia", variables = variables, parameters = parameters, events = events, renderer = renderer)
   # Stub so that individuals 1 and 3 are infected
-  mockery::stub(cf, "stats::runif", c(0, 1, 0))
+  mockery::stub(cf, "stats::runif", mockery::mock(c(0, 1, 0), c(0, 0)))
   # With disease index 1 and 2
   mockery::stub(cf, "sample_disease", mockery::mock(1, 2))
-  # Clinical durations, time to treatment seeking for HF, CHW, private
-  mockery::stub(cf, "stats::rpois", mockery::mock(c(5, 10), 1, 3, 0))
+  # Clinical durations, asymptomatic durations time to treatment seeking for HF, CHW, private
+  mockery::stub(cf, "stats::rpois", mockery::mock(c(5, 10), c(0, 0), 1, 3, 0, 0))
   ipec <- mockery::mock()
   mockery::stub(cf, "increment_prior_exposure_counter", ipec)
   ri <- mockery::mock()

@@ -15,6 +15,7 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
   condition_status <- paste0(condition, "_status")
   condition_fever <- paste0(condition, "_fever")
   condition_prior_disease <- paste0(condition, "_prior_", parameters[[condition]]$disease)
+  condition_asymptomatic <- paste0(condition, "_asymptomatic")
   condition_recover <- paste0(condition, "_recover")
   condition_symptom_start <- paste0(condition, "_symptom_start")
 
@@ -39,7 +40,7 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
         # Prior infections
         pi <- variables[[condition_prior_disease[i]]]$get_values(susceptibles)
         # Infection immunity modifier
-        ii <-  exposure_immunity(pi, p$ii_shape[i], p$ii_rate[i])
+        ii <- exposure_immunity(pi, p$ii_shape[i], p$ii_rate[i])
         # Vaccine modifier
         vi <- vaccine_impact(disease = disease, index = i, target = susceptibles, ages = ages, p = p, variables = variables)
         # LLIN modifier
@@ -61,20 +62,36 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
         infection_prob <- infection_prob[infected, , drop = FALSE]
         disease_index <- apply(infection_prob, 1, sample_disease, n = length(p$disease))
 
+        # Symptoms
+        # Prior infections
+        pi <- rep(NA, to_infect$size())
+        for(i in seq_along(p$disease)){
+          pi[which(disease_index == i)] <- variables[[condition_prior_disease[i]]]$get_values(to_infect)[which(disease_index == i)]
+        }
+        # Symptomatic immunity
+        ci <- clinical_immunity(pi, p$ci_shape[disease_index], p$ci_rate[disease_index])
+        symptomatic_index <- stats::runif(length(ci)) < ci
+        to_symptomatic <- individual::filter_bitset(to_infect, which(symptomatic_index))
+        to_asymptomatic <- individual::filter_bitset(to_infect, which(!symptomatic_index))
+
         # Update infected individuals
+        ## Both Symptomatic and Asymptomatic
+        ### Record disease
         variables[[condition_disease]]$queue_update(disease_index, to_infect)
+        ### Update infection counter
         increment_prior_exposure_counter(disease_index, to_infect, condition_prior_disease, variables)
-        variables[[condition_status]]$queue_update(2, to_infect)
-        variables[[condition_symptom_start]]$queue_update(timestep, to_infect)
-        to_fever <- to_infect$copy()$sample(p$prob_fever[disease_index])
+
+        ### For symptomatic
+        variables[[condition_status]]$queue_update(2, to_symptomatic)
+        variables[[condition_symptom_start]]$queue_update(timestep, to_symptomatic)
+        to_fever <- to_symptomatic$copy()$sample(p$prob_fever[disease_index[symptomatic_index]])
         variables[[condition_fever]]$queue_update(1, to_fever)
-        clinical_duration <- stats::rpois(to_infect$size(), p$clin_dur[disease_index])
-        events[[condition_recover]]$schedule(to_infect, delay = clinical_duration)
-        render_incidence(disease_index, condition, p$disease, timestep, renderer)
-
-        # Schedule treatment
-        to_treat <- to_infect$copy()$sample(parameters$treatment_seeking$prob_seek_treatment)
-
+        clinical_duration <- stats::rpois(to_symptomatic$size(), p$clin_dur[disease_index[symptomatic_index]])
+        asymptomatic_duration <- stats::rpois(to_symptomatic$size(), p$asymp_dur[disease_index[symptomatic_index]])
+        events[[condition_asymptomatic]]$schedule(to_symptomatic, delay = clinical_duration)
+        events[[condition_recover]]$schedule(to_symptomatic, delay = (clinical_duration + asymptomatic_duration))
+        render_incidence(disease_index[symptomatic_index], condition, p$disease, timestep, renderer)
+        to_treat <- to_symptomatic$copy()$sample(parameters$treatment_seeking$prob_seek_treatment)
         if(to_treat$size() > 0){
           to_treat_hf <- variables$provider_preference$get_index_of("HF")$and(to_treat)
           to_treat_chw <- variables$provider_preference$get_index_of("CHW")$and(to_treat)
@@ -84,6 +101,11 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
           events$chw_treatment$schedule(to_treat_chw, delay = parameters$chw$travel_time + 1 + stats::rpois(to_treat_chw$size(), parameters$treatment_seeking$treat_seeking_behaviour_delay))
           events$private_treatment$schedule(to_treat_private, delay = parameters$private$travel_time + 1 + stats::rpois(to_treat_private$size(), parameters$treatment_seeking$treat_seeking_behaviour_delay))
         }
+
+        ### For asymptomatic
+        variables[[condition_status]]$queue_update(1, to_asymptomatic)
+        asymptomatic_duration <- stats::rpois(to_asymptomatic$size(), p$asymp_dur[disease_index[!symptomatic_index]])
+        events[[condition_recover]]$schedule(to_asymptomatic, delay = asymptomatic_duration)
       }
     }
   }

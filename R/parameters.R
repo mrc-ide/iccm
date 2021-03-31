@@ -23,7 +23,7 @@ get_parameters <- function(user_overwrite = NULL){
     # Epidemiology
     het_sd = 0,#1.6,
     # Interventions
-    llin_coverage = 0.5,
+    llin_coverage = 0,
     rotavirus_vx_coverage = 0,
     pneumococcal_vx_coverage = 0.1,
     hib_vx_coverage = 0.1
@@ -36,8 +36,9 @@ get_parameters <- function(user_overwrite = NULL){
     sigma = c(0.005, 0.005, 0.005, 0.005),
     # Average duration of clinical episode
     clin_dur = c(14, 14, 14, 14),
+    asymp_dur = c(0, 0, 0, 0),
     daily_prob_severe = c(0.1, 0.2, 0.3, 0),
-    daily_prob_death = c(0.01, 0.02, 0.03, 0),
+    daily_prob_death = c(0.001, 0.002, 0.003, 0),
     prob_fever = c(0.5, 0.5, 0.5, 0.5),
     # Maternal immunity
     ## Half life
@@ -47,12 +48,51 @@ get_parameters <- function(user_overwrite = NULL){
     ii_shape = c(5, 5, 5, 5),
     ## rate
     ii_rate = c(1, 1, 1, 1),
+    # Clinical immunity
+    ## shape
+    ci_shape = c(0, 0, 0, 0),
+    ## rate
+    ci_rate = c(0, 0, 0, 0),
     # Vaccination
     vx_start = c(0, 0, 0, 0),
     vx_initial_efficacy = c(0, 0, 0, 0),
     vx_hl = c(0, 0, 0, 0),
     # TODO this should be a function of coverage:
     vx_ci = c(0, 0, 0, 0),
+    symptom_time_refer = 5
+  )
+
+  parameters$malaria <- list(
+    groups = 1,
+    disease = "pf",
+    index = 1,
+    sigma = 0.001,
+    # Average duration of clinical episode
+    clin_dur = 14,
+    asymp_dur = 50,
+    daily_prob_severe = 0.1,
+    daily_prob_death = 0.001,
+    prob_fever = 0.1,
+    # Maternal immunity
+    ## Half life
+    mi_hl = 100,
+    # Infection immunity
+    ## shape
+    ii_shape = 5,
+    ## rate
+    ii_rate = 1,
+    # Clinical immunity
+    ## shape
+    ci_shape = 5,
+    ## rate
+    ci_rate = 1,
+    # Vaccination
+    vx_start = 0,
+    vx_initial_efficacy = 0,
+    vx_hl = 0,
+    # TODO this should be a function of coverage:
+    vx_ci = 0,
+    llin_efficacy = 0.5,
     symptom_time_refer = 5
   )
 

@@ -6,8 +6,13 @@
 #'
 #' @return List of events
 create_events <- function(variables, parameters){
-  # Symptomatic to susceptible
+  # To susceptible
   dia_recover <- individual::TargetedEvent$new(parameters$population)
+  malaria_recover <- individual::TargetedEvent$new(parameters$population)
+
+  # To asymptomatic
+  dia_asymptomatic <- individual::TargetedEvent$new(parameters$population)
+  malaria_asymptomatic <- individual::TargetedEvent$new(parameters$population)
 
   # Treatment
   hf_treatment <- individual::TargetedEvent$new(parameters$population)
@@ -17,8 +22,12 @@ create_events <- function(variables, parameters){
   # Demographic
   graduate <- individual::TargetedEvent$new(parameters$population)
 
+  # Note ordering of events does matter here
   events <- list(
+    dia_asymptomatic = dia_asymptomatic,
     dia_recover = dia_recover,
+    malaria_asymptomatic = malaria_asymptomatic,
+    malaria_recover = malaria_recover,
     hf_treatment = hf_treatment,
     chw_treatment = chw_treatment,
     private_treatment = private_treatment,
@@ -36,7 +45,10 @@ create_events <- function(variables, parameters){
 #' @param parameters Model parameters
 #' @param renderer Model renderer
 create_event_listeners <- function(events, variables, parameters, renderer){
+  events$dia_asymptomatic$add_listener(asymptomatic_event(variables, "dia"))
   events$dia_recover$add_listener(recover_event(variables, "dia"))
+  events$malaria_asymptomatic$add_listener(asymptomatic_event(variables, "malaria"))
+  events$malaria_recover$add_listener(recover_event(variables, "malaria"))
   events$hf_treatment$add_listener(hf_treat(variables, parameters, renderer, events))
   events$chw_treatment$add_listener(chw_treat(variables, parameters, renderer, events))
   events$private_treatment$add_listener(private_treat(variables, parameters, renderer, events))
@@ -70,9 +82,36 @@ recover_event <- function(variables, condition){
   condition_fever <- paste0(condition, "_fever")
 
   function(timestep, target){
+    #if(condition == "dia"){
+    #  print("Recover")
+    #  print(target$size())
+    #}
     # Set status = susceptible
     variables[[condition_status]]$queue_update(0, target)
     variables[[condition_disease]]$queue_update(0, target)
+    variables[[condition_fever]]$queue_update(0, target)
+  }
+}
+
+#' Asymptomatic event
+#'
+#' A move to asymptomatic. Resets status back to 1 (asymptomatic) and clears any fever.
+#'
+#' @param condition Condition recovered from
+#' @inheritParams create_event_listeners
+#'
+#' @return Event
+asymptomatic_event <- function(variables, condition){
+  condition_status <- paste0(condition, "_status")
+  condition_fever <- paste0(condition, "_fever")
+
+  function(timestep, target){
+    #if(condition == "dia"){
+    #  print("Asymp")
+    #  print(target$size())
+    #}
+    # Set status = asymptomatic
+    variables[[condition_status]]$queue_update(1, target)
     variables[[condition_fever]]$queue_update(0, target)
   }
 }

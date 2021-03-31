@@ -55,16 +55,25 @@ create_variables <- function(parameters){
 
   variables <- list(
     birth_t = birth_t,
+
     dia_status = dia_status,
     dia_disease = dia_disease,
     dia_symptom_start = dia_symptom_start,
     dia_fever = dia_fever,
-    provider_preference = provider_preference,
-    awaiting_followup = awaiting_followup,
     dia_prior_bacteria = dia_prior_bacteria,
     dia_prior_virus = dia_prior_virus,
     dia_prior_parasite = dia_prior_parasite,
     dia_prior_rotavirus = dia_prior_rotavirus,
+
+    malaria_status = malaria_status,
+    malaria_disease = malaria_disease,
+    malaria_symptom_start = malaria_symptom_start,
+    malaria_fever = malaria_fever,
+    malaria_prior_pf = malaria_prior_pf,
+
+    provider_preference = provider_preference,
+    awaiting_followup = awaiting_followup,
+
     het = het,
     llin = llin,
     rotavirus_vx = rotavirus_vx,

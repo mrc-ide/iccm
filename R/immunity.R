@@ -27,6 +27,21 @@ exposure_immunity <- function(exposure, shape, rate){
   1 - stats::pgamma(q = exposure, shape = shape, rate = rate)
 }
 
+#' Clinical immunity
+#'
+#' Modifier of clinical disease 0 (all asymptomatic) and 1 (all symptomatic), dependent on
+#' a child's prior exposure.
+#'
+#' @param exposure Number of previous infections
+#' @param shape Shape parameter
+#' @param rate Rate parameter (for a fixed shape, a higher rate will lead to a faster build up of immunity)
+#'
+#' @return Exposure immunity modifier
+#' @export
+clinical_immunity <- function(exposure, shape, rate){
+  1 - stats::pgamma(q = exposure, shape = shape, rate = rate)
+}
+
 
 #' Draw individual level heterogeneities
 #'

@@ -51,7 +51,7 @@ vaccine_effect <- function(ages, vx_start, vx_initial_efficacy, vx_hl){
 llin_impact <- function(disease, target, p, variables){
   modifier <- rep(1, target$size())
   if(disease == "pf"){
-    modifier = variables$llin$get_values(target) * p$llin_efficacy
+    modifier = 1 - variables$llin$get_values(target) * p$llin_efficacy
   }
   return(modifier)
 }
@@ -62,7 +62,7 @@ llin_impact <- function(disease, target, p, variables){
 community_impact <- function(disease, index, p){
   community_modifier <- 1
   if(disease %in% c("hib", "pneumococcus", "rotavirus")){
-    community_modifier <- 1 -p$vx_ci[index]
+    community_modifier <- 1 - p$vx_ci[index]
   }
   if(disease == "llin"){
     community_modifier <- 1- p$llin_ci

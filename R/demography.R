@@ -50,6 +50,12 @@ replace_child <- function(target, timestep, variables, parameters, events) {
   variables$dia_prior_parasite$queue_update(0, target)
   variables$dia_prior_rotavirus$queue_update(0, target)
 
+  variables$malaria_status$queue_update(0, target)
+  variables$malaria_disease$queue_update(0, target)
+  variables$malaria_symptom_start$queue_update(NA, target)
+  variables$malaria_fever$queue_update(0, target)
+  variables$malaria_prior_pf$queue_update(0, target)
+
   n <- target$size()
   # re-draw individual level heterogeneity
   new_het <- heterogeneity(n, parameters$het_sd)
@@ -63,6 +69,9 @@ replace_child <- function(target, timestep, variables, parameters, events) {
 
   # TODO: Clear any scheduled disease progression
   events$dia_recover$clear_schedule(target)
+  events$dia_asymptomatic$clear_schedule(target)
+  events$malaria_recover$clear_schedule(target)
+  events$malaria_asymptomatic$clear_schedule(target)
 }
 
 #' Get children's ages

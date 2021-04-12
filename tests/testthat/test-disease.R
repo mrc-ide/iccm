@@ -215,3 +215,63 @@ test_that("Condition exposure works correctly", {
   expect_equal(mockery::mock_args(events$chw_treatment$schedule)[[1]][[2]], parameters$chw$travel_time + 1 + 3)
   expect_equal(length(mockery::mock_args(events$private_treatment$schedule)[[1]][[1]]$to_vector()), 0)
 })
+
+test_that("Condition exposure works correctly - asymptomatic pathway", {
+  variables$malaria_status <- mock_integer(c(0, 0, 0, 2))
+  variables$malaria_disease <- mock_integer(c(0, 0, 0, 1))
+  variables$malaria_symptom_start <- mock_integer(rep(NA, 4))
+  variables$malaria_fever <- mock_integer(c(0, 0, 0, 0))
+  events$malaria_recover <- mock_event()
+  variables$provider_preference <- mock_category(c("None", "HF", "CHW", "Private"), c("HF", "HF", "CHW", "CHW"))
+  events$chw_treatment <- mock_event()
+  events$hf_treatment <- mock_event()
+  events$private_treatment <- mock_event()
+
+  # All get fever
+  parameters$malaria$prob_fever <- rep(1, 4)
+  # All seek treatment
+  parameters$treatment_seeking$prob_seek_treatment <- 1
+
+  cf <- condition_exposure(condition = "malaria", variables = variables, parameters = parameters, events = events, renderer = renderer)
+  # Stub so that individuals 1 and 3 are infected, 1 is symptomatic, 2 asymptomatic
+  mockery::stub(cf, "stats::runif", mockery::mock(c(0, 1, 0), c(0, 2)))
+  # With disease index 1 and 1
+  mockery::stub(cf, "sample_disease", mockery::mock(1, 1))
+  # Clinical duration, asymptomatic duration time to treatment seeking for HF, CHW, private
+  mockery::stub(cf, "stats::rpois", mockery::mock(5, 5, 1, 3, 0, 7))
+  ipec <- mockery::mock()
+  mockery::stub(cf, "increment_prior_exposure_counter", ipec)
+  ri <- mockery::mock()
+  mockery::stub(cf, "render_incidence", ri)
+
+  cf(1)
+
+  # Work through all of the actions call in cf
+  expect_equal(mockery::mock_args(variables$malaria_disease$queue_update)[[1]][[1]], c(1, 1))
+  expect_equal(mockery::mock_args(variables$malaria_disease$queue_update)[[1]][[2]]$to_vector(), c(1, 3))
+  mockery::expect_called(ipec, 1)
+  # First to symptomatic
+  expect_equal(mockery::mock_args(variables$malaria_status$queue_update)[[1]][[1]], 2)
+  expect_equal(mockery::mock_args(variables$malaria_status$queue_update)[[1]][[2]]$to_vector(), 1)
+  # Second to asymptomatic
+  expect_equal(mockery::mock_args(variables$malaria_status$queue_update)[[2]][[1]], 1)
+  expect_equal(mockery::mock_args(variables$malaria_status$queue_update)[[2]][[2]]$to_vector(), 3)
+
+  expect_equal(mockery::mock_args(variables$malaria_symptom_start$queue_update)[[1]][[1]], 1)
+  expect_equal(mockery::mock_args(variables$malaria_symptom_start$queue_update)[[1]][[2]]$to_vector(), 1)
+
+  expect_equal(mockery::mock_args(variables$malaria_fever$queue_update)[[1]][[1]], 1)
+  expect_equal(mockery::mock_args(variables$malaria_fever$queue_update)[[1]][[2]]$to_vector(), 1)
+
+  expect_equal(mockery::mock_args(events$malaria_recover$schedule)[[1]][[1]]$to_vector(), 1)
+  expect_equal(mockery::mock_args(events$malaria_recover$schedule)[[1]][[2]], 10)
+
+  expect_equal(mockery::mock_args(events$malaria_recover$schedule)[[2]][[1]]$to_vector(), 3)
+  expect_equal(mockery::mock_args(events$malaria_recover$schedule)[[2]][[2]], 7)
+
+  mockery::expect_called(ri, 1)
+  expect_equal(mockery::mock_args(events$hf_treatment$schedule)[[1]][[1]]$to_vector(), 1)
+  expect_equal(mockery::mock_args(events$hf_treatment$schedule)[[1]][[2]], parameters$hf$travel_time + 1 + 1)
+  expect_equal(length(mockery::mock_args(events$chw_treatment$schedule)[[1]][[1]]$to_vector()), 0)
+  expect_equal(length(mockery::mock_args(events$private_treatment$schedule)[[1]][[1]]$to_vector()), 0)
+})

@@ -55,7 +55,7 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
       }
 
       # Draw those infected
-      infected <- stats::runif(susceptibles$size(), 0, 1) < rowSums(infection_prob)
+      infected <- stats::runif(susceptibles$size(), 0, 1) < (1 - apply(1 - infection_prob, 1, prod))
       if(sum(infected) > 0){
         to_infect <- individual::filter_bitset(susceptibles, which(infected))
         # Draw which disease

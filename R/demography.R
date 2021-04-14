@@ -49,12 +49,14 @@ replace_child <- function(target, timestep, variables, parameters, events) {
   variables$dia_prior_virus$queue_update(0, target)
   variables$dia_prior_parasite$queue_update(0, target)
   variables$dia_prior_rotavirus$queue_update(0, target)
+  variables$dia_last_tx$queue_update(NA, target)
 
   variables$malaria_status$queue_update(0, target)
   variables$malaria_disease$queue_update(0, target)
   variables$malaria_symptom_start$queue_update(NA, target)
   variables$malaria_fever$queue_update(0, target)
   variables$malaria_prior_pf$queue_update(0, target)
+  variables$malaria_last_tx$queue_update(NA, target)
 
   n <- target$size()
   # re-draw individual level heterogeneity

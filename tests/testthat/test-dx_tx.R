@@ -18,3 +18,9 @@ test_that("provider works", {
   expect_equal(px(disease, 0.51), c(TRUE, TRUE, TRUE, TRUE))
   expect_equal(px(disease, 0.5), c(FALSE, FALSE, FALSE, FALSE))
 })
+
+
+test_that("treatment prophylaxis works", {
+  expect_equal(treatment_prophylaxis(c(0, NA, 100), 100), c(0, 1, 1 - exp(-100 * (1/100))))
+  expect_gt(treatment_prophylaxis(5, 100), treatment_prophylaxis(1, 100))
+})

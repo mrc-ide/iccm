@@ -28,6 +28,9 @@ create_variables <- function(parameters){
   dia_prior_virus <- individual::IntegerVariable$new(initial_values = dia_prior[,2])
   dia_prior_parasite <- individual::IntegerVariable$new(initial_values = dia_prior[,3])
   dia_prior_rotavirus <- individual::IntegerVariable$new(initial_values = dia_prior[,4])
+  ### Previous treatment
+  dia_last_tx <- individual::IntegerVariable$new(rep(NA, size))
+
   ## Malaria
   ### Infection status (0 = Uninfected, 1 = Asymptomatically infected, 2 = clinically infected, 3 = severely infected)
   malaria_status <- individual::IntegerVariable$new(rep(0, size))
@@ -39,6 +42,8 @@ create_variables <- function(parameters){
   malaria_fever <- individual::IntegerVariable$new(rep(0, size))
   malaria_prior <- prior_exposure_matrix(parameters$malaria, size, initial_age, est_het)
   malaria_prior_pf <- individual::IntegerVariable$new(initial_values = malaria_prior[,1])
+  ### Previous treatment
+  malaria_last_tx <- individual::IntegerVariable$new(rep(NA, size))
 
   # Treatment seeking
   est_provider_preference <- sample_preference(size, parameters)
@@ -64,12 +69,14 @@ create_variables <- function(parameters){
     dia_prior_virus = dia_prior_virus,
     dia_prior_parasite = dia_prior_parasite,
     dia_prior_rotavirus = dia_prior_rotavirus,
+    dia_last_tx = dia_last_tx,
 
     malaria_status = malaria_status,
     malaria_disease = malaria_disease,
     malaria_symptom_start = malaria_symptom_start,
     malaria_fever = malaria_fever,
     malaria_prior_pf = malaria_prior_pf,
+    malaria_last_tx = malaria_last_tx,
 
     provider_preference = provider_preference,
     awaiting_followup = awaiting_followup,

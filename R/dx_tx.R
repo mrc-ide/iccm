@@ -38,6 +38,7 @@ give_ors <- function(target, parameters, variables, events, timestep){
 #' @inheritParams give_ors
 give_severe_treatment_diarrhoea <- function(target, parameters, variables, events, timestep){
   target <- target$copy()$sample(parameters$hf$severe_diarrhoea_efficacy)
+  variables$dia_last_tx$queue_update(timestep, target)
   cure(target, "dia", variables, events)
 }
 
@@ -54,3 +55,15 @@ cure <- function(target, condition, variables, events){
   events[[paste0(condition, "_recover")]]$clear_schedule(target)
 }
 
+#' Treatment prophylaxis modifier
+#'
+#' @param time_since_treatment Time since disease last treated
+#' @param pr_hl Prophylaxis half life
+#'
+#' @return Treatment prophylaxis effect
+treatment_prophylaxis <- function(time_since_treatment, pr_hl){
+  tp <- 1 - exp(-time_since_treatment * (1 / pr_hl))
+  # Individuals who have never received treatment have no prophylaxis
+  tp[is.na(tp)] <- 1
+  return(tp)
+}

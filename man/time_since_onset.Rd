@@ -4,14 +4,12 @@
 \alias{time_since_onset}
 \title{Time since onset}
 \usage{
-time_since_onset(target, condition, variables, timestep)
+time_since_onset(target, symptom_start_var, timestep)
 }
 \arguments{
 \item{target}{Target children}
 
-\item{condition}{Condition}
-
-\item{variables}{Model variables}
+\item{symptom_start_var}{Variable of symptom start times}
 
 \item{timestep}{Timestep}
 }

@@ -41,7 +41,7 @@ test_that("time since onset estimated correctly", {
   symptom_start <- c(10, 20, 30, 40)
   variables$dia_symptom_start <- mock_integer(symptom_start)
 
-  expect_equal(time_since_onset(target = pop_bitset, condition = "dia", variables = variables, timestep = 100), 100 - symptom_start)
+  expect_equal(time_since_onset(target = pop_bitset, symptom_start_var = variables$dia_symptom_start, timestep = 100), 100 - symptom_start)
 })
 
 test_that("Prior exposures incremented correctly", {

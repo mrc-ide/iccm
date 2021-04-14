@@ -110,7 +110,8 @@ get_parameters <- function(user_overwrite = NULL){
   parameters$dx_tx <- list(
     rdt_sensitivity = 1,
     rdt_specificity = 1,
-    ors_efficacy = 0.75
+    ors_efficacy = 0.75,
+    act_efficacy = 0.95
   )
 
   parameters$hf <- list(
@@ -121,7 +122,10 @@ get_parameters <- function(user_overwrite = NULL){
     severe_diarrhoea_specificity = 1,
     severe_diarrhoea_efficacy = 1,
     diarrhoea_sensitivity = 1,
-    diarrhoea_specificity = 1
+    diarrhoea_specificity = 1,
+    severe_malaria_sensitivity = 1,
+    severe_malaria_specificity = 1,
+    severe_malaria_efficacy = 1
   )
 
   parameters$chw <- list(
@@ -133,6 +137,8 @@ get_parameters <- function(user_overwrite = NULL){
     severe_diarrhoea_efficacy = 1,
     diarrhoea_sensitivity = 1,
     diarrhoea_specificity = 1,
+    severe_malaria_sensitivity = 1,
+    severe_malaria_specificity = 1,
     followup_period = 14
   )
 

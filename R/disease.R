@@ -18,6 +18,7 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
   condition_asymptomatic <- paste0(condition, "_asymptomatic")
   condition_recover <- paste0(condition, "_recover")
   condition_symptom_start <- paste0(condition, "_symptom_start")
+  condition_last_tx <- paste0(condition, "_last_tx")
 
   function(timestep){
     # Get susceptible indices
@@ -28,6 +29,8 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
       ages <- get_age(timestep, variables, susceptibles)
       # Individual level heterogeneity modifier
       het <- variables$het$get_values(susceptibles)
+      # Time since last treatment (if any)
+      time_since_treatment <- timestep - variables[[condition_last_tx]]$get_values(susceptibles)
 
       # Create an empty matrix to store the infection probabilities for each child X disease
       infection_prob <- matrix(0, nrow = susceptibles$size(), ncol = p$groups)
@@ -47,9 +50,10 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
         li <- llin_impact(disease = disease, target = susceptibles, p = p, variables = variables)
         # Community impacts modifier (vaccine or LLIN)
         ci <- community_impact(disease = disease, index = i, p = p)
+        # Treatment prophylaxis modifier
+        tp <- treatment_prophylaxis(time_since_treatment, p$prophylaxis_hl[i])
         # Estimate infection rate
-        # TODO: treatment prophylaxsis
-        infection_rate <- p$sigma[i] * mi * ii * het * vi * li * ci
+        infection_rate <- p$sigma[i] * mi * ii * het * vi * li * ci * tp
         # Estimate infection probability
         infection_prob[,i] <- rate_to_prob(infection_rate)
       }

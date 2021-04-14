@@ -69,3 +69,5 @@ community_impact <- function(disease, index, p){
   }
   return(community_modifier)
 }
+
+

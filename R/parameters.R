@@ -59,6 +59,8 @@ get_parameters <- function(user_overwrite = NULL){
     vx_hl = c(0, 0, 0, 0),
     # TODO this should be a function of coverage:
     vx_ci = c(0, 0, 0, 0),
+    # Treatment prophylaxis
+    prophylaxis_hl = c(30, 0, 0, 14),
     symptom_time_refer = 5
   )
 
@@ -92,6 +94,8 @@ get_parameters <- function(user_overwrite = NULL){
     vx_hl = 0,
     # TODO this should be a function of coverage:
     vx_ci = 0,
+    # Treatment prophylaxis
+    prophylaxis_hl = 28,
     llin_efficacy = 0.5,
     symptom_time_refer = 5
   )

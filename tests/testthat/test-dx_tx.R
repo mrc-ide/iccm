@@ -1,24 +1,12 @@
 test_that("diagnostic works", {
-  status <- c(0, 1, 2, 3)
-  mockery::stub(dx, "stats::runif", rep(0.5, 4))
-
-  expect_equal(dx(status, sens = 1, spec = 1, positive = 1:3), c(FALSE, TRUE, TRUE, TRUE))
-  expect_equal(dx(status, sens = 0.51, spec = 1, positive = 1:3), c(FALSE, TRUE, TRUE, TRUE))
-  expect_equal(dx(status, sens = 0.5, spec = 1, positive = 1:3), rep(FALSE, 4))
-  expect_equal(dx(status, sens = 1, spec = 0.49, positive = 1:3), c(TRUE, TRUE, TRUE, TRUE))
-  expect_equal(dx(status, sens = 1, spec = 0.5, positive = 1:3), c(FALSE, TRUE, TRUE, TRUE))
-  expect_equal(dx(status, sens = 1, spec = 1, positive = 3), c(FALSE, FALSE, FALSE, TRUE))
+  target <- individual::Bitset$new(8)
+  target <- target$insert(c(1, 3, 5, 7))
+  status <- individual::IntegerVariable$new(c(0, 0, 1, 1, 2, 2, 3, 3))
+  expect_equal(dx(target, status, sens = 1, spec = 1, positive = 3, negative = 0:2)$to_vector(), 7)
+  expect_equal(dx(target, status, sens = 0, spec = 0, positive = 3, negative = 0:2)$to_vector(), c(1, 3, 5))
+  expect_equal(dx(target, status, sens = 1, spec = 1, positive = 2:3, negative = 0:1)$to_vector(), c(5, 7))
+  expect_equal(dx(target, status, sens = 0, spec = 0, positive = 2:3, negative = 0:1)$to_vector(), c(1, 3))
 })
-
-test_that("provider works", {
-  disease <- c(1, 2, 3, 4)
-  mockery::stub(px, "stats::runif", rep(0.5, 4))
-
-  expect_equal(px(disease, 1), c(TRUE, TRUE, TRUE, TRUE))
-  expect_equal(px(disease, 0.51), c(TRUE, TRUE, TRUE, TRUE))
-  expect_equal(px(disease, 0.5), c(FALSE, FALSE, FALSE, FALSE))
-})
-
 
 test_that("treatment prophylaxis works", {
   expect_equal(treatment_prophylaxis(c(0, NA, 100), 100), c(0, 1, 1 - exp(-100 * (1/100))))

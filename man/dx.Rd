@@ -4,20 +4,24 @@
 \alias{dx}
 \title{Diagnostic result}
 \usage{
-dx(status, sens, spec, positive = 1:3)
+dx(target, status_variable, sens, spec, positive, negative)
 }
 \arguments{
-\item{status}{Child status}
+\item{target}{Children visiting provider}
+
+\item{status_variable}{Disease status variable}
 
 \item{sens}{Diagnostic sensitivity}
 
 \item{spec}{Diagnostic specificity}
 
-\item{positive}{Status categories associated that are true +ves}
+\item{positive}{Status categories that are true +ves}
+
+\item{negative}{Status categories  that are true -ves}
 }
 \value{
-Boolean vector, TRUE = positive test, FALSE = negative test
+Bitset
 }
 \description{
-Returns a boolean indicating results of a diagnostic test
+Returns a bitset of those testing positive
 }

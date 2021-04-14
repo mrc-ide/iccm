@@ -216,13 +216,23 @@ sample_disease <- function(p, n){
 #' Estimate the time since the onset of symptoms for a given condition
 #'
 #' @param target Target children
-#' @param condition Condition
-#' @param variables Model variables
+#' @param symptom_start_var Variable of symptom start times
 #' @param timestep Timestep
 #'
 #' @return Vector of times
-time_since_onset <- function(target, condition, variables, timestep){
-  timestep - variables[[paste0(condition, "_symptom_start")]]$get_values(target)
+time_since_onset <- function(target, symptom_start_var, timestep){
+  timestep - symptom_start_var$get_values(target)
+}
+
+#' Any fever
+#'
+#' Returns a bitset of individuals who have fever of any cause
+#'
+#' @param variables Model variables
+#'
+#' @return Bitset
+any_fever <- function(variables){
+  variables$dia_fever$get_index_of(1)$or(variables$malaria_fever$get_index_of(1))
 }
 
 #' Record prevalence
@@ -282,8 +292,7 @@ render_prior_exposure <- function(condition, variables, parameters, renderer){
 #' @inheritParams condition_exposure
 render_fevers <- function(variables, parameters, renderer){
   function(timestep){
-    x <- variables$dia_fever$get_index_of(1)
-    renderer$render("Fever_prevalence", x$size() / parameters$population, timestep)
+    renderer$render("Fever_prevalence", any_fever(variables)$size() / parameters$population, timestep)
   }
 }
 

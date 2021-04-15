@@ -22,18 +22,23 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
 
   function(timestep){
     # Get susceptible indices
-    susceptibles <- variables[[condition_status]]$get_index_of(0)
+    if(condition == "malaria"){
+      # Super-infection of asymptomatic and symptomatically infected individuals for malaria
+      exposed <- variables[[condition_status]]$get_index_of(0:2)
+    } else {
+      exposed <- variables[[condition_status]]$get_index_of(0)
+    }
 
-    if(susceptibles$size() > 0){
+    if(exposed$size() > 0){
       # Get ages (for maternal immunity estimation)
-      ages <- get_age(timestep, variables, susceptibles)
+      ages <- get_age(timestep, variables, exposed)
       # Individual level heterogeneity modifier
-      het <- variables$het$get_values(susceptibles)
+      het <- variables$het$get_values(exposed)
       # Time since last treatment (if any)
-      time_since_treatment <- timestep - variables[[condition_last_tx]]$get_values(susceptibles)
+      time_since_treatment <- timestep - variables[[condition_last_tx]]$get_values(exposed)
 
       # Create an empty matrix to store the infection probabilities for each child X disease
-      infection_prob <- matrix(0, nrow = susceptibles$size(), ncol = p$groups)
+      infection_prob <- matrix(0, nrow = exposed$size(), ncol = p$groups)
 
       # Estimate infection probability for each disease within condition
       for(i in seq_along(p$disease)){
@@ -41,13 +46,13 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
         # Maternal immunity modifier
         mi <- maternal_immunity(ages, p$mi_hl[i])
         # Prior infections
-        pi <- variables[[condition_prior_disease[i]]]$get_values(susceptibles)
+        pi <- variables[[condition_prior_disease[i]]]$get_values(exposed)
         # Infection immunity modifier
         ii <- exposure_immunity(pi, p$ii_shape[i], p$ii_rate[i])
         # Vaccine modifier
-        vi <- vaccine_impact(disease = disease, index = i, target = susceptibles, ages = ages, p = p, variables = variables)
+        vi <- vaccine_impact(disease = disease, index = i, target = exposed, ages = ages, p = p, variables = variables)
         # LLIN modifier
-        li <- llin_impact(disease = disease, target = susceptibles, p = p, variables = variables)
+        li <- llin_impact(disease = disease, target = exposed, p = p, variables = variables)
         # Community impacts modifier (vaccine or LLIN)
         ci <- community_impact(disease = disease, index = i, p = p)
         # Treatment prophylaxis modifier
@@ -59,9 +64,15 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
       }
 
       # Draw those infected
-      infected <- stats::runif(susceptibles$size(), 0, 1) < (1 - apply(1 - infection_prob, 1, prod))
+      infected <- stats::runif(exposed$size(), 0, 1) < (1 - apply(1 - infection_prob, 1, prod))
       if(sum(infected) > 0){
-        to_infect <- individual::filter_bitset(susceptibles, which(infected))
+        to_infect <- individual::filter_bitset(exposed, which(infected))
+
+        # Clear infection schedule - only relevant for superinfection
+        ## TODO: Ideally we would re-draw and check for the longest duration event
+        events[[condition_asymptomatic]]$clear_schedule(to_infect)
+        events[[condition_recover]]$clear_schedule(to_infect)
+
         # Draw which disease
         infection_prob <- infection_prob[infected, , drop = FALSE]
         disease_index <- apply(infection_prob, 1, sample_disease, n = length(p$disease))
@@ -74,7 +85,8 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
         }
         # Symptomatic immunity
         ci <- clinical_immunity(pi, p$ci_shape[disease_index], p$ci_rate[disease_index])
-        symptomatic_index <- stats::runif(length(ci)) < ci
+        # For malaria super-infection those already clinically infected remain so
+        symptomatic_index <- (stats::runif(length(ci)) < ci) | (variables[[condition_status]]$get_values(to_infect) == 2)
         to_symptomatic <- individual::filter_bitset(to_infect, which(symptomatic_index))
         to_asymptomatic <- individual::filter_bitset(to_infect, which(!symptomatic_index))
 

@@ -234,7 +234,7 @@ test_that("Condition exposure works correctly - asymptomatic pathway", {
 
   cf <- condition_exposure(condition = "malaria", variables = variables, parameters = parameters, events = events, renderer = renderer)
   # Stub so that individuals 1 and 3 are infected, 1 is symptomatic, 2 asymptomatic
-  mockery::stub(cf, "stats::runif", mockery::mock(c(0, 1, 0), c(0, 2)))
+  mockery::stub(cf, "stats::runif", mockery::mock(c(0, 1, 0, 1), c(0, 2)))
   # With disease index 1 and 1
   mockery::stub(cf, "sample_disease", mockery::mock(1, 1))
   # Clinical duration, asymptomatic duration time to treatment seeking for HF, CHW, private

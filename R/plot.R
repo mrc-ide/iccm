@@ -41,6 +41,44 @@ plot_sim <- function(output, return_list = FALSE) {
                                "dia_prior_rotavirus"),
                              c("Bacteria", "Virus","Parasite", "Rotavirus"),
                              "N"),
+    pneumonia_prev_plot = sub_plot(output,
+                             "pneumonia prevalence",
+                             c("pneumonia_prevalence",
+                               "pneumonia_bacteria_prevalence",
+                               "pneumonia_virus_prevalence",
+                               "pneumonia_fungus_prevalence",
+                               "pneumonia_pneumococcus_prevalence",
+                               "pneumonia_hib_prevalence"),
+                             c("All", "Bacteria", "Virus","Fungus", "Pneumococcus", "hib"),
+                             "Prevalence"),
+    pneumonia_inc_plot = sub_plot(output,
+                            "pneumonia incidence",
+                            c("pneumonia_incidence",
+                              "pneumonia_bacteria_incidence",
+                              "pneumonia_virus_incidence",
+                              "pneumonia_fungus_incidence",
+                              "pneumonia_pneumococcus_incidence",
+                              "pneumonia_hib_incidence"),
+                            c("All", "Bacteria", "Virus","Fungus", "Pneumococcus", "hib"),
+                            "Incidence"),
+    pneumonia_mort_plot = sub_plot(output,
+                             "pneumonia mortality",
+                             c("pneumonia_bacteria_mortality",
+                               "pneumonia_virus_mortality",
+                               "pneumonia_fungus_mortality",
+                               "pneumonia_pneumococcus_mortality",
+                               "pneumonia_hib_mortality"),
+                             c("Bacteria", "Virus","Fungus", "Pneumococcus", "hib"),
+                             "Mortality"),
+    pneumonia_prior_plot = sub_plot(output,
+                              "pneumonia prior",
+                              c("pneumonia_prior_bacteria",
+                                "pneumonia_prior_virus",
+                                "pneumonia_prior_fungus",
+                                "pneumonia_prior_pneumococcus",
+                                "pneumonia_prior_hib"),
+                              c("Bacteria", "Virus","Fungus", "Pneumococcus", "hib"),
+                              "N"),
     malaria_prev_plot = sub_plot(output,
                              "Malaria prevalence",
                              c("malaria_prevalence",
@@ -98,7 +136,7 @@ plot_sim <- function(output, return_list = FALSE) {
   )
 
   if(!return_list){
-    plots <- patchwork::wrap_plots(plots)
+    plots <- patchwork::wrap_plots(plots, ncol = 4)
   }
 
   return(plots)

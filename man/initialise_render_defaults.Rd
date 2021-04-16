@@ -9,7 +9,14 @@ initialise_render_defaults(
   zero_default = c("chw_patients", "chw_ors", "chw_followup", "chw_referral",
     "private_patients", "private_ors", "hf_patients", "hf_ors", "hf_severe_diarrhoea_tx",
     "graduation", "dia_bacteria_mortality", "dia_virus_mortality",
-    "dia_parasite_mortality", "dia_rotavirus_mortality", "malaria_pf_mortality")
+    "dia_parasite_mortality", "dia_rotavirus_mortality", "malaria_pf_mortality",
+    "pneumonia_bacteria_mortality", "pneumonia_virus_mortality",
+    "pneumonia_fungus_mortality", "pneumonia_pneumococcus_mortality",
+    "pneumonia_hib_mortality", "malaria_pf_mortality", "dia_bacteria_incidence",
+    "dia_virus_incidence",      "dia_parasite_incidence", "dia_rotavirus_incidence",
+    "malaria_pf_incidence", "pneumonia_bacteria_incidence", "pneumonia_virus_incidence",
+    "pneumonia_fungus_incidence", "pneumonia_pneumococcus_incidence",
+    "pneumonia_hib_incidence", "malaria_pf_incidence")
 )
 }
 \arguments{

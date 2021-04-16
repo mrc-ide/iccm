@@ -8,10 +8,12 @@
 create_events <- function(variables, parameters){
   # To susceptible
   dia_recover <- individual::TargetedEvent$new(parameters$population)
+  pneumonia_recover <- individual::TargetedEvent$new(parameters$population)
   malaria_recover <- individual::TargetedEvent$new(parameters$population)
 
   # To asymptomatic
   dia_asymptomatic <- individual::TargetedEvent$new(parameters$population)
+  pneumonia_asymptomatic <- individual::TargetedEvent$new(parameters$population)
   malaria_asymptomatic <- individual::TargetedEvent$new(parameters$population)
 
   # Treatment
@@ -26,6 +28,8 @@ create_events <- function(variables, parameters){
   events <- list(
     dia_asymptomatic = dia_asymptomatic,
     dia_recover = dia_recover,
+    pneumonia_asymptomatic = pneumonia_asymptomatic,
+    pneumonia_recover = pneumonia_recover,
     malaria_asymptomatic = malaria_asymptomatic,
     malaria_recover = malaria_recover,
     hf_treatment = hf_treatment,
@@ -47,6 +51,8 @@ create_events <- function(variables, parameters){
 create_event_listeners <- function(events, variables, parameters, renderer){
   events$dia_asymptomatic$add_listener(asymptomatic_event(variables, "dia"))
   events$dia_recover$add_listener(recover_event(variables, "dia"))
+  events$pneumonia_asymptomatic$add_listener(asymptomatic_event(variables, "pneumonia"))
+  events$pneumonia_recover$add_listener(recover_event(variables, "pneumonia"))
   events$malaria_asymptomatic$add_listener(asymptomatic_event(variables, "malaria"))
   events$malaria_recover$add_listener(recover_event(variables, "malaria"))
   events$hf_treatment$add_listener(hf_treat(variables, parameters, renderer, events))
@@ -82,10 +88,6 @@ recover_event <- function(variables, condition){
   condition_fever <- paste0(condition, "_fever")
 
   function(timestep, target){
-    #if(condition == "dia"){
-    #  print("Recover")
-    #  print(target$size())
-    #}
     # Set status = susceptible
     variables[[condition_status]]$queue_update(0, target)
     variables[[condition_disease]]$queue_update(0, target)
@@ -106,10 +108,6 @@ asymptomatic_event <- function(variables, condition){
   condition_fever <- paste0(condition, "_fever")
 
   function(timestep, target){
-    #if(condition == "dia"){
-    #  print("Asymp")
-    #  print(target$size())
-    #}
     # Set status = asymptomatic
     variables[[condition_status]]$queue_update(1, target)
     variables[[condition_fever]]$queue_update(0, target)

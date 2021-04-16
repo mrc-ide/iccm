@@ -51,6 +51,17 @@ replace_child <- function(target, timestep, variables, parameters, events) {
   variables$dia_prior_rotavirus$queue_update(0, target)
   variables$dia_last_tx$queue_update(NA, target)
 
+  variables$pneumonia_status$queue_update(0, target)
+  variables$pneumonia_disease$queue_update(0, target)
+  variables$pneumonia_symptom_start$queue_update(NA, target)
+  variables$pneumonia_fever$queue_update(0, target)
+  variables$pneumonia_prior_bacteria$queue_update(0, target)
+  variables$pneumonia_prior_virus$queue_update(0, target)
+  variables$pneumonia_prior_fungus$queue_update(0, target)
+  variables$pneumonia_prior_pneumococcus$queue_update(0, target)
+  variables$pneumonia_prior_hib$queue_update(0, target)
+  variables$pneumonia_last_tx$queue_update(NA, target)
+
   variables$malaria_status$queue_update(0, target)
   variables$malaria_disease$queue_update(0, target)
   variables$malaria_symptom_start$queue_update(NA, target)
@@ -72,6 +83,8 @@ replace_child <- function(target, timestep, variables, parameters, events) {
   # TODO: Clear any scheduled disease progression
   events$dia_recover$clear_schedule(target)
   events$dia_asymptomatic$clear_schedule(target)
+  events$pneumonia_recover$clear_schedule(target)
+  events$pneumonia_asymptomatic$clear_schedule(target)
   events$malaria_recover$clear_schedule(target)
   events$malaria_asymptomatic$clear_schedule(target)
 }

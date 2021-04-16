@@ -17,7 +17,7 @@ vaccine_impact <- function(disease, index, target, ages, p, variables){
       vaccinated <- variables$hib_vx$get_values(target)
     }
     if(disease == "pneumococcus"){
-      vaccinated <- variables$pneumococcus_vx$get_values(target)
+      vaccinated <- variables$pneumococcal_vx$get_values(target)
     }
     if(disease == "rotavirus"){
       vaccinated <- variables$rotavirus_vx$get_values(target)

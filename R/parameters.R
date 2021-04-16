@@ -25,8 +25,8 @@ get_parameters <- function(user_overwrite = NULL){
     # Interventions
     llin_coverage = 0,
     rotavirus_vx_coverage = 0,
-    pneumococcal_vx_coverage = 0.1,
-    hib_vx_coverage = 0.1
+    pneumococcal_vx_coverage = 0,
+    hib_vx_coverage = 0
   )
 
   parameters$dia <- list(
@@ -66,14 +66,14 @@ get_parameters <- function(user_overwrite = NULL){
 
   parameters$pneumonia <- list(
     groups = 5,
-    disease = c("bacteria", "virus", "funus", "pneumococcus", "hib"),
+    disease = c("bacteria", "virus", "fungus", "pneumococcus", "hib"),
     index = c(1, 2, 3, 4, 5),
     sigma = c(0.005, 0.005, 0.005, 0.005, 0.005),
     # Average duration of clinical episode
     clin_dur = c(14, 14, 14, 14, 14),
     asymp_dur = c(0, 0, 0, 0, 0),
-    daily_prob_severe = c(0.1, 0.2, 0.3, 0, 0.1),
-    daily_prob_death = c(0.001, 0.002, 0.003, 0, 0.0001),
+    daily_prob_severe = c(0.1, 0.2, 0.3, 0.04, 0.1),
+    daily_prob_death = c(0.001, 0.002, 0.003, 0.002, 0.0001),
     prob_fever = c(0.5, 0.5, 0.5, 0.5, 0.5),
     # Maternal immunity
     ## Half life

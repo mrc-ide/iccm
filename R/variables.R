@@ -31,6 +31,25 @@ create_variables <- function(parameters){
   ### Previous treatment
   dia_last_tx <- individual::IntegerVariable$new(rep(NA, size))
 
+  ## Pneumonia
+  ### Infection status (0 = Uninfected, 1 = Asymptomatically infected, 2 = clinically infected, 3 = severely infected)
+  pneumonia_status <- individual::IntegerVariable$new(rep(0, size))
+  ### Disease type (see parameters$pneumonia$type for index)
+  pneumonia_disease <- individual::IntegerVariable$new(rep(0, size))
+  ### Start time of any active infection symptoms
+  pneumonia_symptom_start <- individual::IntegerVariable$new(rep(NA, size))
+  ### Fever indicator
+  pneumonia_fever <- individual::IntegerVariable$new(rep(0, size))
+  ### Prior exposures
+  pneumonia_prior <- prior_exposure_matrix(parameters$pneumonia, size, initial_age, est_het)
+  pneumonia_prior_bacteria <- individual::IntegerVariable$new(initial_values = pneumonia_prior[,1])
+  pneumonia_prior_virus <- individual::IntegerVariable$new(initial_values = pneumonia_prior[,2])
+  pneumonia_prior_fungus <- individual::IntegerVariable$new(initial_values = pneumonia_prior[,3])
+  pneumonia_prior_pneumococcus <- individual::IntegerVariable$new(initial_values = pneumonia_prior[,4])
+  pneumonia_prior_hib <- individual::IntegerVariable$new(initial_values = pneumonia_prior[,5])
+  ### Previous treatment
+  pneumonia_last_tx <- individual::IntegerVariable$new(rep(NA, size))
+
   ## Malaria
   ### Infection status (0 = Uninfected, 1 = Asymptomatically infected, 2 = clinically infected, 3 = severely infected)
   malaria_status <- individual::IntegerVariable$new(rep(0, size))
@@ -71,6 +90,17 @@ create_variables <- function(parameters){
     dia_prior_rotavirus = dia_prior_rotavirus,
     dia_last_tx = dia_last_tx,
 
+    pneumonia_status = pneumonia_status,
+    pneumonia_disease = pneumonia_disease,
+    pneumonia_symptom_start = pneumonia_symptom_start,
+    pneumonia_fever = pneumonia_fever,
+    pneumonia_prior_bacteria = pneumonia_prior_bacteria,
+    pneumonia_prior_virus = pneumonia_prior_virus,
+    pneumonia_prior_fungus = pneumonia_prior_fungus,
+    pneumonia_prior_pneumococcus = pneumonia_prior_pneumococcus,
+    pneumonia_prior_hib = pneumonia_prior_hib,
+    pneumonia_last_tx = pneumonia_last_tx,
+
     malaria_status = malaria_status,
     malaria_disease = malaria_disease,
     malaria_symptom_start = malaria_symptom_start,
@@ -101,7 +131,16 @@ initialise_render_defaults <- function(renderer, zero_default = c("chw_patients"
                                          "hf_patients", "hf_ors", "hf_severe_diarrhoea_tx",
                                          "graduation", "dia_bacteria_mortality",
                                          "dia_virus_mortality", "dia_parasite_mortality",
-                                         "dia_rotavirus_mortality", "malaria_pf_mortality")){
+                                         "dia_rotavirus_mortality", "malaria_pf_mortality",
+                                         "pneumonia_bacteria_mortality", "pneumonia_virus_mortality",
+                                         "pneumonia_fungus_mortality", "pneumonia_pneumococcus_mortality",
+                                         "pneumonia_hib_mortality", "malaria_pf_mortality",
+                                         "dia_bacteria_incidence",
+                                         "dia_virus_incidence", "dia_parasite_incidence",
+                                         "dia_rotavirus_incidence", "malaria_pf_incidence",
+                                         "pneumonia_bacteria_incidence", "pneumonia_virus_incidence",
+                                         "pneumonia_fungus_incidence", "pneumonia_pneumococcus_incidence",
+                                         "pneumonia_hib_incidence", "malaria_pf_incidence")){
   for(var in zero_default){
     renderer$set_default(var, 0)
   }

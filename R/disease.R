@@ -76,7 +76,6 @@ condition_exposure <- function(condition, variables, parameters, events, rendere
         # Draw which disease
         infection_prob <- infection_prob[infected, , drop = FALSE]
         disease_index <- apply(infection_prob, 1, sample_disease, n = length(p$disease))
-
         # Symptoms
         # Prior infections
         pi <- rep(NA, to_infect$size())
@@ -150,6 +149,8 @@ progress_severe <- function(condition, parameters, variables, events){
 
     if(target$size() > 0){
       variables[[condition_status]]$queue_update(3, target)
+      indices2 <- variables[[condition_disease]]$get_values(target)
+      variables[[condition_disease]]$queue_update(indices2, target)
       variables[[condition_fever]]$queue_update(1, target)
 
       # Schedule treatment
@@ -180,18 +181,36 @@ die <- function(condition, parameters, variables, events, renderer){
   function(timestep){
     # Individuals with severe illness
     target <- variables[[condition_status]]$get_index_of(3)
-    # Disease indices
-    indices <- variables[[condition_disease]]$get_values(target)
-    # Disease-specific probability of dieing | severe illness
-    probs <- dpd[indices]
-    # Sample and death
-    target <- target$sample(probs)
-    if(target$size() > 0 ){
-      replace_child(target, timestep, variables, parameters, events)
-      # Record disease-specific mortality
-      death_cause <- variables[[condition_disease]]$get_values(target)
-      for(i in seq_along(diseases)){
-        renderer$render(condition_disease_mortality[i], sum(death_cause == i), timestep)
+    if(target$size() > 0){
+      # Disease indices
+      indices <- variables[[condition_disease]]$get_values(target)
+      # Disease-specific probability of dieing | severe illness
+      probs <- dpd[indices]
+      # Sample and death
+      target <- target$sample(probs)
+      if(target$size() > 0 ){
+        replace_child(target, timestep, variables, parameters, events)
+        # Record disease-specific mortality
+        death_cause <- variables[[condition_disease]]$get_values(target)
+        for(i in seq_along(diseases)){
+          renderer$render(condition_disease_mortality[i], sum(death_cause == i), timestep)
+        }
+      }
+    }
+  }
+}
+
+check_disease <- function(point, variables){
+  function(timestep){
+
+    dd <- c("dia", "malaria", "pneumonia")
+    for(i in seq_along(dd)){
+      target <- variables[[paste0(dd[i], "_status")]]$get_index_of(1:3)
+      indices <- variables[[paste0(dd[i], "_disease")]]$get_values(target)
+      if(any(indices ==0)){
+        print(dd[i])
+        print(point)
+        stop("EBUG")
       }
     }
   }

@@ -12,12 +12,12 @@ sample_preference <- function(n, parameters){
   stopifnot(n > 0)
   providers <- c(parameters$hf$hf, parameters$chw$chw, parameters$private$private)
   if(all(providers == 0)){
-    return(rep("None", n))
+    return(rep("none", n))
   }
   provider_weights <- parameters$treatment_seeking$provider_preference_weights
   prob <- providers * provider_weights
   prob <- prob / sum(prob)
-  preference <- sample(c("HF", "CHW", "Private"), n, replace = TRUE, prob = prob)
+  preference <- sample(c("hf", "chw", "private"), n, replace = TRUE, prob = prob)
   return(preference)
 }
 

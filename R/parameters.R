@@ -29,7 +29,7 @@ get_parameters <- function(user_overwrite = NULL){
     hib_vx_coverage = 0
   )
 
-  parameters$disease <- list(
+  parameters$disease = list(
     bacterial_diarrhoea = list(
       type = "diarrhoea",
       sigma = 0.005,
@@ -43,7 +43,8 @@ get_parameters <- function(user_overwrite = NULL){
       infection_immunity_rate = 1,
       clinical_immunity_shape = 0,
       clinical_immunity_rate = 0,
-      vaccine = FALSE
+      vaccine = FALSE,
+      asymptomatic_pathway = FALSE
     ),
     plasmodium_falciparum = list(
       type = "malaria",
@@ -58,7 +59,8 @@ get_parameters <- function(user_overwrite = NULL){
       infection_immunity_rate = 1,
       clinical_immunity_shape = 5,
       clinical_immunity_rate = 1,
-      vaccine = FALSE
+      vaccine = FALSE,
+      asymptomatic_pathway = TRUE
     ),
     viral_pneumonia = list(
       type = "pneumonia",
@@ -73,8 +75,9 @@ get_parameters <- function(user_overwrite = NULL){
       infection_immunity_rate = 1,
       clinical_immunity_shape = 0,
       clinical_immunity_rate = 0,
-      vaccine = FALSE
-    ),
+      vaccine = FALSE,
+      asymptomatic_pathway = FALSE
+    )
   )
 
   parameters$treatment_seeking <- list(

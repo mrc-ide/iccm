@@ -13,13 +13,9 @@ create_variables <- function(parameters){
   variables$het <- individual::DoubleVariable$new(est_het)
 
   # Diseases
-  ## Symptom onset
-  variables$diarrhoea_symptom_onset <- individual::IntegerVariable$new(initial_values = rep(NA, parameters$population))
-  variables$malaria_symptom_onset <- individual::IntegerVariable$new(initial_values = rep(NA, parameters$population))
-  variables$pneumonia_symptom_onset <- individual::IntegerVariable$new(initial_values = rep(NA, parameters$population))
   ## Prior exposure
   for(disease in names(parameters$disease)){
-    prior <- prior_exposure_equilibrium(parameters$disease[[disease]], initial_age, parameters$age_upper, est_het)
+    prior <- prior_exposure_equilibrium(parameters$disease[[disease]], parameters$population, initial_age, parameters$age_upper, est_het)
     variables[[paste0(disease, "_prior_exposure")]] <- individual::IntegerVariable$new(initial_values = prior)
   }
   ## Infection status
@@ -30,7 +26,10 @@ create_variables <- function(parameters){
   for(disease in names(parameters$disease)){
     variables[[paste0(disease, "_fever")]] <- individual::CategoricalVariable$new(c("nonfebrile", "febrile"), rep("nonfebrile", parameters$population))
   }
-  ## Fever status
+  ## Symptom onset
+  for(disease in names(parameters$disease)){
+    variables[[paste0(disease, "_symptom_onset")]] <- individual::IntegerVariable$new(initial_values = rep(NA, parameters$population))
+  }
 
   # Treatment
   # Treatment seeking
@@ -50,46 +49,21 @@ create_variables <- function(parameters){
   return(variables)
 }
 
-#' Add default values to render variables that won't get called every timestep
-#'
-#' @param renderer Model renderer
-#' @param zero_default Variables to set a default 0
-initialise_render_defaults <- function(renderer, zero_default = c("chw_patients", "chw_ors", "chw_followup", "chw_referral",
-                                                                  "private_patients", "private_ors",
-                                                                  "hf_patients", "hf_ors", "hf_severe_diarrhoea_tx",
-                                                                  "graduation", "dia_bacteria_mortality",
-                                                                  "dia_virus_mortality", "dia_parasite_mortality",
-                                                                  "dia_rotavirus_mortality", "malaria_pf_mortality",
-                                                                  "pneumonia_bacteria_mortality", "pneumonia_virus_mortality",
-                                                                  "pneumonia_fungus_mortality", "pneumonia_pneumococcus_mortality",
-                                                                  "pneumonia_hib_mortality", "malaria_pf_mortality",
-                                                                  "dia_bacteria_incidence",
-                                                                  "dia_virus_incidence", "dia_parasite_incidence",
-                                                                  "dia_rotavirus_incidence", "malaria_pf_incidence",
-                                                                  "pneumonia_bacteria_incidence", "pneumonia_virus_incidence",
-                                                                  "pneumonia_fungus_incidence", "pneumonia_pneumococcus_incidence",
-                                                                  "pneumonia_hib_incidence", "malaria_pf_incidence")){
-  for(var in zero_default){
-    renderer$set_default(var, 0)
-  }
-}
-
-
 #' Prior exposure equilibrium
 #'
 #' @param p Condition parameters
 #' @param initial_age Age of each child
 #' @param maximum_age Maximum age
 #' @param est_het Heterogeneity of each child variable
-prior_exposure_equilibrium <- function(p, initial_age, maximum_age, est_het){
+prior_exposure_equilibrium <- function(p, population, initial_age, maximum_age, est_het){
   ages <- 1:maximum_age
   vx <- rep(1, length(ages))
   if(p$vaccine){
     vx <- 1 - vaccine_effect(ages, p$vx_start[i], p$vx_initial_efficacy[i], p$vx_hl[i])
   }
   mi <- maternal_immunity(ages, p$maternal_immunity_halflife)
-  dp <- rep(NA, parameters$population)
-  for(i in 1:parameters$population){
+  dp <- rep(NA, population)
+  for(i in 1:population){
     dp[i] <- round(eq_prior_indiv(initial_age[i],
                                   p$sigma,
                                   est_het[i],

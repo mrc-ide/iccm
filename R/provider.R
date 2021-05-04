@@ -40,20 +40,22 @@ hf_treat <- function(variables, parameters, renderer, events){
 
     ### Severe illness #########################################################
     # Diarrhoea
-    dia_severe_to_treat <- dx(target,
-                              status_variable = variables$dia_status,
-                              sens = parameters$hf$severe_diarrhoea_sensitivity,
-                              spec = parameters$hf$severe_diarrhoea_specificity,
-                              positive = 3, negative = 0:2)
+    dia_severe_to_treat <- severe_diagnosis(target,
+                                            "diarrhoea",
+                                            sens = parameters$hf$severe_diarrhoea_sensitivity,
+                                            spec = parameters$hf$severe_diarrhoea_specificity,
+                                            variables,
+                                            parameters)
     dia_severe_to_treat <- dia_severe_to_treat$sample(parameters$hf$efficacy)
     give_severe_treatment_diarrhoea(dia_severe_to_treat, parameters, variables, events, timestep)
 
     # Malaria
-    malaria_severe_to_treat <- dx(target,
-                                  status_variable = variables$malaria_status,
-                                  sens = parameters$hf$severe_malaria_sensitivity,
-                                  spec = parameters$hf$severe_malaria_specificity,
-                                  positive = 3, negative = 0:2)
+    malaria_severe_to_treat <- severe_diagnosis(target,
+                                                "malaria",
+                                                sens = parameters$hf$severe_malaria_sensitivity,
+                                                spec = parameters$hf$severe_malaria_specificity,
+                                                variables,
+                                                parameters)
     malaria_severe_to_treat <- malaria_severe_to_treat$sample(parameters$hf$efficacy)
     give_severe_treatment_malaria(malaria_severe_to_treat, parameters, variables, events, timestep)
     ############################################################################
@@ -64,28 +66,32 @@ hf_treat <- function(variables, parameters, renderer, events){
 
     if(target$size() > 0){
       # Diarrhoea
-      dia_to_treat <- dx(target,
-                         status_variable = variables$dia_status,
-                         sens = parameters$hf$diarrhoea_sensitivity,
-                         spec = parameters$hf$diarrhoea_specificity,
-                         positive = 1:3, negative = 0)
+      dia_to_treat <- diagnosis(target,
+                                "diarrhoea",
+                                sens = parameters$hf$diarrhoea_sensitivity,
+                                spec = parameters$hf$diarrhoea_specificity,
+                                variables,
+                                parameters)
       dia_to_treat <- dia_to_treat$sample(parameters$hf$efficacy)
-      give_ors(dia_to_treat, parameters, variables, events, timestep)
-      n_ors_given <- n_ors_given + dia_to_treat$size()
+      if(dia_to_treat$size() > 0){
+        give_ors(dia_to_treat, parameters, variables, events, timestep)
+        n_ors_given <- n_ors_given + dia_to_treat$size()
+      }
 
       # Malaria
-      malaria_to_treat <- dx(target,
-                             status_variable = variables$malaria_status,
-                             sens = parameters$dx_tx$rdt_sensitivity,
-                             spec = parameters$dx_tx$rdt_specificity,
-                             positive = 1:3, negative = 0)
-      malaria_to_treat <- malaria_to_treat$and(any_fever(variables))
-      malaria_to_treat <- malaria_to_treat$sample(parameters$hf$efficacy)
-      give_act(malaria_to_treat, parameters, variables, events, timestep)
-      n_act_given <- n_act_given + malaria_to_treat$size()
+      #malaria_to_treat <- diagnosis(target,
+      #                              "malaria",
+      #                              sens = parameters$dx_tx$rdt_sensitivity,
+      #                              spec = parameters$dx_tx$rdt_specificity,
+      #                              variables,
+      #                              parameters)
+      #malaria_to_treat <- malaria_to_treat$and(any_fever(parameters, variables))
+      #malaria_to_treat <- malaria_to_treat$sample(parameters$hf$efficacy)
+      #give_act(malaria_to_treat, parameters, variables, events, timestep)
+      #n_act_given <- n_act_given + malaria_to_treat$size()
 
       # Those who test +ve for malaria are not treated for pneumonia
-      target <- target$set_difference(malaria_to_treat)
+      #target <- target$set_difference(malaria_to_treat)
 
       # Pneumonia
 

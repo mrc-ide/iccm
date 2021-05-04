@@ -8,9 +8,13 @@
 #' @return List of model process functions
 create_processes <- function(parameters, variables, renderer, events){
   processes <- list(
-    exposure(variables, parameters, events),
-    render_prevalence(variables, renderer),
-    individual::categorical_count_renderer_process(renderer, variables$plasmodium_falciparum_status, "uninfected")
+    exposure(variables, parameters, events, renderer),
+    mortality(parameters, variables, events, renderer),
+
+    render_prevalence(variables, renderer, parameters),
+    render_demography(variables, renderer),
+    render_prior(variables, renderer,parameters),
+    render_fever_prevalence(parameters, variables, renderer)
   )
 }
 

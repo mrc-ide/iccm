@@ -5,6 +5,17 @@
 
 using namespace Rcpp;
 
+// competing_hazard
+NumericVector competing_hazard(NumericMatrix x);
+RcppExport SEXP _iccm_competing_hazard(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(competing_hazard(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // eq_prior_indiv
 double eq_prior_indiv(int age, double sigma, double het, std::vector<double> vx, std::vector<double> mi, double ii_shape, double ii_rate);
 RcppExport SEXP _iccm_eq_prior_indiv(SEXP ageSEXP, SEXP sigmaSEXP, SEXP hetSEXP, SEXP vxSEXP, SEXP miSEXP, SEXP ii_shapeSEXP, SEXP ii_rateSEXP) {
@@ -24,6 +35,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_iccm_competing_hazard", (DL_FUNC) &_iccm_competing_hazard, 1},
     {"_iccm_eq_prior_indiv", (DL_FUNC) &_iccm_eq_prior_indiv, 7},
     {NULL, NULL, 0}
 };

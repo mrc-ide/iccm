@@ -15,6 +15,33 @@ dx <- function(target, status_variable, sens, spec, positive, negative){
   status_variable$get_index_of(positive)$sample(sens)$or(status_variable$get_index_of(negative)$sample(1 - spec))$and(target)
 }
 
+severe_diagnosis <- function(target, illness, sens, spec, variables, parameters){
+  true_positives <- individual::Bitset$new(parameters$population)
+  for(disease in names(parameters$disease)){
+    if(parameters$disease[[disease]]$type == illness){
+      true_positives <- true_positives$or(variables[[paste0(disease, "_status")]]$get_index_of("severe"))
+    }
+  }
+  true_negatives <- true_positives$not()
+  # True positives OR False positives
+  diagnosed <- true_positives$sample(sens)$or(true_negatives$sample(1 - spec))$and(target)
+  return(diagnosed)
+}
+
+diagnosis <- function(target, illness, sens, spec, variables, parameters){
+  true_positives <- individual::Bitset$new(parameters$population)
+  for(disease in names(parameters$disease)){
+    if(parameters$disease[[disease]]$type == illness){
+      true_positives <- true_positives$or(variables[[paste0(disease, "_status")]]$get_index_of(c("asymptomatic", "symptomatic", "severe")))
+    }
+  }
+  true_negatives <- true_positives$not()
+  # True positives OR False positives
+  diagnosed <- true_positives$sample(sens)$or(true_negatives$sample(1 - spec))$and(target)
+
+  return(diagnosed)
+}
+
 #' Long symptoms
 #'
 #' Returns a bitset of those who have had symptoms for a period > the threshold to define illness as severe
@@ -39,8 +66,22 @@ long_symptoms <- function(symptom_start_var, target, threshold, timestep){
 #' @param events Model events
 #' @param timestep Model timestep
 give_ors <- function(target, parameters, variables, events, timestep){
-  target <- target$copy()$sample(parameters$dx_tx$ors_efficacy)
-  cure(target, "dia", variables, events)
+  for(disease in names(parameters$disease)){
+    if(parameters$disease[[disease]]$type == "diarrhoea"){
+      # If severe: -> symptomatic and clear fever
+      to_ameliorate_severe <- variables[[paste0(disease, "_status")]]$get_index_of("severe")$and(target)
+      to_ameliorate_severe <- to_ameliorate_severe$sample(parameters$dx_tx$ors_efficacy_severe)
+      variables[[paste0(disease, "_status")]]$queue_update("symptomatic",to_ameliorate_severe)
+      variables[[paste0(disease, "_fever")]]$queue_update("nonfebrile", to_ameliorate_severe)
+      # If non-severe: if severe scheduled, cancel and schedule recovery
+      to_avert_severe <- variables[[paste0(disease, "_status")]]$get_index_of(c("asymptomatic", "symptomatic"))$and(target)
+      to_avert_severe <- to_avert_severe$and(events[[paste0(disease, "_progress_to_severe_infection")]]$get_scheduled())
+      to_avert_severe <- to_avert_severe$sample(parameters$dx_tx$ors_efficacy)
+      events[[paste0(disease, "_progress_to_severe_infection")]]$clear_schedule(to_avert_severe)
+      clinical_duration <-  rexp(to_avert_severe$size(), 1 / parameters$disease[[disease]]$clinical_duration)
+      events[[paste0(disease, "_progress_to_uninfected")]]$schedule(to_avert_severe, delay = clinical_duration)
+    }
+  }
 }
 
 #' Give ACT
@@ -53,9 +94,44 @@ give_ors <- function(target, parameters, variables, events, timestep){
 #' @param events Model events
 #' @param timestep Model timestep
 give_act <- function(target, parameters, variables, events, timestep){
-  target <- target$copy()$sample(parameters$dx_tx$act_efficacy)
-  variables$malaria_last_tx$queue_update(timestep, target)
-  cure(target, "malaria", variables, events)
+  # Record when ACT was administered (for prophylaxsis)
+  variables$time_of_last_act$queue_update(timestep, target)
+  for(disease in names(parameters$disease)){
+    if(parameters$disease[[disease]]$type == "malaria"){
+      # Those treated and with disease targeted by ACT
+      to_cure <- variables[[paste0(disease, "_status")]]$get_index_of(c("asymptomatic", "symptomatic", "severe"))$and(target)
+      # And with successful treatment
+      to_cure <- to_cure$sample(parameters$dx_tx$act_efficacy)
+      if(to_cure$size() > 0){
+        cure(to_cure, disease, variables, events)
+      }
+    }
+  }
+}
+
+#' Give amoxicillin
+#'
+#' Provides amoxicillin antibiotic therapy to child
+#'
+#' @param target Target children
+#' @param parameters Model parameters
+#' @param variables Model variable
+#' @param events Model events
+#' @param timestep Model timestep
+give_amoxicillin <- function(target, parameters, variables, events, timestep){
+  # Record when amoxicillin was administered (for prophylaxsis)
+  variables$time_of_last_amoxicillin$queue_update(timestep, target)
+  for(disease in names(parameters$disease)){
+    if(grepl("bacterial", disease)){
+      # Those treated and with disease targeted by amoxicillin
+      to_cure <- variables[[paste0(disease, "_status")]]$get_index_of(c("asymptomatic", "symptomatic", "severe"))$and(target)
+      # And with successful treatment
+      to_cure <- to_cure$sample(parameters$disease[[disease]]$amoxicillin_efficacy)
+      if(to_cure$size() > 0){
+        cure(to_cure, disease, variables, events)
+      }
+    }
+  }
 }
 
 #' Give treatment for severe diarrhoea
@@ -64,9 +140,8 @@ give_act <- function(target, parameters, variables, events, timestep){
 #'
 #' @inheritParams give_ors
 give_severe_treatment_diarrhoea <- function(target, parameters, variables, events, timestep){
-  target <- target$copy()$sample(parameters$hf$severe_diarrhoea_efficacy)
-  variables$dia_last_tx$queue_update(timestep, target)
-  cure(target, "dia", variables, events)
+  #target <- target$copy()$sample(parameters$hf$severe_diarrhoea_efficacy)
+  #cure(target, "dia", variables, events)
 }
 
 #' Give treatment for severe malaria
@@ -75,22 +150,24 @@ give_severe_treatment_diarrhoea <- function(target, parameters, variables, event
 #'
 #' @inheritParams give_act
 give_severe_treatment_malaria <- function(target, parameters, variables, events, timestep){
-  target <- target$copy()$sample(parameters$hf$severe_malaria_efficacy)
-  variables$malaria_last_tx$queue_update(timestep, target)
-  cure(target, "malaria", variables, events)
+  to_cure <- target$copy()$sample(parameters$hf$severe_malaria_efficacy)
+  #variables$malaria_last_tx$queue_update(timestep, target)
+  cure(to_cure, "plasmodium_falciparum", variables, events)
 }
 
 #' Cure a condition
 #'
 #' @param condition Condition to cure
 #' @inheritParams give_ors
-cure <- function(target, condition, variables, events){
-  variables[[paste0(condition, "_status")]]$queue_update(0, target)
-  variables[[paste0(condition, "_disease")]]$queue_update(0, target)
-  variables[[paste0(condition, "_symptom_start")]]$queue_update(NA, target)
-  variables[[paste0(condition, "_fever")]]$queue_update(0, target)
-  events[[paste0(condition, "_asymptomatic")]]$clear_schedule(target)
-  events[[paste0(condition, "_recover")]]$clear_schedule(target)
+cure <- function(target, disease, variables, events){
+  variables[[paste0(disease, "_status")]]$queue_update("uninfected", target)
+  variables[[paste0(disease, "_fever")]]$queue_update("nonfebrile", target)
+  variables[[paste0(disease, "_symptom_onset")]]$queue_update(NA, target)
+  # Clear any future scheduled life course of disease
+  events[[paste0(disease, "_progress_to_asymptomatic_infection")]]$clear_schedule(target)
+  events[[paste0(disease, "_progress_to_clinical_infection")]]$clear_schedule(target)
+  events[[paste0(disease, "_progress_to_severe_infection")]]$clear_schedule(target)
+  events[[paste0(disease, "_progress_to_uninfected")]]$clear_schedule(target)
 }
 
 #' Treatment prophylaxis modifier
@@ -104,4 +181,13 @@ treatment_prophylaxis <- function(time_since_treatment, pr_hl){
   # Individuals who have never received treatment have no prophylaxis
   tp[is.na(tp)] <- 1
   return(tp)
+}
+
+
+any_fever <- function(parameters, variables){
+  has_fever <- individual::Bitset$new(parameters$population)
+  for(disease in names(parameters$disease)){
+    has_fever <- has_fever$or(variables[[paste0(disease, "_fever")]]$get_index_of("febrile"))
+  }
+  return(has_fever)
 }

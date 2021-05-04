@@ -1,4 +1,12 @@
-exposure <- function(variables, parameters, events){
+#' Exposure process
+#'
+#' Governs exposure of all diseases.
+#'
+#' @param variables Model variables
+#' @param parameters Model parameters
+#' @param events Model events
+#' @param renderer Model renderer
+exposure <- function(variables, parameters, events, renderer){
   function(timestep){
     for(disease in names(parameters$disease)){
       exposed <- variables[[paste0(disease, "_status")]]$get_index_of(c("uninfected", "asymptomatic"))
@@ -7,16 +15,29 @@ exposure <- function(variables, parameters, events){
       # Draw those infected
       infected <- exposed$sample(infection_prob)
       if(infected$size() > 0){
-        infection(infected, disease, parameters, variables, events)
+        infection(infected, disease, parameters, variables, events, renderer, timestep)
       }
     }
   }
 }
 
-infection <- function(infected, disease, parameters, variables, events){
+#' Infection
+#'
+#' Infection of children (to asymptomatic or symptomatic states).
+#'
+#' @param infected Target bitset of those infected
+#' @param disease Disease
+#' @param parameters Model parameters
+#' @param variables Model variables
+#' @param events Model events
+#' @param renderer Model renderer
+#' @param timestep Model timestep
+infection <- function(infected, disease, parameters, variables, events, renderer, timestep){
   # Update record of prior exposure
   increment_counter(target = infected, variable = variables[[paste0(disease, "_prior_exposure")]])
+
   if(parameters$disease[[disease]]$asymptomatic_pathway){
+    infection_to_render <- 0
     # Currently uninfected
     currently_uninfected <- variables[[paste0(disease, "_status")]]$get_index_of(c("uninfected"))$and(infected)
     if(currently_uninfected$size() > 0){
@@ -26,6 +47,7 @@ infection <- function(infected, disease, parameters, variables, events){
       S_to_I <- individual::filter_bitset(currently_uninfected, which(clinical_index))
       S_to_A <- individual::filter_bitset(currently_uninfected, which(!clinical_index))
       events[[paste0(disease, "_progress_to_clinical_infection")]]$schedule(S_to_I, delay = 0)
+      infection_to_render <- infection_to_render + S_to_I$size()
       events[[paste0(disease, "_progress_to_asymptomatic_infection")]]$schedule(S_to_A, delay = 0)
     }
 
@@ -36,26 +58,24 @@ infection <- function(infected, disease, parameters, variables, events){
       ci <- clinical_immunity(pi, parameters$disease[[disease]]$clinical_immunity_shape, parameters$disease[[disease]]$clinical_immunity_rate)
       clinical_index <- stats::runif(currently_asymptomatic$size()) < ci
       A_to_I <- individual::filter_bitset(currently_asymptomatic, which(clinical_index))
+      infection_to_render <- infection_to_render + A_to_I$size()
       events[[paste0(disease, "_progress_to_clinical_infection")]]$schedule(A_to_I, delay = 0)
     }
+
+    renderer$render(paste0(disease, "_clinical_infection"), infection_to_render, timestep)
   } else {
     events[[paste0(disease, "_progress_to_clinical_infection")]]$schedule(infected, delay = 0)
+    renderer$render(paste0(disease, "_clinical_infection"),infected$size() , timestep)
   }
 }
 
-
-
-
-#' Increment an integer variable +1
+#' Infection probability vector
 #'
-#' @param target Bitset of individuals
-#' @param variable Variable to increment
-increment_counter <- function(target, variable){
-  current_prior <- variable$get_values(target)
-  variable$queue_update(current_prior + 1, target)
-}
-
-
+#' @param disease Disease
+#' @param target Those exposed
+#' @param p Disease parameters
+#' @param timestep Model timestep
+#' @param variables Model variables
 infection_probability <- function(disease, target, p, timestep, variables){
   ### Infection immunity ###################################################
   ages <- get_age(timestep, variables, target)
@@ -86,4 +106,13 @@ infection_probability <- function(disease, target, p, timestep, variables){
   infection_prob <- rate_to_prob(infection_rate)
   ##########################################################################
   return(infection_prob)
+}
+
+#' Increment an integer variable +1
+#'
+#' @param target Bitset of individuals
+#' @param variable Variable to increment
+increment_counter <- function(target, variable){
+  current_prior <- variable$get_values(target)
+  variable$queue_update(current_prior + 1, target)
 }

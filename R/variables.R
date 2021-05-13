@@ -15,7 +15,7 @@ create_variables <- function(parameters){
   # Diseases
   ## Prior exposure
   for(disease in names(parameters$disease)){
-    prior <- prior_exposure_equilibrium(parameters$disease[[disease]], parameters$population, initial_age, parameters$age_upper, est_het)
+    prior <- round(prior_exposure_equilibrium(parameters$disease[[disease]], parameters$population, initial_age, parameters$age_upper, est_het))
     variables[[paste0(disease, "_prior_exposure")]] <- individual::IntegerVariable$new(initial_values = prior)
   }
   ## Infection status
@@ -64,13 +64,14 @@ prior_exposure_equilibrium <- function(p, population, initial_age, maximum_age, 
   mi <- maternal_immunity(ages, p$maternal_immunity_halflife)
   dp <- rep(NA, population)
   for(i in 1:population){
-    dp[i] <- round(eq_prior_indiv(initial_age[i],
+    dp[i] <- eq_prior_indiv(initial_age[i],
                                   p$sigma,
                                   est_het[i],
                                   vx,
                                   mi,
                                   p$infection_immunity_shape,
-                                  p$infection_immunity_rate))
+                                  p$infection_immunity_rate)
   }
   return(dp)
 }
+

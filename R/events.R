@@ -41,7 +41,6 @@ create_event_listeners <- function(events, variables, parameters, renderer){
         new_status = "symptomatic"
       )
     )
-
     events[[event]]$add_listener(
       update_fever(
         variable = variables[[paste0(disease, "_fever")]],
@@ -62,6 +61,11 @@ create_event_listeners <- function(events, variables, parameters, renderer){
         events = events
       )
     )
+    # This is needed in the case of superinfection
+    events[[event]]$add_listener(
+      clear_scheduled_recovery(
+        event = events[[paste0(disease, "_progress_to_uninfected")]]
+      ))
     events[[event]]$add_listener(
       schedule_progression_from_clinical_infection(
         disease,
@@ -69,11 +73,6 @@ create_event_listeners <- function(events, variables, parameters, renderer){
         progress_to_severe_infection = events[[paste0(disease, "_progress_to_severe_infection")]],
         progress_to_asymptomatic_infection = events[[paste0(disease, "_progress_to_asymptomatic_infection")]],
         progress_to_uninfected = events[[paste0(disease, "_progress_to_uninfected")]]
-      ))
-    # This is needed in the case of superinfection
-    events[[event]]$add_listener(
-      clear_scheduled_recovery(
-        event = events[[paste0(disease, "_progress_to_uninfected")]]
       ))
     ############################################################################
 
@@ -156,8 +155,8 @@ create_event_listeners <- function(events, variables, parameters, renderer){
   }
   events$graduate$add_listener(graduate_event(variables, parameters, events, renderer))
   events$hf_treatment$add_listener(hf_treat(variables, parameters, renderer, events))
-  #events$chw_treatment$add_listener()
-  #events$private_treatment$add_listener()
+  events$chw_treatment$add_listener(chw_treat(variables, parameters, renderer, events))
+  events$private_treatment$add_listener(private_treat(variables, parameters, renderer, events))
 }
 
 update_status <- function(variable, new_status){
@@ -245,6 +244,7 @@ schedule_progression_from_clinical_infection <- function(disease, parameters, pr
     progress_to_severe_infection$schedule(to_severe, time_to_severe[to_severe_index])
 
     recovering <- individual::filter_bitset(target, which(!to_severe_index))
+
     if(parameters$disease[[disease]]$asymptomatic_pathway){
       progress_to_asymptomatic_infection$schedule(recovering, delay = clinical_duration[!to_severe_index])
     } else {

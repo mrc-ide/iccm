@@ -21,6 +21,12 @@ sample_preference <- function(n, parameters){
   return(preference)
 }
 
+clear_scheduled_treatment_visits <- function(target, events){
+  events$hf_treatment$clear_schedule(target)
+  events$chw_treatment$clear_schedule(target)
+  events$private_treatment$clear_schedule(target)
+}
+
 #' Health Facility treatment
 #'
 #' Treats children coming to the health facility. Severe cases take precedent, other
@@ -35,8 +41,9 @@ hf_treat <- function(variables, parameters, renderer, events){
     renderer$render("hf_patients", target$size(), timestep)
     n_ors_given <- 0
     n_act_given <- 0
+    n_amoxicillin_given <- 0
     # Clear any duplicate future tx scheduling
-    events$hf_treatment$clear_schedule(target)
+    clear_scheduled_treatment_visits(target, events)
 
     ### Severe illness #########################################################
     # Diarrhoea
@@ -58,11 +65,21 @@ hf_treat <- function(variables, parameters, renderer, events){
                                                 parameters)
     malaria_severe_to_treat <- malaria_severe_to_treat$sample(parameters$hf$efficacy)
     give_severe_treatment_malaria(malaria_severe_to_treat, parameters, variables, events, timestep)
+
+    # Pneumonia
+    pneumonia_severe_to_treat <- severe_diagnosis(target,
+                                                  "pneumonia",
+                                                  sens = parameters$hf$severe_pneumonia_sensitivity,
+                                                  spec = parameters$hf$severe_pneumonia_specificity,
+                                                  variables,
+                                                  parameters)
+    pneumonia_severe_to_treat <- pneumonia_severe_to_treat$sample(parameters$hf$efficacy)
+    give_severe_treatment_pneumonia(pneumonia_severe_to_treat, parameters, variables, events, timestep)
     ############################################################################
 
     ### Non-severe illness ######################################################
     # Remaining children who have not been treated for severe disease
-    target <- target$set_difference(dia_severe_to_treat)$set_difference(malaria_severe_to_treat)
+    target <- target$set_difference(dia_severe_to_treat$or(malaria_severe_to_treat)$or(pneumonia_severe_to_treat))
 
     if(target$size() > 0){
       # Diarrhoea
@@ -79,22 +96,33 @@ hf_treat <- function(variables, parameters, renderer, events){
       }
 
       # Malaria
-      #malaria_to_treat <- diagnosis(target,
-      #                              "malaria",
-      #                              sens = parameters$dx_tx$rdt_sensitivity,
-      #                              spec = parameters$dx_tx$rdt_specificity,
-      #                              variables,
-      #                              parameters)
+      malaria_to_treat <- diagnosis(target,
+                                    "malaria",
+                                    sens = parameters$dx_tx$rdt_sensitivity,
+                                    spec = parameters$dx_tx$rdt_specificity,
+                                    variables,
+                                    parameters)
       #malaria_to_treat <- malaria_to_treat$and(any_fever(parameters, variables))
-      #malaria_to_treat <- malaria_to_treat$sample(parameters$hf$efficacy)
-      #give_act(malaria_to_treat, parameters, variables, events, timestep)
-      #n_act_given <- n_act_given + malaria_to_treat$size()
-
-      # Those who test +ve for malaria are not treated for pneumonia
-      #target <- target$set_difference(malaria_to_treat)
+      malaria_to_treat <- malaria_to_treat$sample(parameters$hf$efficacy)
+      if(malaria_to_treat$size() > 0){
+        give_act(malaria_to_treat, parameters, variables, events, timestep)
+        n_act_given <- n_act_given + malaria_to_treat$size()
+      }
 
       # Pneumonia
-
+      # Those who test +ve for malaria are not treated for pneumonia
+      target <- target$set_difference(malaria_to_treat)
+      pneumonia_to_treat <- diagnosis(target,
+                                      "pneumonia",
+                                      sens = parameters$hf$pneumonia_sensitivity,
+                                      spec = parameters$hf$pneumonia_specificity,
+                                      variables,
+                                      parameters)
+      pneumonia_to_treat <- pneumonia_to_treat$sample(parameters$hf$efficacy)
+      if(pneumonia_to_treat$size() > 0){
+        give_amoxicillin(pneumonia_to_treat, parameters, variables, events, timestep)
+        n_amoxicillin_given <- n_amoxicillin_given + pneumonia_to_treat$size()
+      }
 
     }
     ############################################################################
@@ -102,8 +130,10 @@ hf_treat <- function(variables, parameters, renderer, events){
     ### Record activity ########################################################
     renderer$render("hf_severe_diarrhoea_tx", dia_severe_to_treat$size(), timestep)
     renderer$render("hf_severe_malaria_tx", malaria_severe_to_treat$size(), timestep)
+    renderer$render("hf_severe_pneumonia_tx", pneumonia_severe_to_treat$size(), timestep)
     renderer$render("hf_ors", n_ors_given, timestep)
     renderer$render("hf_act", n_act_given, timestep)
+    renderer$render("hf_amoxicillin", n_amoxicillin_given, timestep)
     ############################################################################
   }
 }
@@ -122,8 +152,9 @@ chw_treat <- function(variables, parameters, renderer, events){
     renderer$render("chw_patients", target$size(), timestep)
     n_ors_given <- 0
     n_act_given <- 0
+    n_amoxicillin_given <- 0
     # Clear any duplicate future tx scheduling
-    events$chw_treatment$clear_schedule(target)
+    clear_scheduled_treatment_visits(target, events)
 
     ### Follow up ##############################################################
     on_followup <- variables$awaiting_followup$get_index_of(set = 1)$and(target)
@@ -138,32 +169,47 @@ chw_treat <- function(variables, parameters, renderer, events){
 
     ### Severe illness #########################################################
     # Diarrhoea
-    dia_severe_to_dx <- dx(target,
-                           status_variable = variables$dia_status,
-                           sens = parameters$chw$severe_diarrhoea_sensitivity,
-                           spec = parameters$chw$severe_diarrhoea_specificity,
-                           positive = 3, negative = 0:2)
-    dia_long_symptoms <- long_symptoms(variables$dia_symptom_start, target, parameters$dia$symptom_time_refer, timestep)
-    dia_severe_to_refer <- dia_severe_to_dx$or(dia_long_symptoms)$sample(parameters$hf$efficacy)
+    dia_severe_dx <- severe_diagnosis(target,
+                                      "diarrhoea",
+                                      sens = parameters$chw$severe_diarrhoea_sensitivity,
+                                      spec = parameters$chw$severe_diarrhoea_specificity,
+                                      variables,
+                                      parameters)
+    dia_long_symptoms <- long_symptoms(target, "diarrhoea", parameters$chw$diarrhoea_long_symptoms, timestep, variables, parameters)
+    dia_severe_to_refer <- dia_severe_dx$or(dia_long_symptoms)
+    dia_severe_to_refer <- dia_severe_to_refer$sample(parameters$chw$efficacy)
     give_ors(dia_severe_to_refer, parameters, variables, events, timestep)
     n_ors_given <- n_ors_given + dia_severe_to_refer$size()
 
     # Malaria
-    malaria_severe_to_dx <- dx(target,
-                               status_variable = variables$malaria_status,
-                               sens = parameters$chw$severe_malaria_sensitivity,
-                               spec = parameters$chw$severe_malaria_specificity,
-                               positive = 3, negative = 0:2)
-    malaria_long_symptoms <- long_symptoms(variables$malaria_symptom_start, target, parameters$malaria$symptom_time_refer, timestep)
-    malaria_severe_to_refer <- malaria_severe_to_dx$or(malaria_long_symptoms)$sample(parameters$hf$efficacy)
+    malaria_severe_dx <- severe_diagnosis(target,
+                                          "malaria",
+                                          sens = parameters$chw$severe_malaria_sensitivity,
+                                          spec = parameters$chw$severe_malaria_specificity,
+                                          variables,
+                                          parameters)
+    malaria_long_symptoms <- long_symptoms(target, "malaria", parameters$chw$malaria_long_symptoms, timestep, variables, parameters)
+    malaria_severe_to_refer <- malaria_severe_dx$or(malaria_long_symptoms)
+    malaria_severe_to_refer <- malaria_severe_to_refer$sample(parameters$chw$efficacy)
     give_act(malaria_severe_to_refer, parameters, variables, events, timestep)
     n_act_given <- n_act_given + malaria_severe_to_refer$size()
 
     # Pneumonia
+    pneumonia_severe_dx <- severe_diagnosis(target,
+                                            "pneumonia",
+                                            sens = parameters$chw$severe_pneumonia_sensitivity,
+                                            spec = parameters$chw$severe_pneumonia_specificity,
+                                            variables,
+                                            parameters)
+    pneumonia_long_symptoms <- long_symptoms(target, "pneumonia", parameters$chw$pneumonia_long_symptoms, timestep, variables, parameters)
+    pneumonia_severe_to_refer <- pneumonia_severe_dx$or(pneumonia_long_symptoms)
+    pneumonia_severe_to_refer <- pneumonia_severe_to_refer$sample(parameters$chw$efficacy)
+    give_amoxicillin(pneumonia_severe_to_refer, parameters, variables, events, timestep)
+    n_amoxicillin_given <- n_amoxicillin_given + pneumonia_severe_to_refer$size()
     ############################################################################
 
     ### Referral ###############################################################
-    to_refer <- dia_severe_to_refer$copy()$or(malaria_severe_to_refer)
+    to_refer <- dia_severe_to_refer$or(malaria_severe_to_refer)$or(pneumonia_severe_to_refer)
     if(to_refer$size() > 0){
       if(parameters$hf$hf){
         renderer$render("chw_referral", to_refer$size(), timestep)
@@ -174,42 +220,59 @@ chw_treat <- function(variables, parameters, renderer, events){
 
     ### Non-severe illness ######################################################
     # Remaining children who have not been treated for severe disease
-    target <- target$set_difference(dia_severe_to_refer)$set_difference(malaria_severe_to_refer)
+    target <- target$set_difference(to_refer)
 
     if(target$size() > 0){
       # Diarrhoea
-      dia_to_treat <- dx(target,
-                         status_variable = variables$dia_status,
-                         sens = parameters$chw$diarrhoea_sensitivity,
-                         spec = parameters$chw$diarrhoea_specificity,
-                         positive = 1:3, negative = 0)
+      dia_to_treat <- diagnosis(target,
+                                "diarrhoea",
+                                sens = parameters$chw$diarrhoea_sensitivity,
+                                spec = parameters$chw$diarrhoea_specificity,
+                                variables,
+                                parameters)
       dia_to_treat <- dia_to_treat$sample(parameters$chw$efficacy)
-      give_ors(dia_to_treat, parameters, variables, events, timestep)
-      n_ors_given <- n_ors_given + dia_to_treat$size()
+      if(dia_to_treat$size() > 0){
+        give_ors(dia_to_treat, parameters, variables, events, timestep)
+        n_ors_given <- n_ors_given + dia_to_treat$size()
+      }
 
       # Malaria
-      malaria_to_treat <- dx(target,
-                             status_variable = variables$malaria_status,
-                             sens = parameters$dx_tx$rdt_sensitivity,
-                             spec = parameters$dx_tx$rdt_specificity,
-                             positive = 1:3, negative = 0)
-      malaria_to_treat <- malaria_to_treat$and(any_fever(variables))
+      malaria_to_treat <- diagnosis(target,
+                                    "malaria",
+                                    sens = parameters$dx_tx$rdt_sensitivity,
+                                    spec = parameters$dx_tx$rdt_specificity,
+                                    variables,
+                                    parameters)
+      #malaria_to_treat <- malaria_to_treat$and(any_fever(parameters, variables))
       malaria_to_treat <- malaria_to_treat$sample(parameters$chw$efficacy)
-      give_act(malaria_to_treat, parameters, variables, events, timestep)
-      n_act_given <- n_act_given + malaria_to_treat$size()
-
-      # Those who test +ve for malaria are not treated for pneumonia
-      target <- target$set_difference(malaria_to_treat)
+      if(malaria_to_treat$size() > 0){
+        give_act(malaria_to_treat, parameters, variables, events, timestep)
+        n_act_given <- n_act_given + malaria_to_treat$size()
+      }
 
       # Pneumonia
-
+      # Those who test +ve for malaria are not treated for pneumonia
+      target <- target$set_difference(malaria_to_treat)
+      pneumonia_to_treat <- diagnosis(target,
+                                      "pneumonia",
+                                      sens = parameters$chw$pneumonia_sensitivity,
+                                      spec = parameters$chw$pneumonia_specificity,
+                                      variables,
+                                      parameters)
+      pneumonia_to_treat <- pneumonia_to_treat$sample(parameters$chw$efficacy)
+      if(pneumonia_to_treat$size() > 0){
+        give_amoxicillin(pneumonia_to_treat, parameters, variables, events, timestep)
+        n_amoxicillin_given <- n_amoxicillin_given + pneumonia_to_treat$size()
+      }
     }
     ############################################################################
 
     ### Record activity ########################################################
+    renderer$render("chw_followup", on_followup$size(), timestep)
+    renderer$render("chw_referral", to_refer$size(), timestep)
     renderer$render("chw_ors", n_ors_given, timestep)
     renderer$render("chw_act", n_act_given, timestep)
-    renderer$render("chw_followup", on_followup$size(), timestep)
+    renderer$render("chw_amoxicillin", n_amoxicillin_given, timestep)
     ############################################################################
   }
 }
@@ -227,41 +290,58 @@ private_treat <- function(variables, parameters, renderer, events){
     renderer$render("private_patients", target$size(), timestep)
     n_ors_given <- 0
     n_act_given <- 0
+    n_amoxicillin_given <- 0
     # Clear any duplicate future tx scheduling
-    events$private_treatment$clear_schedule(target)
+    clear_scheduled_treatment_visits(target, events)
 
     ### Non-severe illness ######################################################
     # Diarrhoea
-    dia_to_treat <- dx(target,
-                       status_variable = variables$dia_status,
-                       sens = parameters$private$diarrhoea_sensitivity,
-                       spec = parameters$private$diarrhoea_specificity,
-                       positive = 1:3, negative = 0)
+    dia_to_treat <- diagnosis(target,
+                              "diarrhoea",
+                              sens = parameters$private$diarrhoea_sensitivity,
+                              spec = parameters$private$diarrhoea_specificity,
+                              variables,
+                              parameters)
     dia_to_treat <- dia_to_treat$sample(parameters$private$efficacy)
-    give_ors(dia_to_treat, parameters, variables, events, timestep)
-    n_ors_given <- n_ors_given + dia_to_treat$size()
+    if(dia_to_treat$size() > 0){
+      give_ors(dia_to_treat, parameters, variables, events, timestep)
+      n_ors_given <- n_ors_given + dia_to_treat$size()
+    }
 
     # Malaria
-    malaria_to_treat <- dx(target,
-                           status_variable = variables$malaria_status,
-                           sens = parameters$dx_tx$rdt_sensitivity,
-                           spec = parameters$dx_tx$rdt_specificity,
-                           positive = 1:3, negative = 0)
-    malaria_to_treat <- malaria_to_treat$and(any_fever(variables))
+    malaria_to_treat <- diagnosis(target,
+                                  "malaria",
+                                  sens = parameters$dx_tx$rdt_sensitivity,
+                                  spec = parameters$dx_tx$rdt_specificity,
+                                  variables,
+                                  parameters)
+    #malaria_to_treat <- malaria_to_treat$and(any_fever(parameters, variables))
     malaria_to_treat <- malaria_to_treat$sample(parameters$private$efficacy)
-    give_act(malaria_to_treat, parameters, variables, events, timestep)
-    n_act_given <- n_act_given + malaria_to_treat$size()
-
-    # Those who test +ve for malaria are not treated for pneumonia
-    target <- target$set_difference(malaria_to_treat)
+    if(malaria_to_treat$size() > 0){
+      give_act(malaria_to_treat, parameters, variables, events, timestep)
+      n_act_given <- n_act_given + malaria_to_treat$size()
+    }
 
     # Pneumonia
-
+    # Those who test +ve for malaria are not treated for pneumonia
+    target <- target$set_difference(malaria_to_treat)
+    pneumonia_to_treat <- diagnosis(target,
+                                    "pneumonia",
+                                    sens = parameters$private$pneumonia_sensitivity,
+                                    spec = parameters$private$pneumonia_specificity,
+                                    variables,
+                                    parameters)
+    pneumonia_to_treat <- pneumonia_to_treat$sample(parameters$private$efficacy)
+    if(pneumonia_to_treat$size() > 0){
+      give_amoxicillin(pneumonia_to_treat, parameters, variables, events, timestep)
+      n_amoxicillin_given <- n_amoxicillin_given + pneumonia_to_treat$size()
+    }
     ############################################################################
 
     ### Record activity ########################################################
     renderer$render("private_ors", n_ors_given, timestep)
     renderer$render("private_act", n_act_given, timestep)
+    renderer$render("private_amoxicillin", n_amoxicillin_given, timestep)
     ############################################################################
   }
 }

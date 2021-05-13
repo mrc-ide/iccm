@@ -10,10 +10,6 @@
 #' @param negative Status categories  that are true -ves
 #'
 #' @return Bitset
-dx <- function(target, status_variable, sens, spec, positive, negative){
-  # True positives OR False negatives
-  status_variable$get_index_of(positive)$sample(sens)$or(status_variable$get_index_of(negative)$sample(1 - spec))$and(target)
-}
 
 severe_diagnosis <- function(target, illness, sens, spec, variables, parameters){
   true_positives <- individual::Bitset$new(parameters$population)
@@ -52,8 +48,16 @@ diagnosis <- function(target, illness, sens, spec, variables, parameters){
 #' @param timestep Timestyep
 #'
 #' @return Bitset
-long_symptoms <- function(symptom_start_var, target, threshold, timestep){
-  individual::filter_bitset(target, which(time_since_onset(target, symptom_start_var, timestep) > threshold))
+long_symptoms <- function(target, disease_type, threshold, timestep, variables, parameters){
+  long_symptom_duration <- rep(FALSE, target$size())
+  for(disease in names(parameters$disease)){
+    if(parameters$disease[[disease]]$type == disease_type){
+      symptom_duration <- timestep - variables[[paste0(disease, "_symptom_onset")]]$get_values(target)
+      symptom_duration[is.na(symptom_duration)] <- 0
+      long_symptom_duration[symptom_duration > threshold] <- TRUE
+    }
+  }
+  individual::filter_bitset(target, which(long_symptom_duration))
 }
 
 #' Give ORS
@@ -144,15 +148,23 @@ give_severe_treatment_diarrhoea <- function(target, parameters, variables, event
   #cure(target, "dia", variables, events)
 }
 
+#' Give treatment for severe pneumonia
+#'
+#' Provides treatment for severe pneumonia
+give_severe_treatment_pneumonia <- function(target, parameters, variables, events, timestep){
+  #target <- target$copy()$sample(parameters$hf$severe_diarrhoea_efficacy)
+  #cure(target, "dia", variables, events)
+}
+
 #' Give treatment for severe malaria
 #'
 #' Provides treatment for severe malaria
 #'
 #' @inheritParams give_act
 give_severe_treatment_malaria <- function(target, parameters, variables, events, timestep){
-  to_cure <- target$copy()$sample(parameters$hf$severe_malaria_efficacy)
+  # to_cure <- target$copy()$sample(parameters$hf$severe_malaria_efficacy)
   #variables$malaria_last_tx$queue_update(timestep, target)
-  cure(to_cure, "plasmodium_falciparum", variables, events)
+  # cure(to_cure, "plasmodium_falciparum", variables, events)
 }
 
 #' Cure a condition

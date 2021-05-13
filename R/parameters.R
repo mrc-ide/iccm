@@ -32,7 +32,7 @@ get_parameters <- function(user_overwrite = NULL){
   parameters$disease = list(
     bacterial_diarrhoea = list(
       type = "diarrhoea",
-      sigma = 0.05,
+      sigma = 0.0001,
       clinical_duration = 14,
       asymptomatic_duration = 0,
       daily_probability_severe = 0.000001,
@@ -50,10 +50,10 @@ get_parameters <- function(user_overwrite = NULL){
     ),
     viral_diarrhoea = list(
       type = "diarrhoea",
-      sigma = 0.05,
+      sigma = 0.001,
       clinical_duration = 14,
       asymptomatic_duration = 0,
-      daily_probability_severe = 0.01,
+      daily_probability_severe = 0.000001,
       severe_duration = 14,
       daily_probability_death = 0.001,
       probability_fever = 0.5,
@@ -70,7 +70,7 @@ get_parameters <- function(user_overwrite = NULL){
       sigma = 0.01,
       clinical_duration = 14,
       asymptomatic_duration = 30,
-      daily_probability_severe = 0.1,
+      daily_probability_severe = 0.000001,
       severe_duration = 14,
       daily_probability_death = 0.001,
       probability_fever = 0.5,
@@ -84,10 +84,10 @@ get_parameters <- function(user_overwrite = NULL){
     ),
     viral_pneumonia = list(
       type = "pneumonia",
-      sigma = 0.02,
+      sigma = 0.1,
       clinical_duration = 14,
       asymptomatic_duration = 0,
-      daily_probability_severe = 0.1,
+      daily_probability_severe = 0.000001,
       severe_duration = 1,
       daily_probability_death = 0.001,
       probability_fever = 0.5,
@@ -102,8 +102,8 @@ get_parameters <- function(user_overwrite = NULL){
   )
 
   parameters$treatment_seeking <- list(
-    prob_seek_treatment = 0.5,
-    prob_seek_treatment_severe = 1,
+    prob_seek_treatment = 0,
+    prob_seek_treatment_severe = 0,
     treat_seeking_behaviour_delay = 1,
     provider_preference_weights = c(1, 1, 1)
   )

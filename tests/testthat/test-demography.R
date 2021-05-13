@@ -1,15 +1,7 @@
-# Set up simulation
-timesteps <- 100
-parameters = get_parameters(list(population = 5))
-variables <- create_variables(parameters)
-events <- create_events(variables, parameters)
-create_event_listeners(events, variables)
-renderer <- mock_render(1)
-processes <- create_processes(parameters, variables, renderer, events)
-
-test_that("demography rendering works", {
+test_that("demography rendering", {
+  renderer <- mock_render(1)
   # Set up a mock API with 2 children of ages 0 and the age limit
-  variables$birth_t <- mock_double(c(-1, -365*4.5))
+  variables <- list(birth_t = mock_double(c(-1, -365*4.5)))
   # Create the demography rendering function
   demog_renderer <- render_demography(variables, renderer)
   # Make the call using the mock API
@@ -24,7 +16,8 @@ test_that("demography rendering works", {
   mockery::expect_args(renderer$render, 7, "average_age", 2.2541096, 1)
 })
 
-test_that("replace child works", {
+test_that("replace child", {
+  timestep <- 151
   p <- get_parameters()
   p$population <- 3
   # Set coverages of interventions to 1 so we can check the new child is assigned them all
@@ -32,76 +25,65 @@ test_that("replace child works", {
   p$pneumococcal_vx_coverage = 1
   p$hib_vx_coverage = 1
   p$llin_coverage = 1
-  variables <- create_variables(p)
-  timestep <- 1
-  events <- create_events(variables, p)
+
+  # Mock up events
+  events <- list()
+  events$graduate <- mock_event()
 
   # Mock up variables
-  variables$dia_prior_bacteria <- mock_integer(c(1, 2, 3))
-  variables$dia_prior_virus <- mock_integer(c(1, 2, 3))
-  variables$dia_prior_parasite <- mock_integer(c(1, 2, 3))
-  variables$dia_prior_rotavirus <- mock_integer(c(1, 2, 3))
-  variables$dia_status <- mock_integer(c(3, 3, 3))
-  variables$dia_disease <- mock_integer(c(2, 2, 2))
-  variables$birth_t <- mock_double(c(100, 100, 100))
-  variables$llin <- mock_integer(c(0, 0, 0))
-  variables$rotavirus_vx <- mock_integer(c(0, 0, 0))
-  variables$hib_vx <- mock_integer(c(0, 0, 0))
-  variables$pneumococcal_vx <- mock_integer(c(0, 0, 0))
-  variables$het <- mock_double(c(1, 1))
+  variables <- list()
+  variables$birth_t <- mock_integer(rep(100, p$population))
+  for(disease in names(p$disease)){
+    variables[[paste0(disease, "_prior_exposure")]] <- mock_integer(rep(1, p$population))
+    variables[[paste0(disease, "_status")]] <- mock_category(c("uninfected", "asymptomatic", "symptomatic", "severe"), rep("symptomatic", p$population))
+    variables[[paste0(disease, "_fever")]] <- mock_category(c("nonfebrile", "febrile"), rep("febrile", p$population))
+    variables[[paste0(disease, "_symptom_onset")]] <- mock_integer(rep(150, p$population))
+  }
+  variables$het <- mock_double(rep(1.5, p$population))
+  variables$time_of_last_act <- mock_integer(rep(150, p$population))
+  variables$time_of_last_amoxicillin <- mock_integer(rep(150, p$population))
+  variables$awaiting_followup <- mock_integer(rep(1, p$population))
+  variables$llin <- mock_integer(rep(0, p$population))
+  variables$rotavirus_vx <- mock_integer(rep(0, p$population))
+  variables$pneumococcal_vx <- mock_integer(rep(0, p$population))
+  variables$hib_vx <- mock_integer(rep(0, p$population))
+
   # Stub out the random het draw
   mockery::stub(replace_child, "heterogeneity", c(0.5, 1.5))
 
+  # Replace the first 2 children
   to_replace <- individual::Bitset$new(p$population)
   to_replace <- to_replace$insert(1:2)
+  replace_child(to_replace, timestep, variables, p, events)
 
-  # Replace the first 2 children
-  replace_child(to_replace,  timestep, variables, p, events)
-
-  # Checks
-  expect_bitset_update(variables$dia_status$queue_update, 0, 1:2)
-  expect_bitset_update(variables$dia_disease$queue_update, 0, 1:2)
-  expect_bitset_update(variables$dia_prior_bacteria$queue_update, 0, 1:2)
-  expect_bitset_update(variables$dia_prior_virus$queue_update, 0, 1:2)
-  expect_bitset_update(variables$dia_prior_parasite$queue_update, 0, 1:2)
-  expect_bitset_update(variables$dia_prior_rotavirus$queue_update, 0, 1:2)
-  expect_bitset_update(variables$birth_t$queue_update, -29, 1:2)
-  expect_bitset_update(variables$llin$queue_update, c(1,1), 1:2)
-  expect_bitset_update(variables$rotavirus_vx$queue_update, c(1,1), 1:2)
-  expect_bitset_update(variables$hib_vx$queue_update, c(1,1), 1:2)
-  expect_bitset_update(variables$pneumococcal_vx$queue_update, c(1,1), 1:2)
+  # Checks - variable updates
+  expect_bitset_update(variables$birth_t$queue_update, timestep - p$age_lower, 1:2)
+  for(disease in names(p$disease)){
+    expect_bitset_update(variables[[paste0(disease, "_prior_exposure")]]$queue_update, 0, 1:2)
+    expect_bitset_update(variables[[paste0(disease, "_status")]]$queue_update, "uninfected", 1:2)
+    expect_bitset_update(variables[[paste0(disease, "_fever")]]$queue_update, "nonfebrile", 1:2)
+    expect_bitset_update(variables[[paste0(disease, "_symptom_onset")]]$queue_update, NA, 1:2)
+  }
   expect_bitset_update(variables$het$queue_update, c(0.5, 1.5), 1:2)
+  expect_bitset_update(variables$llin$queue_update, c(1,1), 1:2)
+  expect_bitset_update(variables$time_of_last_act$queue_update, NA, 1:2)
+  expect_bitset_update(variables$time_of_last_amoxicillin$queue_update, NA, 1:2)
+  expect_bitset_update(variables$awaiting_followup$queue_update, 0, 1:2)
+  expect_bitset_update(variables$rotavirus_vx$queue_update, c(1, 1), 1:2)
+  expect_bitset_update(variables$hib_vx$queue_update, c(1, 1), 1:2)
+  expect_bitset_update(variables$pneumococcal_vx$queue_update, c(1, 1), 1:2)
+  # Checks - events
+  mockery::expect_args(events$graduate$schedule, n = 1, to_replace, c(p$age_upper - p$age_lower, p$age_upper - p$age_lower))
+  mockery::expect_called(events$graduate$clear_schedule, n = 1)
 })
 
 test_that("get age", {
-  parameters <- get_parameters()
-  parameters$population <- 2
-  variables <- create_variables(parameters)
+  variables <- list()
+  variables$birth_t <- mock_integer(c(1, 100))
 
   expect_equal(get_age(0, variables), -variables$birth_t$get_values())
   expect_equal(get_age(100, variables), -variables$birth_t$get_values() + 100)
   expect_equal(get_age(0, variables, 1), -variables$birth_t$get_values()[1])
   expect_equal(get_age(0, variables, 2), -variables$birth_t$get_values()[2])
-})
-
-
-test_that("background mortality", {
-  p <- get_parameters()
-  p$population <- 3
-  renderer <- mock_render(1)
-  variables <- create_variables(p)
-  variables$dia_status <- mock_integer(c(2, 2, 2))
-  events <- create_events(variables, p)
-
-  # Create the background mortality function
-  bm <- background_mortality(p, variables, renderer, events)
-
-  # Stub to force #2 to die
-  mockery::stub(bm, "sample.int", 2)
-  bm(1)
-
-  mockery::expect_args(renderer$render, 1, "background_mortality", 1, 1)
-  # Check changes have filtered through to replace child
-  expect_bitset_update(variables$dia_status$queue_update, 0, 2)
 })
 

@@ -11,10 +11,10 @@
 #'
 #' @return Bitset
 
-severe_diagnosis <- function(target, illness, sens, spec, variables, parameters){
+severe_diagnosis <- function(target, disease_type, sens, spec, variables, parameters){
   true_positives <- individual::Bitset$new(parameters$population)
   for(disease in names(parameters$disease)){
-    if(parameters$disease[[disease]]$type == illness){
+    if(parameters$disease[[disease]]$type == disease_type){
       true_positives <- true_positives$or(variables[[paste0(disease, "_status")]]$get_index_of("severe"))
     }
   }
@@ -24,10 +24,10 @@ severe_diagnosis <- function(target, illness, sens, spec, variables, parameters)
   return(diagnosed)
 }
 
-diagnosis <- function(target, illness, sens, spec, variables, parameters){
+diagnosis <- function(target, disease_type, sens, spec, variables, parameters){
   true_positives <- individual::Bitset$new(parameters$population)
   for(disease in names(parameters$disease)){
-    if(parameters$disease[[disease]]$type == illness){
+    if(parameters$disease[[disease]]$type == disease_type){
       true_positives <- true_positives$or(variables[[paste0(disease, "_status")]]$get_index_of(c("asymptomatic", "symptomatic", "severe")))
     }
   }

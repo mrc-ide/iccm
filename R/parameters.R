@@ -24,7 +24,7 @@ get_parameters <- function(user_overwrite = NULL){
     het_sd = 0,#1.6,
     # Interventions
     llin_coverage = 0,
-    rotavirus_vx_coverage = 0,
+    rotavirus_vx_coverage = 0.8,
     pneumococcal_vx_coverage = 0,
     hib_vx_coverage = 0
   )
@@ -65,6 +65,26 @@ get_parameters <- function(user_overwrite = NULL){
       vaccine = FALSE,
       asymptomatic_pathway = FALSE
     ),
+    rotavirus = list(
+      type = "diarrhoea",
+      sigma = 0.001,
+      clinical_duration = 14,
+      asymptomatic_duration = 0,
+      daily_probability_severe = 0.000001,
+      severe_duration = 14,
+      daily_probability_death = 0.001,
+      probability_fever = 0.5,
+      maternal_immunity_halflife = 100,
+      infection_immunity_shape = 5,
+      infection_immunity_rate = 1,
+      clinical_immunity_shape = 0,
+      clinical_immunity_rate = 0,
+      vaccine = TRUE,
+      vx_start = 100,
+      vx_initial_efficacy = 0.8,
+      vx_hl = 365,
+      asymptomatic_pathway = FALSE
+    ),
     plasmodium_falciparum = list(
       type = "malaria",
       sigma = 0.01,
@@ -80,7 +100,8 @@ get_parameters <- function(user_overwrite = NULL){
       clinical_immunity_shape = 5,
       clinical_immunity_rate = 1,
       vaccine = FALSE,
-      asymptomatic_pathway = TRUE
+      asymptomatic_pathway = TRUE,
+      llin_efficacy = 0.8
     ),
     viral_pneumonia = list(
       type = "pneumonia",

@@ -31,9 +31,9 @@ mock_render <- function(...) {
   )
 }
 
-mock_event <- function(event) {
+mock_event <- function(scheduled) {
   list(
-    get_scheduled = function(...) event$get_scheduled(...),
+    get_scheduled = function() scheduled,
     schedule = mockery::mock(),
     clear_schedule = mockery::mock()
   )

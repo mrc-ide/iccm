@@ -54,7 +54,9 @@ hf_treat <- function(variables, parameters, renderer, events){
                                             variables,
                                             parameters)
     dia_severe_to_treat <- dia_severe_to_treat$sample(parameters$hf$efficacy)
-    give_severe_treatment_diarrhoea(dia_severe_to_treat, parameters, variables, events, timestep)
+    if(dia_severe_to_treat$size() > 0){
+      give_severe_treatment_diarrhoea(dia_severe_to_treat, parameters, variables, events, timestep)
+    }
 
     # Malaria
     malaria_severe_to_treat <- severe_diagnosis(target,
@@ -64,7 +66,9 @@ hf_treat <- function(variables, parameters, renderer, events){
                                                 variables,
                                                 parameters)
     malaria_severe_to_treat <- malaria_severe_to_treat$sample(parameters$hf$efficacy)
-    give_severe_treatment_malaria(malaria_severe_to_treat, parameters, variables, events, timestep)
+    if(malaria_severe_to_treat$size() > 0){
+      give_severe_treatment_malaria(malaria_severe_to_treat, parameters, variables, events, timestep)
+    }
 
     # Pneumonia
     pneumonia_severe_to_treat <- severe_diagnosis(target,
@@ -74,7 +78,9 @@ hf_treat <- function(variables, parameters, renderer, events){
                                                   variables,
                                                   parameters)
     pneumonia_severe_to_treat <- pneumonia_severe_to_treat$sample(parameters$hf$efficacy)
-    give_severe_treatment_pneumonia(pneumonia_severe_to_treat, parameters, variables, events, timestep)
+    if(pneumonia_severe_to_treat$size() > 0){
+      give_severe_treatment_pneumonia(pneumonia_severe_to_treat, parameters, variables, events, timestep)
+    }
     ############################################################################
 
     ### Non-severe illness ######################################################
@@ -178,8 +184,10 @@ chw_treat <- function(variables, parameters, renderer, events){
     dia_long_symptoms <- long_symptoms(target, "diarrhoea", parameters$chw$diarrhoea_long_symptoms, timestep, variables, parameters)
     dia_severe_to_refer <- dia_severe_dx$or(dia_long_symptoms)
     dia_severe_to_refer <- dia_severe_to_refer$sample(parameters$chw$efficacy)
-    give_ors(dia_severe_to_refer, parameters, variables, events, timestep)
-    n_ors_given <- n_ors_given + dia_severe_to_refer$size()
+    if(dia_severe_to_refer$size() > 0){
+      give_ors(dia_severe_to_refer, parameters, variables, events, timestep)
+      n_ors_given <- n_ors_given + dia_severe_to_refer$size()
+    }
 
     # Malaria
     malaria_severe_dx <- severe_diagnosis(target,
@@ -191,8 +199,10 @@ chw_treat <- function(variables, parameters, renderer, events){
     malaria_long_symptoms <- long_symptoms(target, "malaria", parameters$chw$malaria_long_symptoms, timestep, variables, parameters)
     malaria_severe_to_refer <- malaria_severe_dx$or(malaria_long_symptoms)
     malaria_severe_to_refer <- malaria_severe_to_refer$sample(parameters$chw$efficacy)
-    give_act(malaria_severe_to_refer, parameters, variables, events, timestep)
-    n_act_given <- n_act_given + malaria_severe_to_refer$size()
+    if(malaria_severe_to_refer$size() > 0){
+      give_act(malaria_severe_to_refer, parameters, variables, events, timestep)
+      n_act_given <- n_act_given + malaria_severe_to_refer$size()
+    }
 
     # Pneumonia
     pneumonia_severe_dx <- severe_diagnosis(target,
@@ -204,8 +214,10 @@ chw_treat <- function(variables, parameters, renderer, events){
     pneumonia_long_symptoms <- long_symptoms(target, "pneumonia", parameters$chw$pneumonia_long_symptoms, timestep, variables, parameters)
     pneumonia_severe_to_refer <- pneumonia_severe_dx$or(pneumonia_long_symptoms)
     pneumonia_severe_to_refer <- pneumonia_severe_to_refer$sample(parameters$chw$efficacy)
-    give_amoxicillin(pneumonia_severe_to_refer, parameters, variables, events, timestep)
-    n_amoxicillin_given <- n_amoxicillin_given + pneumonia_severe_to_refer$size()
+    if(pneumonia_severe_to_refer$size() > 0){
+      give_amoxicillin(pneumonia_severe_to_refer, parameters, variables, events, timestep)
+      n_amoxicillin_given <- n_amoxicillin_given + pneumonia_severe_to_refer$size()
+    }
     ############################################################################
 
     ### Referral ###############################################################

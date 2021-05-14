@@ -5,22 +5,22 @@ test_that("sample preference works", {
   parameters$hf$hf = 0
   parameters$chw$chw = 0
   parameters$private$private = 0
-  expect_equal(sample_preference(100, parameters), rep("None", 100))
+  expect_equal(sample_preference(100, parameters), rep("none", 100))
 
   parameters$hf$hf = 1
   parameters$chw$chw = 0
   parameters$private$private = 0
-  expect_equal(sample_preference(100, parameters), rep("HF", 100))
+  expect_equal(sample_preference(100, parameters), rep("hf", 100))
 
   parameters$hf$hf = 0
   parameters$chw$chw = 1
   parameters$private$private = 0
-  expect_equal(sample_preference(100, parameters), rep("CHW", 100))
+  expect_equal(sample_preference(100, parameters), rep("chw", 100))
 
   parameters$hf$hf = 0
   parameters$chw$chw = 0
   parameters$private$private = 1
-  expect_equal(sample_preference(100, parameters), rep("Private", 100))
+  expect_equal(sample_preference(100, parameters), rep("private", 100))
 
 
   # Preference weighting
@@ -28,158 +28,189 @@ test_that("sample preference works", {
   parameters$chw$chw = 1
   parameters$private$private = 1
   parameters$treatment_seeking$provider_preference_weights = c(1, 0, 0)
-  expect_equal(sample_preference(100, parameters), rep("HF", 100))
+  expect_equal(sample_preference(100, parameters), rep("hf", 100))
 
   parameters$treatment_seeking$provider_preference_weights = c(0, 1, 0)
-  expect_equal(sample_preference(100, parameters), rep("CHW", 100))
+  expect_equal(sample_preference(100, parameters), rep("chw", 100))
 
   parameters$treatment_seeking$provider_preference_weights = c(0, 0, 1)
-  expect_equal(sample_preference(100, parameters), rep("Private", 100))
+  expect_equal(sample_preference(100, parameters), rep("private", 100))
 })
 
-test_that("Health facility works", {
-  timesteps <- 10
+test_that("Treatment, diarrhoea non-severe", {
+
+  # Single individual seeking treatment
+
+
+  # Set efficacies and diagnostics to all be perfect
   parameters <- get_parameters()
-  parameters$population <- 5
+  parameters$population <- 1
+  for(i in seq_along(parameters$hf)){
+    if(grepl("sensitivity", names(parameters$hf)[i])){
+      parameters$hf[i] <- 1
+    }
+    if(grepl("specificity", names(parameters$hf)[i])){
+      parameters$hf[i] <- 1
+    }
+  }
   parameters$hf$efficacy <- 1
-  variables <- create_variables(parameters)
-  variables$malaria_fever <- mock_integer(c(0, 1, 0, 1, 0))
-  events <- create_events(variables, parameters)
-  renderer <- mock_render(timesteps)
-  initialise_events(events, variables, parameters)
-  create_event_listeners(events, variables, parameters, renderer)
-  processes <- create_processes(parameters, variables, renderer, events)
-
-  hf1 <- hf_treat(variables, parameters, renderer, events)
-
-  # Five individuals to treat
-  to_treat <- individual::Bitset$new(5)
-  to_treat <- to_treat$insert(1:5)
-
-  dia_sev <- individual::Bitset$new(5)
-  dia_sev <- dia_sev$insert(1)
-  mal_sev <- individual::Bitset$new(5)
-  mal_sev <- mal_sev$insert(2)
-  dia_non_sev <- individual::Bitset$new(5)
-  dia_non_sev <- dia_non_sev$insert(3)
-  mal_non_sev <- individual::Bitset$new(5)
-  mal_non_sev <- mal_non_sev$insert(4)
-
-  gstd <- mockery::mock()
-  mockery::stub(hf1, "give_severe_treatment_diarrhoea", gstd)
-  gstm <- mockery::mock()
-  mockery::stub(hf1, "give_severe_treatment_malaria", gstm)
-  go <- mockery::mock()
-  mockery::stub(hf1, "give_ors", go)
-  ga <- mockery::mock()
-  mockery::stub(hf1, "give_act", ga)
-
-  mockery::stub(hf1, "dx", mockery::mock(dia_sev, mal_sev, dia_non_sev, mal_non_sev))
-
-  hf1(1, to_treat)
-
-  mockery::expect_args(renderer$render, 1, "hf_patients", 5, 1)
-  expect_equal(mockery::mock_args(gstd)[[1]][[1]]$to_vector(), dia_sev$to_vector())
-  expect_equal(mockery::mock_args(gstm)[[1]][[1]]$to_vector(), mal_sev$to_vector())
-  expect_equal(mockery::mock_args(go)[[1]][[1]]$to_vector(), dia_non_sev$to_vector())
-  expect_equal(mockery::mock_args(ga)[[1]][[1]]$to_vector(), mal_non_sev$to_vector())
-  mockery::expect_args(renderer$render, 2, "hf_severe_diarrhoea_tx", 1, 1)
-  mockery::expect_args(renderer$render, 3, "hf_severe_malaria_tx", 1, 1)
-  mockery::expect_args(renderer$render, 4, "hf_ors", 1, 1)
-  mockery::expect_args(renderer$render, 5, "hf_act", 1, 1)
-})
-
-test_that("CHW works", {
-  timesteps <- 10
-  parameters <- get_parameters()
-  parameters$population <- 5
   parameters$chw$efficacy <- 1
-  variables <- create_variables(parameters)
-  variables$malaria_fever <- mock_integer(c(0, 1, 0, 1, 0))
-  variables$awaiting_followup <- mock_integer(c(0, 1, 0, 1, 0))
-  events <- create_events(variables, parameters)
-  renderer <- mock_render(timesteps)
-  initialise_events(events, variables, parameters)
-  create_event_listeners(events, variables, parameters, renderer)
-  processes <- create_processes(parameters, variables, renderer, events)
+  parameters$private$efficacy <- 1
+  parameters$dx_tx$rdt_sensitivity <- 1
+  parameters$dx_tx$rdt_specificity <- 1
 
-  chw1 <- chw_treat(variables, parameters, renderer, events)
+  events <- list()
+  timestep <- 1
 
-  # Five individuals to treat
-  to_treat <- individual::Bitset$new(5)
-  to_treat <- to_treat$insert(1:5)
+  variables <- list()
+  status_cat <- c("uninfected", "asymptomatic", "symptomatic", "severe")
+  for(disease in names(parameters$disease)){
+    variables[[paste0(disease, "_status")]] <- mock_category(status_cat, "uninfected")
+    variables[[paste0(disease, "_symptom_onset")]] <- mock_integer(NA)
+  }
+  variables$bacterial_diarrhoea_status <-  mock_category(status_cat, "symptomatic")
+  variables$bacterial_diarrhoea_symptom_onset <- mock_integer(1)
+  variables$awaiting_followup <- mock_integer(1)
 
-  dia_sev <- individual::Bitset$new(5)
-  dia_sev <- dia_sev$insert(1)
-  mal_sev <- individual::Bitset$new(5)
-  mal_sev <- mal_sev$insert(2)
-  dia_non_sev <- individual::Bitset$new(5)
-  dia_non_sev <- dia_non_sev$insert(3)
-  mal_non_sev <- individual::Bitset$new(5)
-  mal_non_sev <- mal_non_sev$insert(4)
+  # Health facility
+  target <- individual::Bitset$new(1)$insert(1)
+  renderer <- individual::Render$new(1)
+  hf <- hf_treat(variables, parameters, renderer, events)
+  cstv <- mockery::mock()
+  mockery::stub(hf, "clear_scheduled_treatment_visits", cstv)
+  gors <- mockery::mock()
+  mockery::stub(hf, "give_ors", gors)
+  hf(timestep, target)
 
-  go <- mockery::mock()
-  mockery::stub(chw1, "give_ors", go)
-  ga <- mockery::mock()
-  mockery::stub(chw1, "give_act", ga)
+  mockery::expect_called(cstv, 1)
+  mockery::expect_called(gors, 1)
+  output <- renderer$to_dataframe()
+  expect_equal(output$hf_patients, 1)
+  expect_equal(output$hf_severe_diarrhoea_tx, 0)
+  expect_equal(output$hf_severe_malaria_tx, 0)
+  expect_equal(output$hf_severe_pneumonia_tx, 0)
+  expect_equal(output$hf_ors, 1)
+  expect_equal(output$hf_act, 0)
+  expect_equal(output$hf_amoxicillin, 0)
 
-  mockery::stub(chw1, "dx", mockery::mock(dia_sev, mal_sev, dia_non_sev, mal_non_sev))
+  # CHW
+  target <- individual::Bitset$new(1)$insert(1)
+  renderer <- individual::Render$new(1)
+  chw <- chw_treat(variables, parameters, renderer, events)
+  cstv <- mockery::mock()
+  mockery::stub(chw, "clear_scheduled_treatment_visits", cstv)
+  gors <- mockery::mock()
+  mockery::stub(chw, "give_ors", gors)
+  chw(timestep, target)
 
-  chw1(1, to_treat)
+  mockery::expect_called(cstv, 1)
+  mockery::expect_called(gors, 1)
+  output <- renderer$to_dataframe()
+  expect_equal(output$chw_patients, 1)
+  expect_equal(output$chw_followup, 1)
+  expect_equal(output$chw_referral, 0)
+  expect_equal(output$chw_ors, 1)
+  expect_equal(output$chw_act, 0)
+  expect_equal(output$chw_amoxicillin, 0)
 
-  mockery::expect_args(renderer$render, 1, "chw_patients", 5, 1)
-  expect_equal(mockery::mock_args(variables$awaiting_followup$queue_update)[[1]][[2]]$to_vector(), c(1, 3, 5))
-  expect_equal(mockery::mock_args(variables$awaiting_followup$queue_update)[[2]][[2]]$to_vector(), c(2, 4))
-  expect_equal(mockery::mock_args(go)[[1]][[1]]$to_vector(), dia_sev$to_vector())
-  expect_equal(mockery::mock_args(ga)[[1]][[1]]$to_vector(), mal_sev$to_vector())
-  mockery::expect_args(renderer$render, 2, "chw_referral", 2, 1)
-  expect_equal(mockery::mock_args(go)[[2]][[1]]$to_vector(), dia_non_sev$to_vector())
-  expect_equal(mockery::mock_args(ga)[[2]][[1]]$to_vector(), mal_non_sev$to_vector())
-  mockery::expect_args(renderer$render, 3, "chw_ors", 2, 1)
-  mockery::expect_args(renderer$render, 4, "chw_act", 2, 1)
-  mockery::expect_args(renderer$render, 5, "chw_followup", 2, 1)
+  # Private
+  target <- individual::Bitset$new(1)$insert(1)
+  renderer <- individual::Render$new(1)
+  private <- private_treat(variables, parameters, renderer, events)
+  cstv <- mockery::mock()
+  mockery::stub(private, "clear_scheduled_treatment_visits", cstv)
+  gors <- mockery::mock()
+  mockery::stub(private, "give_ors", gors)
+  private(timestep, target)
+
+  mockery::expect_called(cstv, 1)
+  mockery::expect_called(gors, 1)
+  output <- renderer$to_dataframe()
+  expect_equal(output$private_patients, 1)
+  expect_equal(output$private_ors, 1)
+  expect_equal(output$private_act, 0)
+  expect_equal(output$private_amoxicillin, 0)
 })
 
-test_that("Private works", {
-  timesteps <- 10
+
+
+
+
+
+
+
+test_that("Treatment, diarrhoea severe", {
+
+  # Single individual seeking treatment
+  # Set efficacies and diagnostics to all be perfect
   parameters <- get_parameters()
-  parameters$population <- 5
+  parameters$population <- 1
+  for(i in seq_along(parameters$hf)){
+    if(grepl("sensitivity", names(parameters$hf)[i])){
+      parameters$hf[i] <- 1
+    }
+    if(grepl("specificity", names(parameters$hf)[i])){
+      parameters$hf[i] <- 1
+    }
+  }
+  parameters$hf$efficacy <- 1
+  parameters$chw$efficacy <- 1
   parameters$private$efficacy <- 1
-  variables <- create_variables(parameters)
-  variables$malaria_fever <- mock_integer(c(0, 1, 0, 1, 0))
-  events <- create_events(variables, parameters)
-  renderer <- mock_render(timesteps)
-  initialise_events(events, variables, parameters)
-  create_event_listeners(events, variables, parameters, renderer)
-  processes <- create_processes(parameters, variables, renderer, events)
+  parameters$dx_tx$rdt_sensitivity <- 1
+  parameters$dx_tx$rdt_specificity <- 1
 
-  private1 <- private_treat(variables, parameters, renderer, events)
+  events <- list()
+  events$hf_treatment <- mock_event()
+  timestep <- 1
 
-  # Five individuals to treat
-  to_treat <- individual::Bitset$new(5)
-  to_treat <- to_treat$insert(1:5)
+  variables <- list()
+  status_cat <- c("uninfected", "asymptomatic", "symptomatic", "severe")
+  for(disease in names(parameters$disease)){
+    variables[[paste0(disease, "_status")]] <- mock_category(status_cat, "uninfected")
+    variables[[paste0(disease, "_symptom_onset")]] <- mock_integer(NA)
+  }
+  variables$bacterial_diarrhoea_status <-  mock_category(status_cat, "severe")
+  variables$bacterial_diarrhoea_symptom_onset <- mock_integer(1)
+  variables$awaiting_followup <- mock_integer(1)
 
-  dia_sev <- individual::Bitset$new(5)
-  dia_sev <- dia_sev$insert(1)
-  mal_sev <- individual::Bitset$new(5)
-  mal_sev <- mal_sev$insert(2)
-  dia_non_sev <- individual::Bitset$new(5)
-  dia_non_sev <- dia_non_sev$insert(3)
-  mal_non_sev <- individual::Bitset$new(5)
-  mal_non_sev <- mal_non_sev$insert(4)
+  # Health facility
+  target <- individual::Bitset$new(1)$insert(1)
+  renderer <- individual::Render$new(1)
+  hf <- hf_treat(variables, parameters, renderer, events)
+  cstv <- mockery::mock()
+  mockery::stub(hf, "clear_scheduled_treatment_visits", cstv)
+  #gors <- mockery::mock()
+  #mockery::stub(hf, "give_ors", gors)
+  hf(timestep, target)
 
-  go <- mockery::mock()
-  mockery::stub(private1, "give_ors", go)
-  ga <- mockery::mock()
-  mockery::stub(private1, "give_act", ga)
+  mockery::expect_called(cstv, 1)
+  output <- renderer$to_dataframe()
+  expect_equal(output$hf_patients, 1)
+  expect_equal(output$hf_severe_diarrhoea_tx, 1)
+  expect_equal(output$hf_severe_malaria_tx, 0)
+  expect_equal(output$hf_severe_pneumonia_tx, 0)
+  expect_equal(output$hf_ors, 0)
+  expect_equal(output$hf_act, 0)
+  expect_equal(output$hf_amoxicillin, 0)
 
-  mockery::stub(private1, "dx", mockery::mock(dia_non_sev, mal_non_sev))
+  # CHW
+  target <- individual::Bitset$new(1)$insert(1)
+  renderer <- individual::Render$new(1)
+  chw <- chw_treat(variables, parameters, renderer, events)
+  cstv <- mockery::mock()
+  mockery::stub(chw, "clear_scheduled_treatment_visits", cstv)
+  gors <- mockery::mock()
+  mockery::stub(chw, "give_ors", gors)
+  chw(timestep, target)
 
-  private1(1, to_treat)
+  mockery::expect_called(cstv, 1)
+  mockery::expect_called(gors, 1)
+  output <- renderer$to_dataframe()
+  expect_equal(output$chw_patients, 1)
+  expect_equal(output$chw_followup, 1)
+  expect_equal(output$chw_referral, 1)
+  expect_equal(output$chw_ors, 1)
+  expect_equal(output$chw_act, 0)
+  expect_equal(output$chw_amoxicillin, 0)
 
-  mockery::expect_args(renderer$render, 1, "private_patients", 5, 1)
-  expect_equal(mockery::mock_args(go)[[1]][[1]]$to_vector(), dia_non_sev$to_vector())
-  expect_equal(mockery::mock_args(ga)[[1]][[1]]$to_vector(), mal_non_sev$to_vector())
-  mockery::expect_args(renderer$render, 2, "private_ors", 1, 1)
-  mockery::expect_args(renderer$render, 3, "private_act", 1, 1)
 })

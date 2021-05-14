@@ -59,7 +59,7 @@ prior_exposure_equilibrium <- function(p, population, initial_age, maximum_age, 
   ages <- 1:maximum_age
   vx <- rep(1, length(ages))
   if(p$vaccine){
-    vx <- 1 - vaccine_effect(ages, p$vx_start[i], p$vx_initial_efficacy[i], p$vx_hl[i])
+    vx <- 1 - vaccine_effect(ages, p$vx_start, p$vx_initial_efficacy, p$vx_hl)
   }
   mi <- maternal_immunity(ages, p$maternal_immunity_halflife)
   dp <- rep(NA, population)

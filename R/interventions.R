@@ -2,27 +2,16 @@
 #'
 #' Estimate modifier due to vaccine impact
 #'
-#' @param disease Infection disease
-#' @param index Infection disease index
-#' @param target Individual indices
 #' @param ages Individuals ages
 #' @param p Condition specific parameters
-#' @param variables Model variables
+#' @param variable Vaccine coverage variable for specific disease
 #'
 #' @return Vaccine modifier
-vaccine_impact <- function(disease, index, target, ages, p, variables){
-  modifier <- rep(1, target$size())
-  if(disease %in% c("hib", "pneumococcus", "rotavirus")){
-    if(disease == "hib"){
-      vaccinated <- variables$hib_vx$get_values(target)
-    }
-    if(disease == "pneumococcus"){
-      vaccinated <- variables$pneumococcal_vx$get_values(target)
-    }
-    if(disease == "rotavirus"){
-      vaccinated <- variables$rotavirus_vx$get_values(target)
-    }
-    modifier <- 1 - vaccinated * vaccine_effect(ages, p$vx_start[index], p$vx_initial_efficacy[index], p$vx_hl[index])
+vaccine_impact <- function(disease, target, ages, p, variables){
+  if(p$vaccine) {
+    modifier <- 1 - variables[[paste0(disease, "_vx")]]$get_values(target) * vaccine_effect(ages, p$vx_start, p$vx_initial_efficacy, p$vx_hl)
+  } else {
+    modifier <- rep(1, target$size())
   }
   return(modifier)
 }
@@ -49,9 +38,10 @@ vaccine_effect <- function(ages, vx_start, vx_initial_efficacy, vx_hl){
 #'
 #' @inheritParams vaccine_impact
 llin_impact <- function(disease, target, p, variables){
-  modifier <- rep(1, target$size())
-  if(disease == "pf"){
+  if(disease == "plasmodium_falciparum"){
     modifier = 1 - variables$llin$get_values(target) * p$llin_efficacy
+  } else {
+    modifier <- rep(1, target$size())
   }
   return(modifier)
 }

@@ -87,15 +87,9 @@ infection_probability <- function(disease, target, p, timestep, variables){
   # Infection immunity modifier
   ii <- exposure_immunity(pi, p$infection_immunity_shape, p$infection_immunity_rate)
   # Vaccine modifier
-  vi <- rep(1, target$size())
-  if(p$vaccine){
-    vi <- vaccine_impact(disease = disease, index = i, target = target, ages = ages, p = p, variables = variables)
-  }
+  vi <- vaccine_impact(disease = disease, target = target, ages = ages, p = p, variables = variables)
   # LLIN modifier
-  li <- rep(1, target$size())
-  if(disease == "plasmodium_falciparum"){
-    li <- llin_impact(disease = disease, target = target, p = p, variables = variables)
-  }
+  li <- llin_impact(disease = disease, target = target, p = p, variables = variables)
   # Community impacts modifier (vaccine or LLIN)
   #ci <- community_impact(disease = disease, index = i, p = p)
   # Treatment prophylaxis modifier

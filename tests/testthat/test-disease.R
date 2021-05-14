@@ -87,6 +87,33 @@ test_that("infection - including asymptopmatic pathway", {
   mockery::expect_args(renderer$render, 1, paste0(disease, "_clinical_infection"), 2, 1)
 })
 
+test_that("exposure", {
+  parameters <- get_parameters()
+  parameters$population <- 5
+  events <- list()
+  renderer <- mock_render(1)
+
+  variables <- list()
+  for(disease in names(parameters$disease)){
+    variables[[paste0(disease, "_status")]] <- mock_category(c("uninfected", "asymptomatic", "symptomatic", "severe"), rep("uninfected", 5))
+  }
+  ef <- exposure(variables, parameters, events, renderer)
+  mockery::stub(ef, "infection_probability", rep(1, 5), depth = length(parameters$disease))
+  infection_mock <- mockery::mock()
+  mockery::stub(ef, "infection", infection_mock)
+  ef(1)
+
+  for(i in seq_along(parameters$disease)){
+    expect_equal(mockery::mock_args(infection_mock)[[i]][[1]]$to_vector(), 1:5)
+    expect_equal(mockery::mock_args(infection_mock)[[i]][[2]], names(parameters$disease)[i])
+    expect_equal(mockery::mock_args(infection_mock)[[i]][[3]], parameters)
+    expect_equal(mockery::mock_args(infection_mock)[[i]][[4]], variables)
+    expect_equal(mockery::mock_args(infection_mock)[[i]][[5]], events)
+    expect_equal(mockery::mock_args(infection_mock)[[i]][[6]], renderer)
+    expect_equal(mockery::mock_args(infection_mock)[[i]][[7]], 1)
+  }
+})
+
 test_that("increment counter", {
   variable <- mock_integer(1:5)
   target <- individual::Bitset$new(5)$insert(1:3)

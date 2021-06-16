@@ -8,30 +8,30 @@ create_variables <- function(parameters){
   initial_age <- floor(rtexp(parameters$population, rate = 1 / parameters$average_age, lower = parameters$age_lower, upper = parameters$age_upper))
   variables$birth_t <- individual::DoubleVariable$new(-initial_age)
 
-  # Epidemiology
+  # Heterogeneity
   est_het <- heterogeneity(parameters$population, parameters$het_sd)
   variables$het <- individual::DoubleVariable$new(est_het)
 
   # Diseases
-  ## Prior exposure
-  for(disease in names(parameters$disease)){
+  n_disease <- length(parameters$disease)
+  disease_states <- c("uninfected", "asymptomatic", "symptomatic", "severe")
+  fever_states <- c("nonfebrile", "febrile")
+  variables$prior_exposure <- list()
+  variables$infection_status <- list()
+  variables$fever <- list()
+  variables$symptom_onset <- list()
+  for(disease in 1:n_disease){
+    ## Prior exposure
     prior <- round(prior_exposure_equilibrium(parameters$disease[[disease]], parameters$population, initial_age, parameters$age_upper, est_het))
-    variables[[paste0(disease, "_prior_exposure")]] <- individual::IntegerVariable$new(initial_values = prior)
-  }
-  ## Infection status
-  for(disease in names(parameters$disease)){
-    variables[[paste0(disease, "_status")]] <- individual::CategoricalVariable$new(c("uninfected", "asymptomatic", "symptomatic", "severe"), rep("uninfected", parameters$population))
-  }
-  ## Fever status
-  for(disease in names(parameters$disease)){
-    variables[[paste0(disease, "_fever")]] <- individual::CategoricalVariable$new(c("nonfebrile", "febrile"), rep("nonfebrile", parameters$population))
-  }
-  ## Symptom onset
-  for(disease in names(parameters$disease)){
-    variables[[paste0(disease, "_symptom_onset")]] <- individual::IntegerVariable$new(initial_values = rep(NA, parameters$population))
+    variables$prior_exposure[[disease]] <- individual::IntegerVariable$new(initial_values = prior)
+    ## Infection status
+    variables$infection_status[[disease]] <- individual::CategoricalVariable$new(disease_states, rep("uninfected", parameters$population))
+    ## Fever status
+    variables$fever[[disease]] <- individual::CategoricalVariable$new(fever_states, rep("nonfebrile", parameters$population))
+    ## Symptom onset
+    variables$symptom_onset[[disease]] <- individual::IntegerVariable$new(initial_values = rep(NA, parameters$population))
   }
 
-  # Treatment
   # Treatment seeking
   est_provider_preference <- sample_preference(parameters$population, parameters)
   variables$provider_preference <- individual::CategoricalVariable$new(c("none", "hf", "chw", "private"), est_provider_preference)
@@ -65,12 +65,12 @@ prior_exposure_equilibrium <- function(p, population, initial_age, maximum_age, 
   dp <- rep(NA, population)
   for(i in 1:population){
     dp[i] <- eq_prior_indiv(initial_age[i],
-                                  p$sigma,
-                                  est_het[i],
-                                  vx,
-                                  mi,
-                                  p$infection_immunity_shape,
-                                  p$infection_immunity_rate)
+                            p$sigma,
+                            est_het[i],
+                            vx,
+                            mi,
+                            p$infection_immunity_shape,
+                            p$infection_immunity_rate)
   }
   return(dp)
 }

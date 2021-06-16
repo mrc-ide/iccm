@@ -78,8 +78,8 @@ replace_child <- function(target, timestep, variables, parameters, events) {
 #' @param timestep Current time
 #' @param index optionally return a subset of the variable vector
 #' @inheritParams background_mortality
-get_age <- function(timestep, variables, index = NULL){
-  timestep - variables$birth_t$get_values(index = index)
+get_age <- function(timestep, birth_t, index = NULL){
+  timestep - birth_t$get_values(index = index)
 }
 
 

@@ -38,10 +38,6 @@ test_that("sample preference works", {
 })
 
 test_that("Treatment, diarrhoea non-severe", {
-
-  # Single individual seeking treatment
-
-
   # Set efficacies and diagnostics to all be perfect
   parameters <- get_parameters()
   parameters$population <- 1
@@ -132,16 +128,7 @@ test_that("Treatment, diarrhoea non-severe", {
   expect_equal(output$private_amoxicillin, 0)
 })
 
-
-
-
-
-
-
-
 test_that("Treatment, diarrhoea severe", {
-
-  # Single individual seeking treatment
   # Set efficacies and diagnostics to all be perfect
   parameters <- get_parameters()
   parameters$population <- 1
@@ -179,8 +166,6 @@ test_that("Treatment, diarrhoea severe", {
   hf <- hf_treat(variables, parameters, renderer, events)
   cstv <- mockery::mock()
   mockery::stub(hf, "clear_scheduled_treatment_visits", cstv)
-  #gors <- mockery::mock()
-  #mockery::stub(hf, "give_ors", gors)
   hf(timestep, target)
 
   mockery::expect_called(cstv, 1)
@@ -212,5 +197,4 @@ test_that("Treatment, diarrhoea severe", {
   expect_equal(output$chw_ors, 1)
   expect_equal(output$chw_act, 0)
   expect_equal(output$chw_amoxicillin, 0)
-
 })

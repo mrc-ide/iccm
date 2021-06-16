@@ -54,7 +54,7 @@ replace_child <- function(target, timestep, variables, parameters, events) {
     variables[[paste0(disease, "_prior_exposure")]]$queue_update(0, target)
     variables[[paste0(disease, "_status")]]$queue_update("uninfected", target)
     variables[[paste0(disease, "_fever")]]$queue_update("nonfebrile", target)
-    variables[[paste0(disease, "_symptom_onset")]]$queue_update(NA, target)
+    variables[[paste0(disease, "_symptom_onset")]]$queue_update(as.numeric(NA), target)
   }
 
   n <- target$size()
@@ -62,8 +62,8 @@ replace_child <- function(target, timestep, variables, parameters, events) {
   new_het <- heterogeneity(n, parameters$het_sd)
   variables$het$queue_update(new_het, target)
 
-  variables$time_of_last_act$queue_update(NA, target)
-  variables$time_of_last_amoxicillin$queue_update(NA, target)
+  variables$time_of_last_act$queue_update(as.numeric(NA), target)
+  variables$time_of_last_amoxicillin$queue_update(as.numeric(NA), target)
   variables$awaiting_followup$queue_update(0, target)
 
   # re-draw interventions and vaccination

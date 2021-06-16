@@ -186,7 +186,7 @@ clear_fever <- function(variable){
 clear_onset_symptoms <- function(variable){
   force(variable)
   function(timestep, target){
-    variable$queue_update(NA, target)
+    variable$queue_update(as.numeric(NA), target)
   }
 }
 

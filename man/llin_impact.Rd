@@ -7,13 +7,7 @@
 llin_impact(disease, target, p, variables)
 }
 \arguments{
-\item{disease}{Infection disease}
-
-\item{target}{Individual indices}
-
 \item{p}{Condition specific parameters}
-
-\item{variables}{Model variables}
 }
 \description{
 Estimate modifier due to LLIN impact

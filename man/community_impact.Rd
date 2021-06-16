@@ -7,10 +7,6 @@
 community_impact(disease, index, p)
 }
 \arguments{
-\item{disease}{Infection disease}
-
-\item{index}{Infection disease index}
-
 \item{p}{Condition specific parameters}
 }
 \description{

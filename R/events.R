@@ -237,8 +237,8 @@ schedule_progression_from_clinical_infection <- function(disease, parameters, pr
   force(progress_to_asymptomatic_infection)
   force(progress_to_uninfected)
   function(timestep, target){
-    clinical_duration <- rexp(target$size(), 1 / parameters$disease[[disease]]$clinical_duration)
-    time_to_severe <- rgeom(target$size(), parameters$disease[[disease]]$daily_probability_severe)
+    clinical_duration <- stats::rexp(target$size(), 1 / parameters$disease[[disease]]$clinical_duration)
+    time_to_severe <- stats::rgeom(target$size(), parameters$disease[[disease]]$daily_probability_severe)
     to_severe_index <- time_to_severe < clinical_duration
     to_severe <- individual::filter_bitset(target, which(to_severe_index))
     progress_to_severe_infection$schedule(to_severe, time_to_severe[to_severe_index])
@@ -258,7 +258,7 @@ schedule_progression_from_asymptomatic_infection <- function(disease, parameters
   force(parameters)
   force(progress_to_uninfected)
   function(timestep, target){
-    asymptomatic_duration <- rexp(target$size(), 1 / parameters$disease[[disease]]$asymptomatic_duration)
+    asymptomatic_duration <- stats::rexp(target$size(), 1 / parameters$disease[[disease]]$asymptomatic_duration)
     progress_to_uninfected$schedule(target, delay = asymptomatic_duration)
   }
 }
@@ -269,7 +269,7 @@ schedule_progression_from_severe_infection <- function(disease, parameters, prog
   force(progress_to_asymptomatic_infection)
   force(progress_to_uninfected)
   function(timestep, target){
-    severe_duration <- rexp(target$size(), 1 / parameters$disease[[disease]]$severe_duration)
+    severe_duration <- stats::rexp(target$size(), 1 / parameters$disease[[disease]]$severe_duration)
     if(parameters$disease[[disease]]$asymptomatic_pathway){
       progress_to_asymptomatic_infection$schedule(target, delay = severe_duration)
     } else {

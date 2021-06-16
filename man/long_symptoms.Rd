@@ -4,16 +4,16 @@
 \alias{long_symptoms}
 \title{Long symptoms}
 \usage{
-long_symptoms(symptom_start_var, target, threshold, timestep)
+long_symptoms(target, disease_type, threshold, timestep, variables, parameters)
 }
 \arguments{
-\item{symptom_start_var}{Variable of symptom start time}
-
 \item{target}{Children seeking treatment}
 
 \item{threshold}{Period after which illness is classified as severe}
 
 \item{timestep}{Timestyep}
+
+\item{symptom_start_var}{Variable of symptom start time}
 }
 \value{
 Bitset

@@ -9,8 +9,6 @@ get_age(timestep, variables, index = NULL)
 \arguments{
 \item{timestep}{Current time}
 
-\item{variables}{Model variables}
-
 \item{index}{optionally return a subset of the variable vector}
 }
 \description{

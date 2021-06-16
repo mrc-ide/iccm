@@ -82,7 +82,7 @@ give_ors <- function(target, parameters, variables, events, timestep){
       to_avert_severe <- to_avert_severe$and(events[[paste0(disease, "_progress_to_severe_infection")]]$get_scheduled())
       to_avert_severe <- to_avert_severe$sample(parameters$dx_tx$ors_efficacy)
       events[[paste0(disease, "_progress_to_severe_infection")]]$clear_schedule(to_avert_severe)
-      clinical_duration <-  rexp(to_avert_severe$size(), 1 / parameters$disease[[disease]]$clinical_duration)
+      clinical_duration <-  stats::rexp(to_avert_severe$size(), 1 / parameters$disease[[disease]]$clinical_duration)
       events[[paste0(disease, "_progress_to_uninfected")]]$schedule(to_avert_severe, delay = clinical_duration)
     }
   }

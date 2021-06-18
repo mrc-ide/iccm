@@ -4,7 +4,7 @@
 #' @param type Disease type (diarrhoea, malaria or pneumonia)
 #'
 #' @return A vector indexing which disease are of requested type
-type_index <- function(type, parameters){
+type_index <- function(parameters, type){
   which(sapply(parameters$disease, "[[", "type") == type)
 }
 
@@ -17,8 +17,8 @@ type_index <- function(type, parameters){
 #' @param disease_index Index of diseases of target type
 #'
 #' @return A bitset of those testing positive
-diagnosis <- function(target, sens, spec, variables, disease_index){
-  true_positives <- individual::Bitset$new(target$size())
+diagnosis <- function(target, sens, spec, parameters, variables, disease_index){
+  true_positives <- individual::Bitset$new(parameters$population)
   for(disease in disease_index){
     true_positives <- true_positives$or(variables$infection_status[[disease]]$get_index_of(c("asymptomatic", "symptomatic", "severe")))
   }
@@ -33,8 +33,8 @@ diagnosis <- function(target, sens, spec, variables, disease_index){
 #' @inheritDotParams diagnosis
 #'
 #' @return  A bitset of those testing positive
-severe_diagnosis <- function(target, sens, spec, variables, disease_index){
-  true_positives <- individual::Bitset$new(target$size())
+severe_diagnosis <- function(target, sens, spec, parameters, variables, disease_index){
+  true_positives <- individual::Bitset$new(parameters$population)
   for(disease in disease_index){
     true_positives <- true_positives$or(variables$infection_status[[disease]]$get_index_of("severe"))
   }
@@ -205,11 +205,16 @@ treatment_prophylaxis <- function(time_since_treatment, pr_hl){
   return(tp)
 }
 
-
+#' Identify children with fever of any cause
+#'
+#' @param parameters Model parameters
+#' @param variables Model variables
+#'
+#' @return A bitset of children with fever
 any_fever <- function(parameters, variables){
   has_fever <- individual::Bitset$new(parameters$population)
-  for(disease in names(parameters$disease)){
-    has_fever <- has_fever$or(variables[[paste0(disease, "_fever")]]$get_index_of("febrile"))
+  for(disease in 1:length(parameters$disease)){
+    has_fever <- has_fever$or(variables$fever[[disease]]$get_index_of("febrile"))
   }
   return(has_fever)
 }

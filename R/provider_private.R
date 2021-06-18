@@ -95,6 +95,7 @@ private_diagnose_malaria <- function(target, variables, parameters){
     target = target,
     sens = parameters$dx_tx$rdt_sensitivity,
     spec = parameters$dx_tx$rdt_specificity,
+    parameters = parameters,
     variables = variables,
     disease_index = disease_index
   )
@@ -116,6 +117,7 @@ private_diagnose_diarrhoea <- function(target, variables, parameters){
     target = target,
     sens = parameters$private$diarrhoea_sensitivity,
     spec = parameters$private$diarrhoea_specificity,
+    parameters = parameters,
     variables = variables,
     disease_index = disease_index
   )
@@ -137,6 +139,7 @@ private_diagnose_pneumonia <- function(target, variables, parameters){
     target = target,
     sens = parameters$private$pneumonia_sensitivity,
     spec = parameters$private$pneumonia_specificity,
+    parameters = parameters,
     variables = variables,
     disease_index = disease_index
   )

@@ -25,8 +25,8 @@ run_simulation <- function(timesteps, parameters = NULL, long = TRUE){
   create_event_listeners(events, variables, parameters, renderer)
   processes <- create_processes(parameters, variables, renderer, events)
 
-  individual::simulation_loop(variables = variables,
-                              events = events,
+  individual::simulation_loop(variables = unlist(variables),
+                              events = unlist(events),
                               processes = processes,
                               timesteps = timesteps)
   output <- renderer$to_dataframe()# %>%

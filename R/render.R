@@ -4,10 +4,11 @@
 #'
 #' @inheritParams condition_exposure
 render_prevalence <- function(variables, renderer, parameters){
+  names <- names(parameters$disease)
   function(timestep){
-    for(disease in names(parameters$disease)){
-      prevalence <- (parameters$population - variables[[paste0(disease, "_status")]]$get_index_of("uninfected")$size()) / parameters$population
-      renderer$render(paste0(disease, "_prevalence"), prevalence, timestep)
+    for(disease in seq_along(names)){
+      prevalence <- (parameters$population - variables$infection_status[[disease]]$get_index_of("uninfected")$size()) / parameters$population
+      renderer$render(paste0(names[disease], "_prevalence"), prevalence, timestep)
     }
   }
 }
@@ -15,14 +16,17 @@ render_prevalence <- function(variables, renderer, parameters){
 #' Record average prior infections
 #'
 render_prior <- function(variables, renderer, parameters){
+  names <- names(parameters$disease)
   function(timestep){
-    for(disease in names(parameters$disease)){
-      priors <- mean(variables[[paste0(disease, "_prior_exposure")]]$get_values())
-      renderer$render(paste0(disease, "_prior_exposure"), priors, timestep)
+    for(disease in seq_along(names)){
+      priors <- mean(variables$prior_exposure[[disease]]$get_values())
+      renderer$render(paste0(names[disease], "_prior_exposure"), priors, timestep)
     }
   }
 }
 
+#' Record prevalence of fever
+#'
 render_fever_prevalence <- function(parameters, variables, renderer){
   function(timestep){
     fever_prev <- any_fever(parameters, variables)$size() / parameters$population

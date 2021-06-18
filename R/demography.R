@@ -13,7 +13,7 @@ mortality <- function(parameters, variables, events, renderer){
     mort_prob_matrix[ , length(parameters$disease) + 1] <- rate_to_prob(1 / parameters$average_age)
     diseases <- names(parameters$disease)
     for(i in seq_along(diseases)){
-      mort_prob_matrix[variables[[paste0(diseases[i], "_status")]]$get_index_of("severe")$to_vector() , i] <- parameters$disease[[diseases[i]]]$daily_probability_death
+      mort_prob_matrix[variables$infection_status[[i]]$get_index_of("severe")$to_vector() , i] <- parameters$disease[[i]]$daily_probability_death
     }
     # Sample outcomes
     death_index <- competing_hazard(mort_prob_matrix)
@@ -27,8 +27,10 @@ mortality <- function(parameters, variables, events, renderer){
     }
     # Death other causes
     index <- death_index == i + 1
-    renderer$render("other_death", sum(index), timestep)
-    replace_child(individual::Bitset$new(parameters$population)$insert(which(index)), timestep, variables, parameters, events)
+    if(sum(index) > 0){
+      renderer$render("other_death", sum(index), timestep)
+      replace_child(individual::Bitset$new(parameters$population)$insert(which(index)), timestep, variables, parameters, events)
+    }
   }
 }
 
@@ -41,7 +43,7 @@ mortality <- function(parameters, variables, events, renderer){
 #' @param events  Model events
 replace_child <- function(target, timestep, variables, parameters, events) {
   # Clear any future scheduling
-  for(event in events){
+  for(event in unlist(events)){
     event$clear_schedule(target)
   }
 
@@ -50,17 +52,23 @@ replace_child <- function(target, timestep, variables, parameters, events) {
   events$graduate$schedule(target, delay = rep(graduate_t, target$size()))
 
   # Diseases
-  for(disease in names(parameters$disease)){
-    variables[[paste0(disease, "_prior_exposure")]]$queue_update(0, target)
-    variables[[paste0(disease, "_status")]]$queue_update("uninfected", target)
-    variables[[paste0(disease, "_fever")]]$queue_update("nonfebrile", target)
-    variables[[paste0(disease, "_symptom_onset")]]$queue_update(as.numeric(NA), target)
+  for(disease in 1:length(parameters$disease)){
+    ## Prior exposure
+    variables$prior_exposure[[disease]]$queue_update(0, target)
+    ## Infection status
+    variables$infection_status[[disease]]$queue_update("uninfected", target)
+    ## Fever status
+    variables$fever[[disease]]$queue_update("nonfebrile", target)
+    ## Symptom onset
+    variables$symptom_onset[[disease]]$queue_update(as.numeric(NA), target)
+    ## Vaccination status
+    variables$vaccine[[disease]]$queue_update(stats::rbinom(target$size(), 1, parameters$disease[[disease]]$vaccine_coverage), target)
   }
 
   n <- target$size()
   # re-draw individual level heterogeneity
   new_het <- heterogeneity(n, parameters$het_sd)
-  variables$het$queue_update(new_het, target)
+  variables$heterogeneity$queue_update(new_het, target)
 
   variables$time_of_last_act$queue_update(as.numeric(NA), target)
   variables$time_of_last_amoxicillin$queue_update(as.numeric(NA), target)
@@ -68,9 +76,6 @@ replace_child <- function(target, timestep, variables, parameters, events) {
 
   # re-draw interventions and vaccination
   variables$llin$queue_update(stats::rbinom(n, 1, parameters$llin_coverage), target)
-  variables$rotavirus_vx$queue_update(stats::rbinom(n, 1, parameters$rotavirus_vx_coverage), target)
-  variables$pneumococcal_vx$queue_update(stats::rbinom(n, 1, parameters$pneumococcal_vx_coverage), target)
-  variables$hib_vx$queue_update(stats::rbinom(n, 1, parameters$hib_vx_coverage), target)
 }
 
 #' Get children's ages
@@ -78,8 +83,8 @@ replace_child <- function(target, timestep, variables, parameters, events) {
 #' @param timestep Current time
 #' @param index optionally return a subset of the variable vector
 #' @inheritParams background_mortality
-get_age <- function(timestep, birth_t, index = NULL){
-  timestep - birth_t$get_values(index = index)
+get_age <- function(timestep, birth_t, target = NULL){
+  timestep - birth_t$get_values(index = target)
 }
 
 

@@ -21,12 +21,8 @@ get_parameters <- function(user_overwrite = NULL){
     age_lower = 30,
     age_upper = 5 * 365 - 1,
     # Epidemiology
-    het_sd = 0,#1.6,
-    # Interventions
-    llin_coverage = 0,
-    rotavirus_vx_coverage = 0.8,
-    pneumococcal_vx_coverage = 0,
-    hib_vx_coverage = 0
+    het_sd = 0, #1.6,
+    llin_coverage = 0
   )
 
   parameters$disease = list(
@@ -35,7 +31,7 @@ get_parameters <- function(user_overwrite = NULL){
       sigma = 0.0001,
       clinical_duration = 14,
       asymptomatic_duration = 0,
-      daily_probability_severe = 0.000001,
+      daily_probability_severe = 0.001,
       severe_duration = 14,
       daily_probability_death = 0.000001,
       probability_fever = 0.5,
@@ -44,7 +40,7 @@ get_parameters <- function(user_overwrite = NULL){
       infection_immunity_rate = 1,
       clinical_immunity_shape = 0,
       clinical_immunity_rate = 0,
-      vaccine = FALSE,
+      vaccine_coverage = 0,
       asymptomatic_pathway = FALSE,
       amoxicillin_efficacy = 0.8
     ),
@@ -53,7 +49,7 @@ get_parameters <- function(user_overwrite = NULL){
       sigma = 0.001,
       clinical_duration = 14,
       asymptomatic_duration = 0,
-      daily_probability_severe = 0.000001,
+      daily_probability_severe = 0.0001,
       severe_duration = 14,
       daily_probability_death = 0.001,
       probability_fever = 0.5,
@@ -62,15 +58,16 @@ get_parameters <- function(user_overwrite = NULL){
       infection_immunity_rate = 1,
       clinical_immunity_shape = 0,
       clinical_immunity_rate = 0,
-      vaccine = FALSE,
-      asymptomatic_pathway = FALSE
+      vaccine_coverage = 0,
+      asymptomatic_pathway = FALSE,
+      amoxicillin_efficacy = 0
     ),
     rotavirus = list(
       type = "diarrhoea",
       sigma = 0.001,
       clinical_duration = 14,
       asymptomatic_duration = 0,
-      daily_probability_severe = 0.000001,
+      daily_probability_severe = 0.00001,
       severe_duration = 14,
       daily_probability_death = 0.001,
       probability_fever = 0.5,
@@ -79,18 +76,19 @@ get_parameters <- function(user_overwrite = NULL){
       infection_immunity_rate = 1,
       clinical_immunity_shape = 0,
       clinical_immunity_rate = 0,
-      vaccine = TRUE,
-      vx_start = 100,
-      vx_initial_efficacy = 0.8,
-      vx_hl = 365,
-      asymptomatic_pathway = FALSE
+      vaccine_coverage = 0.8,
+      vaccine_start = 100,
+      vaccine_initial_efficacy = 0.8,
+      vaccine_hl = 365,
+      asymptomatic_pathway = FALSE,
+      amoxicillin_efficacy = 0
     ),
     plasmodium_falciparum = list(
       type = "malaria",
       sigma = 0.01,
       clinical_duration = 14,
       asymptomatic_duration = 30,
-      daily_probability_severe = 0.000001,
+      daily_probability_severe = 0.001,
       severe_duration = 14,
       daily_probability_death = 0.001,
       probability_fever = 0.5,
@@ -99,16 +97,17 @@ get_parameters <- function(user_overwrite = NULL){
       infection_immunity_rate = 1,
       clinical_immunity_shape = 5,
       clinical_immunity_rate = 1,
-      vaccine = FALSE,
+      vaccine_coverage = 0,
       asymptomatic_pathway = TRUE,
-      llin_efficacy = 0.8
+      llin_efficacy = 0.8,
+      amoxicillin_efficacy = 0
     ),
     viral_pneumonia = list(
       type = "pneumonia",
       sigma = 0.1,
       clinical_duration = 14,
       asymptomatic_duration = 0,
-      daily_probability_severe = 0.000001,
+      daily_probability_severe = 0.001,
       severe_duration = 1,
       daily_probability_death = 0.001,
       probability_fever = 0.5,
@@ -117,14 +116,15 @@ get_parameters <- function(user_overwrite = NULL){
       infection_immunity_rate = 1,
       clinical_immunity_shape = 0,
       clinical_immunity_rate = 0,
-      vaccine = FALSE,
-      asymptomatic_pathway = FALSE
+      vaccine_coverage = 0,
+      asymptomatic_pathway = FALSE,
+      amoxicillin_efficacy = 0
     )
   )
 
   parameters$treatment_seeking <- list(
-    prob_seek_treatment = 0,
-    prob_seek_treatment_severe = 0,
+    prob_seek_treatment = 0.2,
+    prob_seek_treatment_severe = 0.3,
     treat_seeking_behaviour_delay = 1,
     provider_preference_weights = c(1, 1, 1)
   )
@@ -178,7 +178,7 @@ get_parameters <- function(user_overwrite = NULL){
   )
 
   parameters$private <- list(
-    private = 1,
+    private = 0,
     travel_time = 1,
     efficacy = 1,
     severe_diarrhoea_efficacy = 1,

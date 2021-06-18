@@ -68,19 +68,19 @@ create_event_listeners <- function(events, variables, parameters, renderer){
         provider_preference = variables$provider_preference,
         hf_treatment = events$hf_treatment,
         hf_travel_time = parameters$hf$travel_time,
-        chw_treament = events$chw_treatment,
+        chw_treatment = events$chw_treatment,
         chw_travel_time = parameters$chw$travel_time,
         private_treatment = events$private_treatment,
         private_travel_time = parameters$private$travel_time
       )
     )
     # In the case of super-infection, a recovery may already be scheduled. We need to clear this
-    events[[event]]$add_listener(
+    events$clinical[[disease]]$add_listener(
       clear_scheduled_recovery(
-        event = events$uninfected[[disease]]
+        event = events$susceptible[[disease]]
       ))
     # Schedule progression from clinical infection
-    events[[event]]$add_listener(
+    events$clinical[[disease]]$add_listener(
       schedule_progression_from_clinical_infection(
         p = p,
         severe = events$severe[[disease]],
@@ -157,7 +157,7 @@ create_event_listeners <- function(events, variables, parameters, renderer){
         provider_preference = variables$provider_preference,
         hf_treatment = events$hf_treatment,
         hf_travel_time = parameters$hf$travel_time,
-        chw_treament = events$chw_treatment,
+        chw_treatment = events$chw_treatment,
         chw_travel_time = parameters$chw$travel_time,
         private_treatment = events$private_treatment,
         private_travel_time = parameters$private$travel_time
@@ -172,7 +172,7 @@ create_event_listeners <- function(events, variables, parameters, renderer){
       )
     )
     events$severe[[disease]]$add_listener(
-      record_severe_incidence(paste0(disease, "_severe_incidence"), renderer)
+      record_severe_incidence(paste0(names(parameters$disease)[disease], "_severe_incidence"), renderer)
     )
   }
 
@@ -269,7 +269,7 @@ schedule_treatment_seeking <- function(probability_seek_treatment,
                                        provider_preference,
                                        hf_treatment,
                                        hf_travel_time,
-                                       chw_treament,
+                                       chw_treatment,
                                        chw_travel_time,
                                        private_treatment,
                                        private_travel_time){
@@ -278,7 +278,7 @@ schedule_treatment_seeking <- function(probability_seek_treatment,
   force(provider_preference)
   force(hf_treatment)
   force(hf_travel_time)
-  force(chw_treament)
+  force(chw_treatment)
   force(chw_travel_time)
   force(private_treatment)
   force(private_travel_time)
@@ -352,7 +352,7 @@ initialise_events <- function(events, variables, parameters){
   # Initialise gradutation
   to_graduate <- individual::Bitset$new(parameters$population)
   to_graduate <- to_graduate$insert(1:parameters$population)
-  graduate_t <- parameters$age_upper - get_age(0, variables)
+  graduate_t <- parameters$age_upper - get_age(0, variables$birth_t)
   events$graduate$schedule(to_graduate, delay = graduate_t)
 }
 

@@ -14,10 +14,9 @@ exposure <- function(variables, parameters, events, renderer){
       # Estimate infection probabilities
       infection_prob <- infection_probability(
         target = exposed,
-        p = parameters$disease[[disease]],
-        prior_exposure = variables$prior_exposure[[disease]],
-        heterogeneity = variables$het,
-        birth_t = variables$birth_t,
+        disease = disease,
+        parameters = parameters,
+        variables = variables,
         timestep = timestep
       )
       # Draw those infected
@@ -26,11 +25,10 @@ exposure <- function(variables, parameters, events, renderer){
       if(infected$size() > 0){
         infection(
           infected = infected,
-          p = parameters$disease[[disease]],
-          prior_exposure = variables$prior_exposure[[disease]],
-          infection_status = variables$infection_status[[disease]],
-          clinical = events$clinical[[disease]],
-          asymptomatic = events$asymptomatic[[disease]],
+          disease = disease,
+          parameters = parameters,
+          variables = variables,
+          events = events,
           renderer = renderer,
           timestep = timestep
         )
@@ -51,47 +49,51 @@ exposure <- function(variables, parameters, events, renderer){
 #' @param renderer Model renderer
 #' @param timestep Model timestep
 infection <- function(infected,
-                      p,
-                      prior_exposure,
-                      infection_status,
-                      clinical,
-                      asymptomatic,
+                      disease,
+                      parameters,
+                      variables,
+                      events,
                       renderer,
                       timestep){
-  # Update record of prior exposure
-  increment_counter(target = infected, variable = prior_exposure)
 
-  if(p$asymptomatic_pathway){
+
+  if(parameters$disease[[disease]]$asymptomatic_pathway){
     infection_to_render <- 0
     # Currently uninfected
-    currently_uninfected <- infection_status$get_index_of(c("uninfected"))$and(infected)
+    currently_uninfected <- variables$infection_status[[disease]]$get_index_of(c("uninfected"))$and(infected)
     if(currently_uninfected$size() > 0){
-      pi <- prior_exposure$get_values(currently_uninfected)
-      ci <- clinical_immunity(pi, p$clinical_immunity_shape, p$clinical_immunity_rate)
+      pi <- variables$prior_exposure[[disease]]$get_values(currently_uninfected)
+      ci <- clinical_immunity(pi, parameters$disease[[disease]]$clinical_immunity_shape, parameters$disease[[disease]]$clinical_immunity_rate)
       clinical_index <- stats::runif(currently_uninfected$size()) < ci
       S_to_I <- individual::filter_bitset(currently_uninfected, which(clinical_index))
       S_to_A <- individual::filter_bitset(currently_uninfected, which(!clinical_index))
-      clinical$schedule(S_to_I, delay = 0)
+      events$clinical[[disease]]$schedule(S_to_I, delay = 0)
       infection_to_render <- infection_to_render + S_to_I$size()
-      asymptomatic$schedule(S_to_A, delay = 0)
+      events$asymptomatic[[disease]]$schedule(S_to_A, delay = 0)
     }
 
     # Currently asymptomatically infected
-    currently_asymptomatic <- infection_status$get_index_of(c("asymptomatic"))$and(infected)
+    currently_asymptomatic <- variables$infection_status[[disease]]$get_index_of(c("asymptomatic"))$and(infected)
     if(currently_uninfected$size() > 0){
-      pi <- prior_exposure$get_values(currently_asymptomatic)
-      ci <- clinical_immunity(pi, p$clinical_immunity_shape, p$clinical_immunity_rate)
+      pi <- variables$prior_exposure[[disease]]$get_values(currently_asymptomatic)
+      ci <- clinical_immunity(pi, parameters$disease[[disease]]$clinical_immunity_shape, parameters$disease[[disease]]$clinical_immunity_rate)
       clinical_index <- stats::runif(currently_asymptomatic$size()) < ci
       A_to_I <- individual::filter_bitset(currently_asymptomatic, which(clinical_index))
       infection_to_render <- infection_to_render + A_to_I$size()
-      clinical$schedule(A_to_I, delay = 0)
+      events$clinical[[disease]]$schedule(A_to_I, delay = 0)
     }
 
-    renderer$render(paste0(disease, "_clinical_infection"), infection_to_render, timestep)
+    renderer$render(paste0(names(parameters$disease)[disease], "_clinical_infection"), infection_to_render, timestep)
   } else {
-    clinical$schedule(infected, delay = 0)
-    renderer$render(paste0(disease, "_clinical_infection"), infected$size() , timestep)
+    events$clinical[[disease]]$schedule(infected, delay = 0)
+    renderer$render(paste0(names(parameters$disease)[disease], "_clinical_infection"), infected$size() , timestep)
   }
+
+  # Update record of prior exposure
+  increment_counter(
+    target = infected,
+    variable = variables$prior_exposure[[disease]]
+  )
 }
 
 #' Infection probability vector
@@ -103,30 +105,52 @@ infection <- function(infected,
 #' @param birth_t Birth times
 #' @param timestep Timestep
 infection_probability <- function(target,
-                                  p,
-                                  prior_exposure,
-                                  heterogeneity,
-                                  birth_t,
+                                  disease,
+                                  parameters,
+                                  variables,
                                   timestep){
   ### Infection immunity ###################################################
-  ages <- get_age(timestep, birth_t, target)
-  het <- heterogeneity$get_values(target)
+  # Childrens ages
+  ages <- get_age(
+    timestep = timestep,
+    birth_t = variables$birth_t,
+    target = target)
+  # Childrens heterogeneity modifier
+  het <- variables$heterogeneity$get_values(target)
   # Maternal immunity modifier
-  mi <- maternal_immunity(ages, p$maternal_immunity_halflife)
+  mi <- maternal_immunity(
+    age = ages,
+    hl = parameters$disease[[disease]]$maternal_immunity_halflife
+  )
   # Prior infections
-  pi <- prior_exposure$get_values(target)
+  pi <- variables$prior_exposure[[disease]]$get_values(target)
   # Infection immunity modifier
-  ii <- exposure_immunity(pi, p$infection_immunity_shape, p$infection_immunity_rate)
+  ii <- exposure_immunity(
+    exposure = pi,
+    shape = parameters$disease[[disease]]$infection_immunity_shape,
+    rate = parameters$disease[[disease]]$infection_immunity_rate
+  )
   # Vaccine modifier
-  vi <- vaccine_impact(disease = disease, target = target, ages = ages, p = p, variables = variables)
+  vi <- vaccine_impact(
+    target = target,
+    disease = disease,
+    ages = ages,
+    parameters = parameters,
+    variables = variables
+  )
   # LLIN modifier
-  li <- llin_impact(disease = disease, target = target, p = p, variables = variables)
+  li <- llin_impact(
+    target = target,
+    disease = disease,
+    parameters = parameters,
+    variables = variables
+  )
   # Community impacts modifier (vaccine or LLIN)
   #ci <- community_impact(disease = disease, index = i, p = p)
   # Treatment prophylaxis modifier
   #tp <- treatment_prophylaxis(time_since_treatment, p$prophylaxis_hl[i])
   # Estimate infection rate
-  infection_rate <- p$sigma * mi * ii * het * vi * li# * ci * tp
+  infection_rate <- parameters$disease[[disease]]$sigma * mi * ii * het * vi * li# * ci * tp
   # Estimate infection probability
   infection_prob <- rate_to_prob(infection_rate)
   ##########################################################################

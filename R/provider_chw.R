@@ -180,6 +180,7 @@ chw_diagnose_malaria <- function(target, variables, parameters){
     target = target,
     sens = parameters$dx_tx$rdt_sensitivity,
     spec = parameters$dx_tx$rdt_specificity,
+    parameters = parameters,
     variables = variables,
     disease_index = disease_index
   )
@@ -203,6 +204,7 @@ chw_diagnose_severe_malaria <- function(target, variables, parameters, timestep)
     target = target,
     sens = parameters$chw$severe_malaria_sensitivity,
     spec = parameters$chw$severe_malaria_specificity,
+    parameters = parameters,
     variables = variables,
     disease_index = disease_index
   )
@@ -232,6 +234,7 @@ chw_diagnose_diarrhoea <- function(target, variables, parameters){
     target = target,
     sens = parameters$chw$diarrhoea_sensitivity,
     spec = parameters$chw$diarrhoea_specificity,
+    parameters = parameters,
     variables = variables,
     disease_index = disease_index
   )
@@ -255,6 +258,7 @@ chw_diagnose_severe_diarrhoea <- function(target, variables, parameters, timeste
     target = target,
     sens = parameters$chw$severe_diarrhoea_sensitivity,
     spec = parameters$chw$severe_diarrhoea_specificity,
+    parameters = parameters,
     variables = variables,
     disease_index = disease_index
   )
@@ -284,6 +288,7 @@ chw_diagnose_pneumonia <- function(target, variables, parameters){
     target = target,
     sens = parameters$chw$pneumonia_sensitivity,
     spec = parameters$chw$pneumonia_specificity,
+    parameters = parameters,
     variables = variables,
     disease_index = disease_index
   )
@@ -307,6 +312,7 @@ chw_diagnose_severe_pneumonia <- function(target, variables, parameters, timeste
     target = target,
     sens = parameters$chw$severe_pneumonia_sensitivity,
     spec = parameters$chw$severe_pneumonia_specificity,
+    parameters = parameters,
     variables = variables,
     disease_index = disease_index
   )

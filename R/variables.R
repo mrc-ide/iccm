@@ -10,7 +10,7 @@ create_variables <- function(parameters){
 
   # Heterogeneity
   est_het <- heterogeneity(parameters$population, parameters$het_sd)
-  variables$het <- individual::DoubleVariable$new(est_het)
+  variables$heterogeneity <- individual::DoubleVariable$new(est_het)
 
   # Diseases
   n_disease <- length(parameters$disease)
@@ -30,6 +30,8 @@ create_variables <- function(parameters){
     variables$fever[[disease]] <- individual::CategoricalVariable$new(fever_states, rep("nonfebrile", parameters$population))
     ## Symptom onset
     variables$symptom_onset[[disease]] <- individual::IntegerVariable$new(initial_values = rep(NA, parameters$population))
+    ## Vaccination status
+    variables$vaccine[[disease]] <- individual::IntegerVariable$new(initial_values = stats::rbinom(parameters$population, 1, parameters$disease[[disease]]$vaccine_coverage))
   }
 
   # Treatment seeking
@@ -42,9 +44,6 @@ create_variables <- function(parameters){
 
   # Interventions
   variables$llin <- individual::IntegerVariable$new(stats::rbinom(parameters$population, 1, parameters$llin_coverage))
-  variables$rotavirus_vx <- individual::IntegerVariable$new(stats::rbinom(parameters$population, 1, parameters$rotavirus_vx_coverage))
-  variables$pneumococcal_vx <- individual::IntegerVariable$new(stats::rbinom(parameters$population, 1, parameters$pneumococcal_vx_coverage))
-  variables$hib_vx <- individual::IntegerVariable$new(stats::rbinom(parameters$population, 1, parameters$hib_vx_coverage))
 
   return(variables)
 }
@@ -58,8 +57,8 @@ create_variables <- function(parameters){
 prior_exposure_equilibrium <- function(p, population, initial_age, maximum_age, est_het){
   ages <- 1:maximum_age
   vx <- rep(1, length(ages))
-  if(p$vaccine){
-    vx <- 1 - vaccine_effect(ages, p$vx_start, p$vx_initial_efficacy, p$vx_hl)
+  if(p$vaccine_coverage > 0){
+    vx <- 1 - vaccine_effect(ages, p$vaccine_start, p$vaccine_initial_efficacy, p$vaccine_hl)
   }
   mi <- maternal_immunity(ages, p$maternal_immunity_halflife)
   dp <- rep(NA, population)

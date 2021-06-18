@@ -29,47 +29,56 @@ chw_treat <- function(variables, parameters, renderer, events){
 
     ### Severe illness #########################################################
     # Diarrhoea
-    dia_severe_dx <- severe_diagnosis(target,
-                                      "diarrhoea",
-                                      sens = parameters$chw$severe_diarrhoea_sensitivity,
-                                      spec = parameters$chw$severe_diarrhoea_specificity,
-                                      variables,
-                                      parameters)
-    dia_long_symptoms <- long_symptoms(target, "diarrhoea", parameters$chw$diarrhoea_long_symptoms, timestep, variables, parameters)
-    dia_severe_to_refer <- dia_severe_dx$or(dia_long_symptoms)
-    dia_severe_to_refer <- dia_severe_to_refer$sample(parameters$chw$efficacy)
+    dia_severe_to_refer <- chw_diagnose_severe_diarrhoea(
+      target = target,
+      variables = variables,
+      parameters = parameters,
+      timestep = timestep
+    )
     if(dia_severe_to_refer$size() > 0){
-      give_ors(dia_severe_to_refer, parameters, variables, events, timestep)
+      give_ors(
+        target = dia_severe_to_refer,
+        parameters = parameters,
+        variables = variables,
+        events = events,
+        timestep = timestep
+      )
       n_ors_given <- n_ors_given + dia_severe_to_refer$size()
     }
 
     # Malaria
-    malaria_severe_dx <- severe_diagnosis(target,
-                                          "malaria",
-                                          sens = parameters$chw$severe_malaria_sensitivity,
-                                          spec = parameters$chw$severe_malaria_specificity,
-                                          variables,
-                                          parameters)
-    malaria_long_symptoms <- long_symptoms(target, "malaria", parameters$chw$malaria_long_symptoms, timestep, variables, parameters)
-    malaria_severe_to_refer <- malaria_severe_dx$or(malaria_long_symptoms)
-    malaria_severe_to_refer <- malaria_severe_to_refer$sample(parameters$chw$efficacy)
+    malaria_severe_to_refer <- chw_diagnose_severe_malaria(
+      target = target,
+      variables = variables,
+      parameters = parameters,
+      timestep = timestep
+    )
     if(malaria_severe_to_refer$size() > 0){
-      give_act(malaria_severe_to_refer, parameters, variables, events, timestep)
+      give_act(
+        target = malaria_severe_to_refer,
+        parameters = parameters,
+        variables = variables,
+        events = events,
+        timestep = timestep
+      )
       n_act_given <- n_act_given + malaria_severe_to_refer$size()
     }
 
     # Pneumonia
-    pneumonia_severe_dx <- severe_diagnosis(target,
-                                            "pneumonia",
-                                            sens = parameters$chw$severe_pneumonia_sensitivity,
-                                            spec = parameters$chw$severe_pneumonia_specificity,
-                                            variables,
-                                            parameters)
-    pneumonia_long_symptoms <- long_symptoms(target, "pneumonia", parameters$chw$pneumonia_long_symptoms, timestep, variables, parameters)
-    pneumonia_severe_to_refer <- pneumonia_severe_dx$or(pneumonia_long_symptoms)
-    pneumonia_severe_to_refer <- pneumonia_severe_to_refer$sample(parameters$chw$efficacy)
+    pneumonia_severe_to_refer <- chw_diagnose_severe_pneumonia(
+      target = target,
+      variables = variables,
+      parameters = parameters,
+      timestep = timestep
+    )
     if(pneumonia_severe_to_refer$size() > 0){
-      give_amoxicillin(pneumonia_severe_to_refer, parameters, variables, events, timestep)
+      give_amoxicillin(
+        target = pneumonia_severe_to_refer,
+        parameters = parameters,
+        variables = variables,
+        events = events,
+        timestep = timestep
+      )
       n_amoxicillin_given <- n_amoxicillin_given + pneumonia_severe_to_refer$size()
     }
     ############################################################################
@@ -85,49 +94,61 @@ chw_treat <- function(variables, parameters, renderer, events){
     ############################################################################
 
     ### Non-severe illness ######################################################
+    # TODO: Any fever as diagnostic?
     # Remaining children who have not been treated for severe disease
     target <- target$set_difference(to_refer)
 
     if(target$size() > 0){
       # Diarrhoea
-      dia_to_treat <- diagnosis(target,
-                                "diarrhoea",
-                                sens = parameters$chw$diarrhoea_sensitivity,
-                                spec = parameters$chw$diarrhoea_specificity,
-                                variables,
-                                parameters)
-      dia_to_treat <- dia_to_treat$sample(parameters$chw$efficacy)
+      dia_to_treat <- chw_diagnose_diarrhoea(
+        target = target,
+        variables = variables,
+        parameters = parameters
+      )
       if(dia_to_treat$size() > 0){
-        give_ors(dia_to_treat, parameters, variables, events, timestep)
+        give_ors(
+          target = dia_severe_to_refer,
+          parameters = parameters,
+          variables = variables,
+          events = events,
+          timestep = timestep
+        )
         n_ors_given <- n_ors_given + dia_to_treat$size()
       }
 
       # Malaria
-      malaria_to_treat <- diagnosis(target,
-                                    "malaria",
-                                    sens = parameters$dx_tx$rdt_sensitivity,
-                                    spec = parameters$dx_tx$rdt_specificity,
-                                    variables,
-                                    parameters)
-      #malaria_to_treat <- malaria_to_treat$and(any_fever(parameters, variables))
-      malaria_to_treat <- malaria_to_treat$sample(parameters$chw$efficacy)
+      malaria_to_treat <- chw_diagnose_malaria(
+        target = target,
+        variables = variables,
+        parameters = parameters
+      )
       if(malaria_to_treat$size() > 0){
-        give_act(malaria_to_treat, parameters, variables, events, timestep)
+        give_act(
+          target = malaria_severe_to_refer,
+          parameters = parameters,
+          variables = variables,
+          events = events,
+          timestep = timestep
+        )
         n_act_given <- n_act_given + malaria_to_treat$size()
       }
 
       # Pneumonia
       # Those who test +ve for malaria are not treated for pneumonia
       target <- target$set_difference(malaria_to_treat)
-      pneumonia_to_treat <- diagnosis(target,
-                                      "pneumonia",
-                                      sens = parameters$chw$pneumonia_sensitivity,
-                                      spec = parameters$chw$pneumonia_specificity,
-                                      variables,
-                                      parameters)
-      pneumonia_to_treat <- pneumonia_to_treat$sample(parameters$chw$efficacy)
+      pneumonia_to_treat <- chw_diagnose_pneumonia(
+        target = target,
+        variables = variables,
+        parameters = parameters
+      )
       if(pneumonia_to_treat$size() > 0){
-        give_amoxicillin(pneumonia_to_treat, parameters, variables, events, timestep)
+        give_amoxicillin(
+          target = pneumonia_severe_to_refer,
+          parameters = parameters,
+          variables = variables,
+          events = events,
+          timestep = timestep
+        )
         n_amoxicillin_given <- n_amoxicillin_given + pneumonia_to_treat$size()
       }
     }

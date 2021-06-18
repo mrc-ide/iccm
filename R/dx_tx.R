@@ -213,3 +213,36 @@ any_fever <- function(parameters, variables){
   }
   return(has_fever)
 }
+
+#' Clear any scheduled treatment visits
+#'
+#' @param target Children
+#' @param events Model events
+clear_scheduled_treatment_visits <- function(target, events){
+  events$hf_treatment$clear_schedule(target)
+  events$chw_treatment$clear_schedule(target)
+  events$private_treatment$clear_schedule(target)
+}
+
+#' Sample provider preference
+#'
+#' Used to select the provider preference assigned to each child at birth. Provider
+#' choice can be weighted. Providers are currently: HF, CHW or Private. If no providers
+#' are available preference is set to "None".
+#'
+#' @param n Number of children
+#' @param parameters Model parameters
+#'
+#' @return Vector of provider preference for each child
+sample_preference <- function(n, parameters){
+  stopifnot(n > 0)
+  providers <- c(parameters$hf$hf, parameters$chw$chw, parameters$private$private)
+  if(all(providers == 0)){
+    return(rep("none", n))
+  }
+  provider_weights <- parameters$treatment_seeking$provider_preference_weights
+  prob <- providers * provider_weights
+  prob <- prob / sum(prob)
+  preference <- sample(c("hf", "chw", "private"), n, replace = TRUE, prob = prob)
+  return(preference)
+}

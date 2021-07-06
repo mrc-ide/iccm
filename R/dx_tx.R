@@ -17,7 +17,7 @@ type_index <- function(parameters, type){
 #' @param disease_index Index of diseases of target type
 #'
 #' @return A bitset of those testing positive
-diagnosis <- function(target, sens, spec, parameters, variables, disease_index){
+diagnosis <- function(target, sens, spec, parameters, variables, disease_index, positive_index = c("asymptomatic", "symptomatic", "severe")){
   true_positives <- individual::Bitset$new(parameters$population)
   for(disease in disease_index){
     true_positives <- true_positives$or(variables$infection_status[[disease]]$get_index_of(c("asymptomatic", "symptomatic", "severe")))
@@ -28,20 +28,15 @@ diagnosis <- function(target, sens, spec, parameters, variables, disease_index){
   return(diagnosed)
 }
 
+
+
 #' Diagnostic result for severe disease
 #'
 #' @inheritDotParams diagnosis
 #'
 #' @return  A bitset of those testing positive
 severe_diagnosis <- function(target, sens, spec, parameters, variables, disease_index){
-  true_positives <- individual::Bitset$new(parameters$population)
-  for(disease in disease_index){
-    true_positives <- true_positives$or(variables$infection_status[[disease]]$get_index_of("severe"))
-  }
-  true_negatives <- true_positives$not()
-  # True positives OR False positives
-  diagnosed <- true_positives$sample(sens)$or(true_negatives$sample(1 - spec))$and(target)
-  return(diagnosed)
+  diagnosis(target, sens, spec, parameters, variables, disease_index, positive_index = c("severe"))
 }
 
 #' Long symptoms

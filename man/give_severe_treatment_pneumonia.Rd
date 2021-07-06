@@ -4,13 +4,7 @@
 \alias{give_severe_treatment_pneumonia}
 \title{Give treatment for severe pneumonia}
 \usage{
-give_severe_treatment_pneumonia(
-  target,
-  parameters,
-  variables,
-  events,
-  timestep
-)
+give_severe_treatment_pneumonia(target, efficacy)
 }
 \description{
 Provides treatment for severe pneumonia

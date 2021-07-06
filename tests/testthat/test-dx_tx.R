@@ -1,3 +1,57 @@
+test_that("disease types are indexed correctly", {
+  parameters <- get_parameters()
+  disease_types <- sapply(parameters$disease, "[[", "type")
+  for(type in c("diarrhoea", "malaria", "pneumonia")){
+    expect_equal(type_index(parameters,type), which(disease_types == type))
+  }
+})
+
+
+test_that("diagnosis works", {
+  disease_index <- 1
+  parameters <- list(
+    population = 10
+  )
+  variables <- list(
+    infection_status = list(
+      individual::CategoricalVariable$new(
+        c("uninfected", "asymptomatic", "symptomatic", "severe"),
+        c(rep("symptomatic", 2), rep("uninfected", 8))
+      )
+    )
+  )
+
+  target <- individual::Bitset$new(10)$insert(1:10)
+  # No false positives, no false negatives
+  perfect_diagnostic <- diagnosis(target, sens = 1, spec = 1, parameters, variables, disease_index)
+  expect_equal(perfect_diagnostic$to_vector(), c(1, 2))
+  # All negative or false negative
+  bad_diagnostic1 <- diagnosis(target, sens = 0, spec = 1, parameters, variables, disease_index)
+  expect_equal(bad_diagnostic1$to_vector(), double())
+  # All positive or false positive
+  bad_diagnostic2 <- diagnosis(target, sens = 1, spec = 0, parameters, variables, disease_index)
+  expect_equal(bad_diagnostic2$to_vector(), 1:10)
+  # All positive -> negative, all negative -> positive
+  bad_diagnostic3 <- diagnosis(target, sens = 0, spec = 0, parameters, variables, disease_index)
+  expect_equal(bad_diagnostic3$to_vector(), 3:10)
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 test_that("diagnosis", {
   parameters <- get_parameters()
   target <- individual::Bitset$new(4)$insert(1:4)

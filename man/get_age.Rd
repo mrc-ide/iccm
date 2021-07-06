@@ -4,7 +4,7 @@
 \alias{get_age}
 \title{Get children's ages}
 \usage{
-get_age(timestep, variables, index = NULL)
+get_age(timestep, birth_t, target = NULL)
 }
 \arguments{
 \item{timestep}{Current time}

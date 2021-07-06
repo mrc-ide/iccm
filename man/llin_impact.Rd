@@ -4,10 +4,7 @@
 \alias{llin_impact}
 \title{LLIN impact}
 \usage{
-llin_impact(disease, target, p, variables)
-}
-\arguments{
-\item{p}{Condition specific parameters}
+llin_impact(target, disease, parameters, variables)
 }
 \description{
 Estimate modifier due to LLIN impact

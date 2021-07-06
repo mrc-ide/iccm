@@ -4,7 +4,7 @@
 \alias{vaccine_impact}
 \title{Vaccine impact}
 \usage{
-vaccine_impact(disease, target, ages, p, variables)
+vaccine_impact(target, disease, ages, parameters, variables)
 }
 \arguments{
 \item{ages}{Individuals ages}

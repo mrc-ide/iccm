@@ -2,26 +2,23 @@
 % Please edit documentation in R/dx_tx.R
 \name{severe_diagnosis}
 \alias{severe_diagnosis}
-\title{Diagnostic result}
+\title{Diagnostic result for severe disease}
 \usage{
-severe_diagnosis(target, disease_type, sens, spec, variables, parameters)
+severe_diagnosis(target, sens, spec, parameters, variables, disease_index)
 }
 \arguments{
-\item{target}{Children visiting provider}
-
-\item{sens}{Diagnostic sensitivity}
-
-\item{spec}{Diagnostic specificity}
-
-\item{status_variable}{Disease status variable}
-
-\item{positive}{Status categories that are true +ves}
-
-\item{negative}{Status categories  that are true -ves}
+\item{...}{
+  Arguments passed on to \code{\link[=diagnosis]{diagnosis}}
+  \describe{
+    \item{\code{target}}{Children visiting provider}
+    \item{\code{sens}}{Diagnostic sensitivity}
+    \item{\code{spec}}{Diagnostic specificity}
+    \item{\code{disease_index}}{Index of diseases of target type}
+  }}
 }
 \value{
-Bitset
+A bitset of those testing positive
 }
 \description{
-Returns a bitset of those testing positive
+Diagnostic result for severe disease
 }

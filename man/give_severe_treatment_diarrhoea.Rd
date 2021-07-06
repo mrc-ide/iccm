@@ -4,24 +4,10 @@
 \alias{give_severe_treatment_diarrhoea}
 \title{Give treatment for severe diarrhoea}
 \usage{
-give_severe_treatment_diarrhoea(
-  target,
-  parameters,
-  variables,
-  events,
-  timestep
-)
+give_severe_treatment_diarrhoea(target, efficacy)
 }
 \arguments{
 \item{target}{Target children}
-
-\item{parameters}{Model parameters}
-
-\item{variables}{Model variable}
-
-\item{events}{Model events}
-
-\item{timestep}{Model timestep}
 }
 \description{
 Provides treatment for severe diarrhoea

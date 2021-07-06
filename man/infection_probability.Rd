@@ -4,18 +4,20 @@
 \alias{infection_probability}
 \title{Infection probability vector}
 \usage{
-infection_probability(disease, target, p, timestep, variables)
+infection_probability(target, disease, parameters, variables, timestep)
 }
 \arguments{
-\item{disease}{Disease}
-
 \item{target}{Those exposed}
+
+\item{timestep}{Timestep}
 
 \item{p}{Disease parameters}
 
-\item{timestep}{Model timestep}
+\item{prior_exposure}{Prior exposure to disease}
 
-\item{variables}{Model variables}
+\item{heterogeneity}{Individual heterogeneity}
+
+\item{birth_t}{Birth times}
 }
 \description{
 Infection probability vector

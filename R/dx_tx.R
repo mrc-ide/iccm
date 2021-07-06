@@ -49,7 +49,7 @@ severe_diagnosis <- function(target, sens, spec, parameters, variables, disease_
 #' @param timestep Timestep
 #'
 #' @return Bitset
-long_symptoms <- function(target, disease_index, threshold, timestep, variables, parameters){
+long_symptoms <- function(target, disease_index, threshold, timestep, variables){
   long_symptom_duration <- rep(FALSE, target$size())
   for(disease in disease_index){
       symptom_duration <- timestep - variables$symptom_onset[[disease]]$get_values(target)

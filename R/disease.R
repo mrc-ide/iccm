@@ -99,10 +99,9 @@ infection <- function(infected,
 #' Infection probability vector
 #'
 #' @param target Those exposed
-#' @param p Disease parameters
-#' @param prior_exposure Prior exposure to disease
-#' @param heterogeneity Individual heterogeneity
-#' @param birth_t Birth times
+#' @param disease disease index
+#' @param parameters Model parameters
+#' @param variables Model variables
 #' @param timestep Timestep
 infection_probability <- function(target,
                                   disease,

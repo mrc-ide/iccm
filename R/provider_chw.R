@@ -213,8 +213,7 @@ chw_diagnose_severe_malaria <- function(target, variables, parameters, timestep)
     disease_index = disease_index,
     threshold = parameters$chw$malaria_long_symptoms,
     timestep = timestep,
-    variables = variables,
-    parameters = parameters
+    variables = variables
   )
   diagnosed <- diagnosed$or(diagnosed_long_symptoms)$sample(parameters$chw$efficacy)
   return(diagnosed)
@@ -267,8 +266,7 @@ chw_diagnose_severe_diarrhoea <- function(target, variables, parameters, timeste
     disease_index = disease_index,
     threshold = parameters$chw$diarrhoea_long_symptoms,
     timestep = timestep,
-    variables = variables,
-    parameters = parameters
+    variables = variables
   )
   diagnosed <- diagnosed$or(diagnosed_long_symptoms)$sample(parameters$chw$efficacy)
   return(diagnosed)
@@ -321,8 +319,7 @@ chw_diagnose_severe_pneumonia <- function(target, variables, parameters, timeste
     disease_index = disease_index,
     threshold = parameters$chw$pneumonia_long_symptoms,
     timestep = timestep,
-    variables = variables,
-    parameters = parameters
+    variables = variables
   )
   diagnosed <- diagnosed$or(diagnosed_long_symptoms)$sample(parameters$chw$efficacy)
   return(diagnosed)

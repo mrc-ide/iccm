@@ -9,28 +9,56 @@
 mortality <- function(parameters, variables, events, renderer){
   function(timestep){
     # Death probability matrix
-    mort_prob_matrix <- matrix(0, ncol = length(parameters$disease) + 1, nrow = parameters$population)
-    mort_prob_matrix[ , length(parameters$disease) + 1] <- rate_to_prob(1 / parameters$average_age)
-    diseases <- names(parameters$disease)
-    for(i in seq_along(diseases)){
-      mort_prob_matrix[variables$infection_status[[i]]$get_index_of("severe")$to_vector() , i] <- parameters$disease[[i]]$daily_probability_death
-    }
+    mort_prob_matrix <- mortality_probability(parameters, variables)
     # Sample outcomes
     death_index <- competing_hazard(mort_prob_matrix)
     # Death from disease
-    for(i in seq_along(diseases)){
-      index <- death_index == i
-      if(sum(index) > 0){
-        renderer$render(paste0(diseases[i], "_death"), sum(index), timestep)
-        replace_child(individual::Bitset$new(parameters$population)$insert(which(index)), timestep, variables, parameters, events)
-      }
-    }
+    death_from_diseases(death_index, parameters, variables, events, renderer, timestep)
     # Death other causes
-    index <- death_index == i + 1
+    death_from_other_causes(death_index, parameters, variables, events, renderer, timestep)
+  }
+}
+
+#' Estimate matrix of mortality probabilities
+#'
+#' @inheritParams mortality
+mortality_probability <- function(parameters, variables){
+  mort_prob_matrix <- matrix(0, ncol = length(parameters$disease) + 1, nrow = parameters$population)
+  mort_prob_matrix[ , length(parameters$disease) + 1] <- rate_to_prob(1 / parameters$average_age)
+  diseases <- names(parameters$disease)
+  for(i in seq_along(diseases)){
+    mort_prob_matrix[variables$infection_status[[i]]$get_index_of("severe")$to_vector() , i] <- parameters$disease[[i]]$daily_probability_death
+  }
+  return(mort_prob_matrix)
+}
+
+
+#' Death from diseases
+#'
+#' @param death_index Index of cause of deaths
+#' @param timestep Model timestep
+#' @inheritParams mortality
+death_from_diseases <- function(death_index, parameters, variables, events, renderer, timestep){
+  diseases <- names(parameters$disease)
+  for(i in seq_along(diseases)){
+    index <- death_index == i
     if(sum(index) > 0){
-      renderer$render("other_death", sum(index), timestep)
+      renderer$render(paste0(diseases[i], "_death"), sum(index), timestep)
       replace_child(individual::Bitset$new(parameters$population)$insert(which(index)), timestep, variables, parameters, events)
     }
+  }
+}
+
+#' Death from other (non-modelled disease) causes
+#'
+#' @param death_index Index of cause of deaths
+#' @param timestep Model timestep
+#' @inheritParams mortality
+death_from_other_causes <- function(death_index, parameters, variables, events, renderer, timestep){
+  index <- death_index == (length(parameters$disease) + 1)
+  if(sum(index) > 0){
+    renderer$render("other_death", sum(index), timestep)
+    replace_child(individual::Bitset$new(parameters$population)$insert(which(index)), timestep, variables, parameters, events)
   }
 }
 

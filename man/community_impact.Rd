@@ -4,10 +4,7 @@
 \alias{community_impact}
 \title{Intervention community impact modifier}
 \usage{
-community_impact(disease, index, p)
-}
-\arguments{
-\item{p}{Condition specific parameters}
+community_impact()
 }
 \description{
 Intervention community impact modifier

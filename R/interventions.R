@@ -2,9 +2,11 @@
 #'
 #' Estimate modifier due to vaccine impact
 #'
+#' @param target Target
+#' @param disease Disease index
 #' @param ages Individuals ages
-#' @param p Condition specific parameters
-#' @param variable Vaccine coverage variable for specific disease
+#' @param parameters Model parameters
+#' @param variables Model variables
 #'
 #' @return Vaccine modifier
 vaccine_impact <- function(target, disease, ages, parameters, variables){
@@ -54,16 +56,8 @@ llin_impact <- function(target, disease, parameters, variables){
 
 #' Intervention community impact modifier
 #'
-#' @inheritParams vaccine_impact
-community_impact <- function(disease, index, p){
-  community_modifier <- 1
-  if(disease %in% c("hib", "pneumococcus", "rotavirus")){
-    community_modifier <- 1 - p$vaccine_ci[index]
-  }
-  if(disease == "llin"){
-    community_modifier <- 1- p$llin_ci
-  }
-  return(community_modifier)
+community_impact <- function(){
+
 }
 
 

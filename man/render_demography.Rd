@@ -6,6 +6,11 @@
 \usage{
 render_demography(variables, renderer)
 }
+\arguments{
+\item{variables}{Model variables}
+
+\item{renderer}{Model renderer}
+}
 \description{
 Average ages and number of children in each year age-group.
 }

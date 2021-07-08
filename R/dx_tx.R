@@ -1,6 +1,6 @@
 #' Index diseases of a given type
 #'
-#' @param disease_parameters Disease parameters
+#' @param parameters Model parameters
 #' @param type Disease type (diarrhoea, malaria or pneumonia)
 #'
 #' @return A vector indexing which disease are of requested type
@@ -13,8 +13,10 @@ type_index <- function(parameters, type){
 #' @param target Children visiting provider
 #' @param sens Diagnostic sensitivity
 #' @param spec Diagnostic specificity
-#' @param infection_status All infection status variables
-#' @param disease_index Index of diseases of target type
+#' @param parameters Model parameters
+#' @param variables Model variables
+#' @param disease_index Disease index
+#' @param positive_index State that are positive
 #'
 #' @return A bitset of those testing positive
 diagnosis <- function(target, sens, spec, parameters, variables, disease_index, positive_index = c("asymptomatic", "symptomatic", "severe")){
@@ -32,7 +34,7 @@ diagnosis <- function(target, sens, spec, parameters, variables, disease_index, 
 
 #' Diagnostic result for severe disease
 #'
-#' @inheritDotParams diagnosis
+#' @inheritParams diagnosis
 #'
 #' @return  A bitset of those testing positive
 severe_diagnosis <- function(target, sens, spec, parameters, variables, disease_index){
@@ -43,10 +45,11 @@ severe_diagnosis <- function(target, sens, spec, parameters, variables, disease_
 #'
 #' Returns a bitset of those who have had symptoms for a period > the threshold to define illness as severe
 #'
-#' @param symptom_start_var Variable of symptom start time
 #' @param target Children seeking treatment
+#' @param disease_index Disease index
 #' @param threshold Period after which illness is classified as severe
 #' @param timestep Timestep
+#' @param variables Model variables
 #'
 #' @return Bitset
 long_symptoms <- function(target, disease_index, threshold, timestep, variables){
@@ -145,9 +148,8 @@ give_amoxicillin <- function(target, parameters, variables, events, timestep){
 
 #' Give treatment for severe diarrhoea
 #'
-#' Provides treatment for severe diarrhoea
-#'
-#' @inheritParams give_ors
+#' @param target Target
+#' @param efficacy Efficacy
 give_severe_treatment_diarrhoea <- function(target, efficacy){
   #target <- target$copy()$sample(parameters$hf$severe_diarrhoea_efficacy)
   #cure(target, "dia", variables, events)
@@ -155,7 +157,8 @@ give_severe_treatment_diarrhoea <- function(target, efficacy){
 
 #' Give treatment for severe pneumonia
 #'
-#' Provides treatment for severe pneumonia
+#' @param target Target
+#' @param efficacy Efficacy
 give_severe_treatment_pneumonia <- function(target, efficacy){
   #target <- target$copy()$sample(parameters$hf$severe_diarrhoea_efficacy)
   #cure(target, "dia", variables, events)
@@ -163,9 +166,8 @@ give_severe_treatment_pneumonia <- function(target, efficacy){
 
 #' Give treatment for severe malaria
 #'
-#' Provides treatment for severe malaria
-#'
-#' @inheritParams give_act
+#' @param target Target
+#' @param efficacy Efficacy
 give_severe_treatment_malaria <- function(target, efficacy){
   # to_cure <- target$copy()$sample(parameters$hf$severe_malaria_efficacy)
   #variables$malaria_last_tx$queue_update(timestep, target)
@@ -174,8 +176,10 @@ give_severe_treatment_malaria <- function(target, efficacy){
 
 #' Cure a condition
 #'
-#' @param condition Condition to cure
-#' @inheritParams give_ors
+#' @param target Target children
+#' @param disease Disease index
+#' @param variables Model variables
+#' @param events Model events
 cure <- function(target, disease, variables, events){
   variables$infection_status[[disease]]$queue_update("uninfected", target)
   variables$fever[[disease]]$queue_update("nonfebrile", target)

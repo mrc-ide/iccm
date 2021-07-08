@@ -6,6 +6,13 @@
 \usage{
 render_fever_prevalence(parameters, variables, renderer)
 }
+\arguments{
+\item{parameters}{Model parameters}
+
+\item{variables}{Model variables}
+
+\item{renderer}{Model renderer}
+}
 \description{
 Record prevalence of fever
 }

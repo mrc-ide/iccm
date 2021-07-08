@@ -16,74 +16,105 @@ test_that("demography rendering", {
   mockery::expect_args(renderer$render, 7, "average_age", 2.2541096, 1)
 })
 
-test_that("replace child", {
-  timestep <- 151
-  p <- get_parameters()
-  p$population <- 3
-  # Set coverages of interventions to 1 so we can check the new child is assigned them all
-  p$rotavirus_vx_coverage = 1
-  p$pneumococcal_vx_coverage = 1
-  p$hib_vx_coverage = 1
-  p$llin_coverage = 1
+test_that("clearing all events works", {
+  target <- individual::Bitset$new(2)$insert(1:2)
+  events <- list(
+    mock_event(),
+    mock_event()
+  )
+  clear_all_scheduled_events(target, events)
+  expect_equal(mockery::mock_args(events[[1]]$clear_schedule)[[1]][[1]]$to_vector(), c(1, 2))
+  expect_equal(mockery::mock_args(events[[2]]$clear_schedule)[[1]][[1]]$to_vector(), c(1, 2))
+})
 
-  # Mock up events
-  events <- list()
-  events$graduate <- mock_event()
+test_that("Resetting disease variables works", {
+  target = individual::Bitset$new(2)$insert(1:2)
+  parameters <- list(
+    disease = list(
+      list(vaccine_coverage = 1)
+    )
+  )
+  variables = list(
+    prior_exposure = list(
+      mock_integer(c(1, 2))
+    ),
+    infection_status = list(
+      mock_category(c("uninfected", "asymptomatic", "symptomatic", "severe"), c("symptomatic", "severe"))
+    ),
+    fever = list(
+      mock_category(c("nonfebrile", "febrile"), c("nonfebrile", "febrile"))
+    ),
+    symptom_onset = list(
+      mock_integer(c(100, 101))
+    ),
+    vaccine = list(
+      mock_integer(c(0, 0))
+    )
+  )
+  reset_disease_status(target, parameters, variables)
+  expect_bitset_update(variables$prior_exposure[[1]]$queue_update, 0, c(1, 2))
+  expect_bitset_update(variables$infection_status[[1]]$queue_update, "uninfected", c(1, 2))
+  expect_bitset_update(variables$fever[[1]]$queue_update, "nonfebrile", c(1, 2))
+  expect_bitset_update(variables$symptom_onset[[1]]$queue_update, as.numeric(NA), c(1, 2))
+  expect_bitset_update(variables$vaccine[[1]]$queue_update, c(1, 1), c(1, 2))
+})
 
-  # Mock up variables
-  variables <- list()
-  variables$birth_t <- mock_integer(rep(100, p$population))
-  for(disease in names(p$disease)){
-    variables[[paste0(disease, "_prior_exposure")]] <- mock_integer(rep(1, p$population))
-    variables[[paste0(disease, "_status")]] <- mock_category(c("uninfected", "asymptomatic", "symptomatic", "severe"), rep("symptomatic", p$population))
-    variables[[paste0(disease, "_fever")]] <- mock_category(c("nonfebrile", "febrile"), rep("febrile", p$population))
-    variables[[paste0(disease, "_symptom_onset")]] <- mock_integer(rep(150, p$population))
-  }
-  variables$het <- mock_double(rep(1.5, p$population))
-  variables$time_of_last_act <- mock_integer(rep(150, p$population))
-  variables$time_of_last_amoxicillin <- mock_integer(rep(150, p$population))
-  variables$awaiting_followup <- mock_integer(rep(1, p$population))
-  variables$llin <- mock_integer(rep(0, p$population))
-  variables$rotavirus_vx <- mock_integer(rep(0, p$population))
-  variables$pneumococcal_vx <- mock_integer(rep(0, p$population))
-  variables$hib_vx <- mock_integer(rep(0, p$population))
+test_that("Resetting treatment and interventions works", {
+  target = individual::Bitset$new(2)$insert(1:2)
+  parameters <- list(
+    llin_coverage = 1
+  )
+  variables = list(
+    time_of_last_act = mock_integer(c(1, 2)),
+    time_of_last_amoxicillin = mock_integer(c(1, 2)),
+    awaiting_followup = mock_integer(c(1, 1)),
+    llin = mock_integer(c(0, 0))
+  )
+  reset_treatment_and_interventions(target, parameters, variables)
+  expect_bitset_update(variables$time_of_last_act$queue_update, as.numeric(NA), c(1, 2))
+  expect_bitset_update(variables$time_of_last_amoxicillin$queue_update, as.numeric(NA), c(1, 2))
+  expect_bitset_update(variables$awaiting_followup$queue_update, 0, c(1, 2))
+  expect_bitset_update(variables$llin$queue_update, c(1, 1), c(1, 2))
+})
 
-  # Stub out the random het draw
-  mockery::stub(replace_child, "heterogeneity", c(0.5, 1.5))
+test_that("Resetting heterogeneity works", {
+  target = individual::Bitset$new(2)$insert(1:2)
+  parameters <- list(
+    het_sd = 0
+  )
+  variables = list(
+    heterogeneity = mock_double(c(1, 2))
+  )
+  reset_heterogeneity(target, parameters, variables)
+  expect_bitset_update(variables$heterogeneity$queue_update, c(1, 1), c(1, 2))
+})
 
-  # Replace the first 2 children
-  to_replace <- individual::Bitset$new(p$population)
-  to_replace <- to_replace$insert(1:2)
-  replace_child(to_replace, timestep, variables, p, events)
-
-  # Checks - variable updates
-  expect_bitset_update(variables$birth_t$queue_update, timestep - p$age_lower, 1:2)
-  for(disease in names(p$disease)){
-    expect_bitset_update(variables[[paste0(disease, "_prior_exposure")]]$queue_update, 0, 1:2)
-    expect_bitset_update(variables[[paste0(disease, "_status")]]$queue_update, "uninfected", 1:2)
-    expect_bitset_update(variables[[paste0(disease, "_fever")]]$queue_update, "nonfebrile", 1:2)
-    expect_bitset_update(variables[[paste0(disease, "_symptom_onset")]]$queue_update, NA, 1:2)
-  }
-  expect_bitset_update(variables$het$queue_update, c(0.5, 1.5), 1:2)
-  expect_bitset_update(variables$llin$queue_update, c(1,1), 1:2)
-  expect_bitset_update(variables$time_of_last_act$queue_update, NA, 1:2)
-  expect_bitset_update(variables$time_of_last_amoxicillin$queue_update, NA, 1:2)
-  expect_bitset_update(variables$awaiting_followup$queue_update, 0, 1:2)
-  expect_bitset_update(variables$rotavirus_vx$queue_update, c(1, 1), 1:2)
-  expect_bitset_update(variables$hib_vx$queue_update, c(1, 1), 1:2)
-  expect_bitset_update(variables$pneumococcal_vx$queue_update, c(1, 1), 1:2)
-  # Checks - events
-  mockery::expect_args(events$graduate$schedule, n = 1, to_replace, c(p$age_upper - p$age_lower, p$age_upper - p$age_lower))
-  mockery::expect_called(events$graduate$clear_schedule, n = 1)
+test_that("Resetting demography works", {
+  target = individual::Bitset$new(2)$insert(1:2)
+  parameters <- list(
+    age_lower = 10,
+    age_upper = 11
+  )
+  variables = list(
+    birth_t = mock_integer(c(1, 2))
+  )
+  events = list(
+    graduate = mock_event()
+  )
+  timestep = 100
+  reset_demography(target, parameters, variables, events, timestep)
+  expect_bitset_update(variables$birth_t$queue_update, timestep - parameters$age_lower, c(1, 2))
+  expect_equal(mockery::mock_args(events$graduate$schedule)[[1]][[1]]$to_vector(), c(1, 2))
+  expect_equal(mockery::mock_args(events$graduate$schedule)[[1]][[2]], c(1, 1))
 })
 
 test_that("get age", {
   variables <- list()
   variables$birth_t <- mock_integer(c(1, 100))
 
-  expect_equal(get_age(0, variables), -variables$birth_t$get_values())
-  expect_equal(get_age(100, variables), -variables$birth_t$get_values() + 100)
-  expect_equal(get_age(0, variables, 1), -variables$birth_t$get_values()[1])
-  expect_equal(get_age(0, variables, 2), -variables$birth_t$get_values()[2])
+  expect_equal(get_age(0, variables$birth_t), -variables$birth_t$get_values())
+  expect_equal(get_age(100, variables$birth_t), -variables$birth_t$get_values() + 100)
+  expect_equal(get_age(0, variables$birth_t, 1), -variables$birth_t$get_values()[1])
+  expect_equal(get_age(0, variables$birth_t, 2), -variables$birth_t$get_values()[2])
 })
 

@@ -9,6 +9,8 @@ prior_exposure_equilibrium(p, population, initial_age, maximum_age, est_het)
 \arguments{
 \item{p}{Condition parameters}
 
+\item{population}{Population size}
+
 \item{initial_age}{Age of each child}
 
 \item{maximum_age}{Maximum age}

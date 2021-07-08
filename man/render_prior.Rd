@@ -6,6 +6,13 @@
 \usage{
 render_prior(variables, renderer, parameters)
 }
+\arguments{
+\item{variables}{Model variables}
+
+\item{renderer}{Model renderer}
+
+\item{parameters}{Model parameters}
+}
 \description{
 Record average prior infections
 }

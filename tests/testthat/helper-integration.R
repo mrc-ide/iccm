@@ -31,12 +31,25 @@ mock_render <- function(...) {
   )
 }
 
-mock_event <- function(scheduled) {
-  list(
-    get_scheduled = function() scheduled,
-    schedule = mockery::mock(),
-    clear_schedule = mockery::mock()
-  )
+mock_event_class <- R6::R6Class("mock_event", list(
+
+  user_scheduled = NULL,
+  set_user_scheduled = function(x) self$user_scheduled = x,
+  get_scheduled = function() self$user_scheduled,
+
+  schedule = NULL,
+  set_schedule = function(x) self$schedule = x,
+
+  clear_schedule = NULL,
+  set_clear_schedule = function(x) self$clear_schedule = x
+))
+
+mock_event <- function(schedule = NULL) {
+  me <- mock_event_class$new()
+  me$set_user_scheduled(schedule)
+  me$set_schedule(mockery::mock())
+  me$set_clear_schedule(mockery::mock())
+  return(me)
 }
 
 expect_bitset_update <- function(mock, value, index, call = 1) {

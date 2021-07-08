@@ -51,6 +51,7 @@ create_variables <- function(parameters){
 #' Prior exposure equilibrium
 #'
 #' @param p Condition parameters
+#' @param population Population size
 #' @param initial_age Age of each child
 #' @param maximum_age Maximum age
 #' @param est_het Heterogeneity of each child variable

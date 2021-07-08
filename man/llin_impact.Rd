@@ -6,6 +6,15 @@
 \usage{
 llin_impact(target, disease, parameters, variables)
 }
+\arguments{
+\item{target}{Target}
+
+\item{disease}{Disease index}
+
+\item{parameters}{Model parameters}
+
+\item{variables}{Model variables}
+}
 \description{
 Estimate modifier due to LLIN impact
 }

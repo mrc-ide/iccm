@@ -7,9 +7,9 @@
 type_index(parameters, type)
 }
 \arguments{
-\item{type}{Disease type (diarrhoea, malaria or pneumonia)}
+\item{parameters}{Model parameters}
 
-\item{disease_parameters}{Disease parameters}
+\item{type}{Disease type (diarrhoea, malaria or pneumonia)}
 }
 \value{
 A vector indexing which disease are of requested type

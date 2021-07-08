@@ -71,15 +71,33 @@ death_from_other_causes <- function(death_index, parameters, variables, events, 
 #' @param events  Model events
 replace_child <- function(target, timestep, variables, parameters, events) {
   # Clear any future scheduling
+  clear_all_scheduled_events(target, events)
+
+
+
+  reset_disease_status(target, parameters, variables)
+
+  reset_heterogeneity(target, parameters, variables)
+
+  reset_treatment_and_interventions(target, parameters, variables)
+}
+
+#' Clear all scheduled events for a given target
+#'
+#' @param events Model events
+#' @param target Children to clear events for
+clear_all_scheduled_events <- function(target, events){
   for(event in unlist(events)){
     event$clear_schedule(target)
   }
+}
 
-  variables$birth_t$queue_update(value = timestep - parameters$age_lower, index = target)
-  graduate_t <- parameters$age_upper - parameters$age_lower
-  events$graduate$schedule(target, delay = rep(graduate_t, target$size()))
-
-  # Diseases
+#' Reset disease status for a new child
+#'
+#' @param target Target children
+#' @param parameters Model parameters
+#' @param variables Model variables
+reset_disease_status <- function(target, parameters, variables){
   for(disease in 1:length(parameters$disease)){
     ## Prior exposure
     variables$prior_exposure[[disease]]$queue_update(0, target)
@@ -92,25 +110,50 @@ replace_child <- function(target, timestep, variables, parameters, events) {
     ## Vaccination status
     variables$vaccine[[disease]]$queue_update(stats::rbinom(target$size(), 1, parameters$disease[[disease]]$vaccine_coverage), target)
   }
+}
 
-  n <- target$size()
-  # re-draw individual level heterogeneity
-  new_het <- heterogeneity(n, parameters$het_sd)
-  variables$heterogeneity$queue_update(new_het, target)
-
+#' Reset treatment and interventions
+#'
+#' @param target Target children
+#' @param parameters Model parameters
+#' @param variables Model variables
+reset_treatment_and_interventions <- function(target, parameters, variables){
   variables$time_of_last_act$queue_update(as.numeric(NA), target)
   variables$time_of_last_amoxicillin$queue_update(as.numeric(NA), target)
   variables$awaiting_followup$queue_update(0, target)
-
   # re-draw interventions and vaccination
-  variables$llin$queue_update(stats::rbinom(n, 1, parameters$llin_coverage), target)
+  variables$llin$queue_update(stats::rbinom(target$size(), 1, parameters$llin_coverage), target)
+}
+
+#' Reset child heterogeneity
+#'
+#' @param target Target children
+#' @param parameters Model parameters
+#' @param variables Model variables
+reset_heterogeneity <- function(target, parameters, variables){
+  # re-draw individual level heterogeneity
+  new_het <- heterogeneity(target$size(), parameters$het_sd)
+  variables$heterogeneity$queue_update(new_het, target)
+}
+
+#' Reset child demographic variables
+#'
+#' @param target Target children
+#' @param parameters Model parameters
+#' @param variables Model variables
+#' @param events Model events
+#' @param timestep Current timestep
+reset_demography <- function(target, parameters, variables, events, timestep){
+  variables$birth_t$queue_update(value = timestep - parameters$age_lower, index = target)
+  graduate_t <- parameters$age_upper - parameters$age_lower
+  events$graduate$schedule(target, delay = rep(graduate_t, target$size()))
 }
 
 #' Get children's ages
 #'
 #' @param timestep Current time
-#' @param index optionally return a subset of the variable vector
-#' @inheritParams background_mortality
+#' @param birth_t Birth time variable
+#' @param target Target
 get_age <- function(timestep, birth_t, target = NULL){
   timestep - birth_t$get_values(index = target)
 }

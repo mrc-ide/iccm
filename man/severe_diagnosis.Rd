@@ -7,14 +7,17 @@
 severe_diagnosis(target, sens, spec, parameters, variables, disease_index)
 }
 \arguments{
-\item{...}{
-  Arguments passed on to \code{\link[=diagnosis]{diagnosis}}
-  \describe{
-    \item{\code{target}}{Children visiting provider}
-    \item{\code{sens}}{Diagnostic sensitivity}
-    \item{\code{spec}}{Diagnostic specificity}
-    \item{\code{disease_index}}{Index of diseases of target type}
-  }}
+\item{target}{Children visiting provider}
+
+\item{sens}{Diagnostic sensitivity}
+
+\item{spec}{Diagnostic specificity}
+
+\item{parameters}{Model parameters}
+
+\item{variables}{Model variables}
+
+\item{disease_index}{Disease index}
 }
 \value{
 A bitset of those testing positive

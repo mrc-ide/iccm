@@ -4,7 +4,15 @@
 \alias{diagnosis}
 \title{Diagnostic result for disease}
 \usage{
-diagnosis(target, sens, spec, parameters, variables, disease_index)
+diagnosis(
+  target,
+  sens,
+  spec,
+  parameters,
+  variables,
+  disease_index,
+  positive_index = c("asymptomatic", "symptomatic", "severe")
+)
 }
 \arguments{
 \item{target}{Children visiting provider}
@@ -13,9 +21,13 @@ diagnosis(target, sens, spec, parameters, variables, disease_index)
 
 \item{spec}{Diagnostic specificity}
 
-\item{disease_index}{Index of diseases of target type}
+\item{parameters}{Model parameters}
 
-\item{infection_status}{All infection status variables}
+\item{variables}{Model variables}
+
+\item{disease_index}{Disease index}
+
+\item{positive_index}{State that are positive}
 }
 \value{
 A bitset of those testing positive

@@ -8,6 +8,8 @@ initialise_render_defaults(renderer, parameters)
 }
 \arguments{
 \item{renderer}{Model renderer}
+
+\item{parameters}{Model parameters}
 }
 \description{
 Add default values to render variables that won't get called every timestep

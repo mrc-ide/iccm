@@ -7,11 +7,15 @@
 vaccine_impact(target, disease, ages, parameters, variables)
 }
 \arguments{
+\item{target}{Target}
+
+\item{disease}{Disease index}
+
 \item{ages}{Individuals ages}
 
-\item{p}{Condition specific parameters}
+\item{parameters}{Model parameters}
 
-\item{variable}{Vaccine coverage variable for specific disease}
+\item{variables}{Model variables}
 }
 \value{
 Vaccine modifier

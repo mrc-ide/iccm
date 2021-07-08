@@ -88,16 +88,20 @@ test_that("infection - no asymptopmatic pathway", {
 test_that("infection - including asymptopmatic pathway", {
   disease <- 1
   parameters <- get_parameters()
-  parameters$population <- 5
+  parameters$population <- 3
   parameters$disease <- parameters$disease[1]
-  parameters$disease[[1]]$asymptomatic_pathway <- FALSE
+  parameters$disease[[1]]$asymptomatic_pathway <- TRUE
   timestep <- 1
   variables <- list()
   variables$het <- mock_double(rep(1, parameters$population))
   variables$prior_exposure <- list(
-    mock_integer(1:5)
+    mock_integer(1:3)
+  )
+  variables$infection_status <- list(
+    individual::CategoricalVariable$new(c("uninfected", "asymptomatic", "symptomatic", "severe"), c("uninfected", "uninfected", "asymptomatic"))
   )
   variables$birth_t <- mock_integer(rep(-364, parameters$population))
+
   renderer <- mock_render(1)
   events <- list()
   events$clinical <- list(
@@ -106,35 +110,36 @@ test_that("infection - including asymptopmatic pathway", {
   events$asymptomatic <- list(
     mock_event()
   )
-  infected <- individual::Bitset$new(5)$insert(1:5)
+  infected <- individual::Bitset$new(3)$insert(1:3)
 
+  mockery::stub(infection, "stats::runif", how = 0)
+  infection(infected,
+            disease,
+            parameters,
+            variables,
+            events,
+            renderer,
+            timestep)
 
+  expect_equal(mockery::mock_args(events$clinical[[1]]$schedule)[[1]][[1]]$to_vector(), c(1, 2))
+  expect_equal(mockery::mock_args(events$clinical[[1]]$schedule)[[1]][[2]], 0)
 
-  disease <- "plasmodium_falciparum"
-  parameters <- get_parameters()
-  parameters$population <- 5
-  p <- parameters$disease[[disease]]
-  timestep <- 1
-  variables <- list()
-  variables$het <- mock_double(rep(1, parameters$population))
-  variables$plasmodium_falciparum_prior_exposure <- mock_integer(1:5)
-  variables$plasmodium_falciparum_status <- mock_category(c("uninfected", "asymptomatic", "symptomatic", "severe"), rep("uninfected", 5))
-  variables$birth_t <- mock_integer(rep(-364, parameters$population))
-  renderer <- mock_render(1)
-  events <- list()
-  events$plasmodium_falciparum_progress_to_clinical_infection <- mock_event()
-  events$plasmodium_falciparum_progress_to_asymptomatic_infection <- mock_event()
-  infected <- individual::Bitset$new(5)$insert(1:5)
-  mockery::stub(infection, "stats::runif", how = c(0, 0, 1, 1, 1))
+  expect_equal(mockery::mock_args(events$clinical[[1]]$schedule)[[2]][[1]]$to_vector(), 3)
+  expect_equal(mockery::mock_args(events$clinical[[1]]$schedule)[[2]][[2]], 0)
 
-  infection(infected, disease, parameters, variables, events, renderer, timestep)
+  expect_equal(mockery::mock_args(events$asymptomatic[[1]]$schedule)[[1]][[1]]$to_vector(), double())
+  expect_equal(mockery::mock_args(events$asymptomatic[[1]]$schedule)[[1]][[2]], 0)
 
-  expect_equal(mockery::mock_args(events$plasmodium_falciparum_progress_to_clinical_infection$schedule)[[1]][[1]]$to_vector(), 1:2)
-  expect_equal(mockery::mock_args(events$plasmodium_falciparum_progress_to_clinical_infection$schedule)[[1]][[2]], 0)
+  mockery::stub(infection, "stats::runif", how = 1)
+  infection(infected,
+            disease,
+            parameters,
+            variables,
+            events,
+            renderer,
+            timestep)
 
-  expect_equal(mockery::mock_args(events$plasmodium_falciparum_progress_to_asymptomatic_infection$schedule)[[1]][[1]]$to_vector(), 3:5)
-  expect_equal(mockery::mock_args(events$plasmodium_falciparum_progress_to_asymptomatic_infection$schedule)[[1]][[2]], 0)
-
-  mockery::expect_args(renderer$render, 1, paste0(disease, "_clinical_infection"), 2, 1)
+  expect_equal(mockery::mock_args(events$asymptomatic[[1]]$schedule)[[2]][[1]]$to_vector(), c(1, 2))
+  expect_equal(mockery::mock_args(events$asymptomatic[[1]]$schedule)[[2]][[2]], 0)
 })
 

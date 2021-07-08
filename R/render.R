@@ -2,7 +2,9 @@
 #'
 #' Record overall (condition) and disaggregated (disease) prevalence
 #'
-#' @inheritParams condition_exposure
+#' @param variables Model variables
+#' @param renderer Model renderer
+#' @param parameters Model parameters
 render_prevalence <- function(variables, renderer, parameters){
   names <- names(parameters$disease)
   function(timestep){
@@ -15,6 +17,9 @@ render_prevalence <- function(variables, renderer, parameters){
 
 #' Record average prior infections
 #'
+#' @param variables Model variables
+#' @param renderer Model renderer
+#' @param parameters Model parameters
 render_prior <- function(variables, renderer, parameters){
   names <- names(parameters$disease)
   function(timestep){
@@ -27,6 +32,9 @@ render_prior <- function(variables, renderer, parameters){
 
 #' Record prevalence of fever
 #'
+#' @param variables Model variables
+#' @param renderer Model renderer
+#' @param parameters Model parameters
 render_fever_prevalence <- function(parameters, variables, renderer){
   function(timestep){
     fever_prev <- any_fever(parameters, variables)$size() / parameters$population
@@ -38,7 +46,8 @@ render_fever_prevalence <- function(parameters, variables, renderer){
 #'
 #' Average ages and number of children in each year age-group.
 #'
-#' @inheritParams background_mortality
+#' @param variables Model variables
+#' @param renderer Model renderer
 render_demography <- function(variables, renderer){
   function(timestep){
     age_days <- timestep - variables$birth_t$get_values()
@@ -56,6 +65,7 @@ render_demography <- function(variables, renderer){
 #' Add default values to render variables that won't get called every timestep
 #'
 #' @param renderer Model renderer
+#' @param parameters Model parameters
 initialise_render_defaults <- function(renderer, parameters){
   renderer$set_default("graduation", 0)
   renderer$set_default("hf_patients", 0)

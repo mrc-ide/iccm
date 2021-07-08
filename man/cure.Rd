@@ -9,11 +9,11 @@ cure(target, disease, variables, events)
 \arguments{
 \item{target}{Target children}
 
-\item{variables}{Model variable}
+\item{disease}{Disease index}
+
+\item{variables}{Model variables}
 
 \item{events}{Model events}
-
-\item{condition}{Condition to cure}
 }
 \description{
 Cure a condition

@@ -11,7 +11,7 @@ hf_diagnose_severe_diarrhoea(target, variables, parameters)
 
 \item{variables}{Model variables}
 
-\item{parameters}{Model parametyers}
+\item{parameters}{Model parameters}
 }
 \value{
 A bit set of children that have tested +ve (including false +ves) and

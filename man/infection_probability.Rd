@@ -9,15 +9,13 @@ infection_probability(target, disease, parameters, variables, timestep)
 \arguments{
 \item{target}{Those exposed}
 
+\item{disease}{disease index}
+
+\item{parameters}{Model parameters}
+
+\item{variables}{Model variables}
+
 \item{timestep}{Timestep}
-
-\item{p}{Disease parameters}
-
-\item{prior_exposure}{Prior exposure to disease}
-
-\item{heterogeneity}{Individual heterogeneity}
-
-\item{birth_t}{Birth times}
 }
 \description{
 Infection probability vector

@@ -6,6 +6,11 @@
 \usage{
 give_severe_treatment_pneumonia(target, efficacy)
 }
+\arguments{
+\item{target}{Target}
+
+\item{efficacy}{Efficacy}
+}
 \description{
-Provides treatment for severe pneumonia
+Give treatment for severe pneumonia
 }

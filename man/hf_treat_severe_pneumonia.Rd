@@ -6,6 +6,15 @@
 \usage{
 hf_treat_severe_pneumonia(target, variables, parameters, events)
 }
+\arguments{
+\item{target}{Children presenting at the health facility}
+
+\item{variables}{Model variables}
+
+\item{parameters}{Model parameters}
+
+\item{events}{Model events}
+}
 \description{
 Health facility treatment for severe pneumonia
 }

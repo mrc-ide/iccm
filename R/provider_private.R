@@ -60,7 +60,7 @@ private_treat <- function(variables, parameters, renderer, events){
     )
     if(pneumonia_to_treat$size() > 0){
       give_amoxicillin(
-        target = pneumonia_severe_to_refer,
+        target = pneumonia_to_treat,
         parameters = parameters,
         variables = variables,
         events = events,

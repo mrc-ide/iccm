@@ -9,7 +9,9 @@ get_age(timestep, birth_t, target = NULL)
 \arguments{
 \item{timestep}{Current time}
 
-\item{index}{optionally return a subset of the variable vector}
+\item{birth_t}{Birth time variable}
+
+\item{target}{Target}
 }
 \description{
 Get children's ages

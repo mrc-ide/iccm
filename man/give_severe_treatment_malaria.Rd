@@ -7,8 +7,10 @@
 give_severe_treatment_malaria(target, efficacy)
 }
 \arguments{
-\item{target}{Target children}
+\item{target}{Target}
+
+\item{efficacy}{Efficacy}
 }
 \description{
-Provides treatment for severe malaria
+Give treatment for severe malaria
 }

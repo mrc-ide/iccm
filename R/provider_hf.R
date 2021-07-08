@@ -25,7 +25,7 @@ hf_treat <- function(variables, parameters, renderer, events){
     )
     if(dia_severe_to_treat$size() > 0){
       hf_treat_severe_diarrhoea(
-        target = dia__severe_to_treat,
+        target = dia_severe_to_treat,
         variables = variables,
         parameters = parameters,
         events = events
@@ -141,7 +141,7 @@ hf_treat <- function(variables, parameters, renderer, events){
 #'
 #' @param target Children presenting at the health facility
 #' @param variables Model variables
-#' @param parameters Model parametyers
+#' @param parameters Model parameters
 #'
 #' @return A bit set of children that have tested +ve (including false +ves) and
 #' who have been successfully processed by the health facility.
@@ -182,6 +182,8 @@ hf_diagnose_severe_malaria <- function(target, variables, parameters){
 }
 
 #' Health facility treatment for severe malaria
+#' @inheritParams hf_diagnose_malaria
+#' @param events Model events
 hf_treat_severe_malaria <- function(target, variables, parameters, events){
 
 }
@@ -231,6 +233,8 @@ hf_diagnose_severe_diarrhoea <- function(target, variables, parameters){
 }
 
 #' Health facility treatment for severe diarrhoea
+#' @inheritParams hf_diagnose_malaria
+#' @param events Model events
 hf_treat_severe_diarrhoea <- function(target, variables, parameters, events){
 
 }
@@ -280,6 +284,8 @@ hf_diagnose_severe_pneumonia <- function(target, variables, parameters){
 }
 
 #' Health facility treatment for severe pneumonia
+#' @inheritParams hf_diagnose_malaria
+#' @param events Model events
 hf_treat_severe_pneumonia <- function(target, variables, parameters, events){
 
 }

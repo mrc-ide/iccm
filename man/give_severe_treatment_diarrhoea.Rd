@@ -7,8 +7,10 @@
 give_severe_treatment_diarrhoea(target, efficacy)
 }
 \arguments{
-\item{target}{Target children}
+\item{target}{Target}
+
+\item{efficacy}{Efficacy}
 }
 \description{
-Provides treatment for severe diarrhoea
+Give treatment for severe diarrhoea
 }

@@ -73,13 +73,13 @@ replace_child <- function(target, timestep, variables, parameters, events) {
   # Clear any future scheduling
   clear_all_scheduled_events(target, events)
 
-
-
   reset_disease_status(target, parameters, variables)
 
   reset_heterogeneity(target, parameters, variables)
 
   reset_treatment_and_interventions(target, parameters, variables)
+
+  reset_demography(target, parameters, variables, events, timestep)
 }
 
 #' Clear all scheduled events for a given target

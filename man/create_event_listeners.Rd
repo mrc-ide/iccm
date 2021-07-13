@@ -2,7 +2,7 @@
 % Please edit documentation in R/events.R
 \name{create_event_listeners}
 \alias{create_event_listeners}
-\title{Add event listeners}
+\title{Adds listeners to specific events}
 \usage{
 create_event_listeners(events, variables, parameters, renderer)
 }
@@ -16,5 +16,5 @@ create_event_listeners(events, variables, parameters, renderer)
 \item{renderer}{Model renderer}
 }
 \description{
-These are the functions that are called when an event is triggered
+Adds listeners to specific events
 }

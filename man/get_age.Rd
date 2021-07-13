@@ -4,14 +4,14 @@
 \alias{get_age}
 \title{Get children's ages}
 \usage{
-get_age(timestep, variables, index = NULL)
+get_age(timestep, birth_t, target = NULL)
 }
 \arguments{
 \item{timestep}{Current time}
 
-\item{variables}{Model variables}
+\item{birth_t}{Birth time variable}
 
-\item{index}{optionally return a subset of the variable vector}
+\item{target}{Target}
 }
 \description{
 Get children's ages

@@ -1,4 +1,3 @@
-
 #' Create events
 #'
 #' @param variables Model variables
@@ -6,60 +5,358 @@
 #'
 #' @return List of events
 create_events <- function(variables, parameters){
-  # To susceptible
-  dia_recover <- individual::TargetedEvent$new(parameters$population)
-  pneumonia_recover <- individual::TargetedEvent$new(parameters$population)
-  malaria_recover <- individual::TargetedEvent$new(parameters$population)
+  events <- list()
 
-  # To asymptomatic
-  dia_asymptomatic <- individual::TargetedEvent$new(parameters$population)
-  pneumonia_asymptomatic <- individual::TargetedEvent$new(parameters$population)
-  malaria_asymptomatic <- individual::TargetedEvent$new(parameters$population)
-
-  # Treatment
-  hf_treatment <- individual::TargetedEvent$new(parameters$population)
-  chw_treatment <- individual::TargetedEvent$new(parameters$population)
-  private_treatment <- individual::TargetedEvent$new(parameters$population)
-
-  # Demographic
-  graduate <- individual::TargetedEvent$new(parameters$population)
-
-  # Note ordering of events does matter here
-  events <- list(
-    dia_asymptomatic = dia_asymptomatic,
-    dia_recover = dia_recover,
-    pneumonia_asymptomatic = pneumonia_asymptomatic,
-    pneumonia_recover = pneumonia_recover,
-    malaria_asymptomatic = malaria_asymptomatic,
-    malaria_recover = malaria_recover,
-    hf_treatment = hf_treatment,
-    chw_treatment = chw_treatment,
-    private_treatment = private_treatment,
-    graduate = graduate
-  )
+  # Progression events for each disease
+  events$asymptomatic <- list()
+  events$clinical <- list()
+  events$severe <- list()
+  events$susceptible <- list()
+  for(disease in 1:length(parameters$disease)){
+    events$asymptomatic[[disease]] <- individual::TargetedEvent$new(parameters$population)
+    events$clinical[[disease]] <- individual::TargetedEvent$new(parameters$population)
+    events$severe[[disease]] <- individual::TargetedEvent$new(parameters$population)
+    events$susceptible[[disease]] <- individual::TargetedEvent$new(parameters$population)
+  }
+  # Treatment provider visits
+  events$hf_treatment <- individual::TargetedEvent$new(parameters$population)
+  events$chw_treatment <- individual::TargetedEvent$new(parameters$population)
+  events$private_treatment <- individual::TargetedEvent$new(parameters$population)
+  # Graduation
+  events$graduate <- individual::TargetedEvent$new(parameters$population)
   return(events)
 }
 
-#' Add event listeners
-#'
-#' These are the functions that are called when an event is triggered
+
+#' Adds listeners to specific events
 #'
 #' @param events Model events
 #' @param variables Model variables
 #' @param parameters Model parameters
 #' @param renderer Model renderer
 create_event_listeners <- function(events, variables, parameters, renderer){
-  events$dia_asymptomatic$add_listener(asymptomatic_event(variables, "dia"))
-  events$dia_recover$add_listener(recover_event(variables, "dia"))
-  events$pneumonia_asymptomatic$add_listener(asymptomatic_event(variables, "pneumonia"))
-  events$pneumonia_recover$add_listener(recover_event(variables, "pneumonia"))
-  events$malaria_asymptomatic$add_listener(asymptomatic_event(variables, "malaria"))
-  events$malaria_recover$add_listener(recover_event(variables, "malaria"))
-  events$hf_treatment$add_listener(hf_treat(variables, parameters, renderer, events))
-  events$chw_treatment$add_listener(chw_treat(variables, parameters, renderer, events))
-  events$private_treatment$add_listener(private_treat(variables, parameters, renderer, events))
-  events$graduate$add_listener(graduate_event(variables, parameters, events, renderer))
+
+  for(disease in 1:length(parameters$disease)){
+    p <- parameters$disease[[disease]]
+
+    ### Progress to clinical infection #########################################
+    # Update status
+    events$clinical[[disease]]$add_listener(
+      update_status(
+        variable = variables$infection_status[[disease]],
+        new_status = "symptomatic"
+      )
+    )
+    # Update fever status
+    events$clinical[[disease]]$add_listener(
+      update_fever(
+        variable = variables$fever[[disease]],
+        probability_fever = p$probability_fever
+      )
+    )
+    # Update time of onset of symptoms
+    events$clinical[[disease]]$add_listener(
+      onset_symptoms(
+        variable = variables$symptom_onset[[disease]]
+      )
+    )
+    # Schedule treatment seeking
+    events$clinical[[disease]]$add_listener(
+      schedule_treatment_seeking(
+        probability_seek_treatment = parameters$treatment_seeking$prob_seek_treatment,
+        behavioural_delay = parameters$treatment_seeking$treat_seeking_behaviour_delay,
+        provider_preference = variables$provider_preference,
+        provider_reserve_preference = variables$provider_reserve_preference,
+        introduction_time = parameters$chw$introduction_time,
+        hf_treatment = events$hf_treatment,
+        hf_travel_time = parameters$hf$travel_time,
+        chw_treatment = events$chw_treatment,
+        chw_travel_time = parameters$chw$travel_time,
+        private_treatment = events$private_treatment,
+        private_travel_time = parameters$private$travel_time
+      )
+    )
+    # In the case of super-infection, a recovery may already be scheduled. We need to clear this
+    events$clinical[[disease]]$add_listener(
+      clear_scheduled_recovery(
+        event = events$susceptible[[disease]]
+      ))
+    # Schedule progression from clinical infection
+    events$clinical[[disease]]$add_listener(
+      schedule_progression_from_clinical_infection(
+        p = p,
+        severe = events$severe[[disease]],
+        asymptomatic = events$asymptomatic[[disease]],
+        susceptible = events$susceptible[[disease]]
+      ))
+    ############################################################################
+
+    ### Progress to asymptomatic infection #####################################
+    # Update status
+    events$asymptomatic[[disease]]$add_listener(
+      update_status(
+        variable = variables$infection_status[[disease]],
+        new_status = "asymptomatic"
+      )
+    )
+    # Clear any disease-related fever
+    events$asymptomatic[[disease]]$add_listener(
+      clear_fever(
+        variable = variables$fever[[disease]]
+      )
+    )
+    # Schedule progression from asymptomatic infection
+    events$asymptomatic[[disease]]$add_listener(
+      schedule_progression_from_asymptomatic_infection(
+        p = p,
+        susceptible = events$susceptible[[disease]]
+      )
+    )
+    ############################################################################
+
+    ### Progress to uninfected #################################################
+    # Update status
+    events$susceptible[[disease]]$add_listener(
+      update_status(
+        variable = variables$infection_status[[disease]],
+        new_status = "uninfected"
+      )
+    )
+    # Clear any disease-related fever
+    events$susceptible[[disease]]$add_listener(
+      clear_fever(
+        variable = variables$fever[[disease]]
+      )
+    )
+    # Clear any symptom-onset time
+    events$susceptible[[disease]]$add_listener(
+      clear_onset_symptoms(
+        variable = variables$symptom_onset[[disease]]
+      )
+    )
+    ############################################################################
+
+    ### Progress to severe disease #############################################
+    # Update status
+    events$severe[[disease]]$add_listener(
+      update_status(
+        variable = variables$infection_status[[disease]],
+        new_status = "severe"
+      )
+    )
+    # All severe disease is associated with fever
+    events$severe[[disease]]$add_listener(
+      update_fever(
+        variable = variables$fever[[disease]],
+        probability_fever = 1
+      )
+    )
+    # More likely to seek treatment with onset of severe disease
+    events$severe[[disease]]$add_listener(
+      schedule_treatment_seeking(
+        probability_seek_treatment = parameters$treatment_seeking$prob_seek_treatment_severe,
+        behavioural_delay = 0,
+        provider_preference = variables$provider_preference,
+        provider_reserve_preference = variables$provider_reserve_preference,
+        introduction_time = parameters$chw$introduction_time,
+        hf_treatment = events$hf_treatment,
+        hf_travel_time = parameters$hf$travel_time,
+        chw_treatment = events$chw_treatment,
+        chw_travel_time = parameters$chw$travel_time,
+        private_treatment = events$private_treatment,
+        private_travel_time = parameters$private$travel_time
+      )
+    )
+    # Schedule progression from severe infection
+    events$severe[[disease]]$add_listener(
+      schedule_progression_from_severe_infection(
+        p = p,
+        asymptomatic = events$asymptomatic[[disease]],
+        susceptible = events$susceptible[[disease]]
+      )
+    )
+    events$severe[[disease]]$add_listener(
+      record_severe_incidence(paste0(names(parameters$disease)[disease], "_severe_incidence"), renderer)
+    )
+  }
+
+  events$graduate$add_listener(
+    graduate_event(
+      variables,
+      parameters,
+      events,
+      renderer
+    )
+  )
+  events$hf_treatment$add_listener(
+    hf_treat(
+      variables,
+      parameters,
+      renderer,
+      events
+    )
+  )
+  events$chw_treatment$add_listener(
+    chw_treat(
+      variables,
+      parameters,
+      renderer,
+      events
+    )
+  )
+  events$private_treatment$add_listener(
+    private_treat(
+      variables,
+      parameters,
+      renderer,
+      events
+    )
+  )
 }
+
+
+update_status <- function(variable, new_status){
+  force(variable)
+  force(new_status)
+  function(timestep, target){
+    variable$queue_update(new_status, target)
+  }
+}
+
+update_fever <- function(variable, probability_fever){
+  force(variable)
+  force(probability_fever)
+  function(timestep, target){
+    get_fever <- target$copy()$sample(probability_fever)
+    variable$queue_update("febrile", get_fever)
+  }
+}
+
+clear_fever <- function(variable){
+  force(variable)
+  function(timestep, target){
+    variable$queue_update("nonfebrile", target)
+  }
+}
+
+clear_onset_symptoms <- function(variable){
+  force(variable)
+  function(timestep, target){
+    variable$queue_update(as.numeric(NA), target)
+  }
+}
+
+onset_symptoms <- function(variable){
+  force(variable)
+  function(timestep, target){
+    variable$queue_update(timestep, target)
+  }
+}
+
+record_severe_incidence <- function(name, renderer){
+  force(name)
+  force(renderer)
+  function(timestep, target){
+    renderer$render(name, target$size(), timestep)
+  }
+}
+
+clear_scheduled_recovery <- function(event){
+  force(event)
+  function(timestep, target){
+    event$clear_schedule(target)
+  }
+}
+
+schedule_treatment_seeking <- function(probability_seek_treatment,
+                                       behavioural_delay,
+                                       provider_preference,
+                                       provider_reserve_preference,
+                                       introduction_time,
+                                       hf_treatment,
+                                       hf_travel_time,
+                                       chw_treatment,
+                                       chw_travel_time,
+                                       private_treatment,
+                                       private_travel_time){
+  force(probability_seek_treatment)
+  force(behavioural_delay)
+  force(provider_preference)
+  force(provider_reserve_preference)
+  force(introduction_time)
+  force(hf_treatment)
+  force(hf_travel_time)
+  force(chw_treatment)
+  force(chw_travel_time)
+  force(private_treatment)
+  force(private_travel_time)
+  function(timestep, target){
+    to_treat <- target$copy()$sample(probability_seek_treatment)
+    if(timestep < introduction_time){
+      to_treat_hf <- provider_reserve_preference$get_index_of("hf")$and(to_treat)
+      to_treat_chw <- provider_reserve_preference$get_index_of("chw")$and(to_treat)
+      print(to_treat_chw$size())
+      to_treat_private <- provider_reserve_preference$get_index_of("private")$and(to_treat)
+    } else {
+      to_treat_hf <- provider_preference$get_index_of("hf")$and(to_treat)
+      to_treat_chw <- provider_preference$get_index_of("chw")$and(to_treat)
+      to_treat_private <- provider_preference$get_index_of("private")$and(to_treat)
+    }
+
+    hf_treatment$schedule(to_treat_hf, delay = hf_travel_time + stats::rpois(to_treat_hf$size(), behavioural_delay) + 1)
+    chw_treatment$schedule(to_treat_chw, delay = chw_travel_time + stats::rpois(to_treat_chw$size(), behavioural_delay) + 1)
+    private_treatment$schedule(to_treat_private, delay = private_travel_time + stats::rpois(to_treat_private$size(), behavioural_delay) + 1)
+  }
+}
+
+schedule_progression_from_clinical_infection <- function(p, severe, asymptomatic, susceptible){
+  force(p)
+  force(severe)
+  force(asymptomatic)
+  force(susceptible)
+
+  function(timestep, target){
+    clinical_duration <- stats::rexp(target$size(), 1 / p$clinical_duration)
+    time_to_severe <- stats::rgeom(target$size(), p$daily_probability_severe)
+    to_severe_index <- time_to_severe < clinical_duration
+    to_severe <- individual::filter_bitset(target, which(to_severe_index))
+    severe$schedule(to_severe, time_to_severe[to_severe_index])
+
+    recovering <- individual::filter_bitset(target, which(!to_severe_index))
+
+    if(p$asymptomatic_pathway){
+      asymptomatic$schedule(recovering, delay = clinical_duration[!to_severe_index])
+    } else {
+      susceptible$schedule(recovering, delay = clinical_duration[!to_severe_index])
+    }
+  }
+}
+
+schedule_progression_from_asymptomatic_infection <- function(p, susceptible){
+  force(p)
+  force(susceptible)
+
+  function(timestep, target){
+    asymptomatic_duration <- stats::rexp(target$size(), 1 / p$asymptomatic_duration)
+    susceptible$schedule(target, delay = asymptomatic_duration)
+  }
+}
+
+schedule_progression_from_severe_infection <- function(p, asymptomatic, susceptible){
+  force(p)
+  force(asymptomatic)
+  force(susceptible)
+
+  function(timestep, target){
+    severe_duration <- stats::rexp(target$size(), 1 / p$severe_duration)
+    if(p$asymptomatic_pathway){
+      asymptomatic$schedule(target, delay = severe_duration)
+    } else {
+      susceptible$schedule(target, delay = severe_duration)
+    }
+  }
+}
+
 
 #' Initialise events
 #'
@@ -70,49 +367,10 @@ initialise_events <- function(events, variables, parameters){
   # Initialise gradutation
   to_graduate <- individual::Bitset$new(parameters$population)
   to_graduate <- to_graduate$insert(1:parameters$population)
-  graduate_t <- parameters$age_upper - get_age(0, variables)
+  graduate_t <- parameters$age_upper - get_age(0, variables$birth_t)
   events$graduate$schedule(to_graduate, delay = graduate_t)
 }
 
-#' Recovery event
-#'
-#' A recovery event. Resets status back to 0 (susceptible) and clears the disease index.
-#'
-#' @param condition Condition recovered from
-#' @inheritParams create_event_listeners
-#'
-#' @return Event
-recover_event <- function(variables, condition){
-  condition_status <- paste0(condition, "_status")
-  condition_disease <- paste0(condition, "_disease")
-  condition_fever <- paste0(condition, "_fever")
-
-  function(timestep, target){
-    # Set status = susceptible
-    variables[[condition_status]]$queue_update(0, target)
-    variables[[condition_disease]]$queue_update(0, target)
-    variables[[condition_fever]]$queue_update(0, target)
-  }
-}
-
-#' Asymptomatic event
-#'
-#' A move to asymptomatic. Resets status back to 1 (asymptomatic) and clears any fever.
-#'
-#' @param condition Condition recovered from
-#' @inheritParams create_event_listeners
-#'
-#' @return Event
-asymptomatic_event <- function(variables, condition){
-  condition_status <- paste0(condition, "_status")
-  condition_fever <- paste0(condition, "_fever")
-
-  function(timestep, target){
-    # Set status = asymptomatic
-    variables[[condition_status]]$queue_update(1, target)
-    variables[[condition_fever]]$queue_update(0, target)
-  }
-}
 
 #' Graduate event
 #'
@@ -127,3 +385,4 @@ graduate_event <- function(variables, parameters, events, renderer){
     replace_child(target, timestep, variables, parameters, events)
   }
 }
+

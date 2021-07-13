@@ -4,14 +4,14 @@
 \alias{llin_impact}
 \title{LLIN impact}
 \usage{
-llin_impact(disease, target, p, variables)
+llin_impact(target, disease, parameters, variables)
 }
 \arguments{
-\item{disease}{Infection disease}
+\item{target}{Target}
 
-\item{target}{Individual indices}
+\item{disease}{Disease index}
 
-\item{p}{Condition specific parameters}
+\item{parameters}{Model parameters}
 
 \item{variables}{Model variables}
 }

@@ -4,19 +4,13 @@
 \alias{give_severe_treatment_malaria}
 \title{Give treatment for severe malaria}
 \usage{
-give_severe_treatment_malaria(target, parameters, variables, events, timestep)
+give_severe_treatment_malaria(target, efficacy)
 }
 \arguments{
-\item{target}{Target children}
+\item{target}{Target}
 
-\item{parameters}{Model parameters}
-
-\item{variables}{Model variable}
-
-\item{events}{Model events}
-
-\item{timestep}{Model timestep}
+\item{efficacy}{Efficacy}
 }
 \description{
-Provides treatment for severe malaria
+Give treatment for severe malaria
 }

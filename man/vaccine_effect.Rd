@@ -4,16 +4,16 @@
 \alias{vaccine_effect}
 \title{Vaccine effect}
 \usage{
-vaccine_effect(ages, vx_start, vx_initial_efficacy, vx_hl)
+vaccine_effect(ages, vaccine_start, vaccine_initial_efficacy, vaccine_hl)
 }
 \arguments{
 \item{ages}{Ages of children}
 
-\item{vx_start}{Age of vaccinated child when fully protected}
+\item{vaccine_start}{Age of vaccinated child when fully protected}
 
-\item{vx_initial_efficacy}{Initial (maximum) efficacy}
+\item{vaccine_initial_efficacy}{Initial (maximum) efficacy}
 
-\item{vx_hl}{Vaccine protection half life}
+\item{vaccine_hl}{Vaccine protection half life}
 }
 \value{
 Vaccine effects

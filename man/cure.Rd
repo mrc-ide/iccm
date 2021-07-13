@@ -4,14 +4,14 @@
 \alias{cure}
 \title{Cure a condition}
 \usage{
-cure(target, condition, variables, events)
+cure(target, disease, variables, events)
 }
 \arguments{
 \item{target}{Target children}
 
-\item{condition}{Condition to cure}
+\item{disease}{Disease index}
 
-\item{variables}{Model variable}
+\item{variables}{Model variables}
 
 \item{events}{Model events}
 }

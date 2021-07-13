@@ -4,12 +4,18 @@
 \alias{treatment_prophylaxis}
 \title{Treatment prophylaxis modifier}
 \usage{
-treatment_prophylaxis(time_since_treatment, pr_hl)
+treatment_prophylaxis(target, disease, parameters, variables, timestep)
 }
 \arguments{
-\item{time_since_treatment}{Time since disease last treated}
+\item{target}{Children exposed}
 
-\item{pr_hl}{Prophylaxis half life}
+\item{disease}{Disease index}
+
+\item{parameters}{Model parameters}
+
+\item{variables}{Model variables}
+
+\item{timestep}{Current timestep}
 }
 \value{
 Treatment prophylaxis effect

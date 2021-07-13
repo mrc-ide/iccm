@@ -25,7 +25,8 @@ Imports:
     magrittr,
     rlang,
     patchwork,
-    Rcpp
+    Rcpp,
+    R6
 Suggests: 
   testthat,
   mockery

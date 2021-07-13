@@ -4,18 +4,16 @@
 \alias{vaccine_impact}
 \title{Vaccine impact}
 \usage{
-vaccine_impact(disease, index, target, ages, p, variables)
+vaccine_impact(target, disease, ages, parameters, variables)
 }
 \arguments{
-\item{disease}{Infection disease}
+\item{target}{Target}
 
-\item{index}{Infection disease index}
-
-\item{target}{Individual indices}
+\item{disease}{Disease index}
 
 \item{ages}{Individuals ages}
 
-\item{p}{Condition specific parameters}
+\item{parameters}{Model parameters}
 
 \item{variables}{Model variables}
 }

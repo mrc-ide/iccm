@@ -2,175 +2,77 @@
 #'
 #' @param parameters Model parameters
 create_variables <- function(parameters){
-  size <- parameters$population
+  variables <- list()
 
   # Demography
-  initial_age <- floor(rtexp(size, rate = 1 / parameters$average_age, lower = parameters$age_lower, upper = parameters$age_upper))
-  birth_t <- individual::DoubleVariable$new(-initial_age)
+  initial_age <- floor(rtexp(parameters$population, rate = 1 / parameters$average_age, lower = parameters$age_lower, upper = parameters$age_upper))
+  variables$birth_t <- individual::DoubleVariable$new(-initial_age)
 
-  # Epidemiology
-  est_het <- heterogeneity(size, parameters$het_sd)
-  het <- individual::DoubleVariable$new(est_het)
+  # Heterogeneity
+  est_het <- heterogeneity(parameters$population, parameters$het_sd)
+  variables$heterogeneity <- individual::DoubleVariable$new(est_het)
 
-  # Disease
-  ## Diarrhoea
-  ### Infection status (0 = Uninfected, 1 = Asymptomatically infected, 2 = clinically infected, 3 = severely infected)
-  dia_status <- individual::IntegerVariable$new(rep(0, size))
-  ### Disease type (see parameters$dia$type for index)
-  dia_disease <- individual::IntegerVariable$new(rep(0, size))
-  ### Start time of any active infection symptoms
-  dia_symptom_start <- individual::IntegerVariable$new(rep(NA, size))
-  ### Fever indicator
-  dia_fever <- individual::IntegerVariable$new(rep(0, size))
-  ### Prior exposures
-  dia_prior <- prior_exposure_matrix(parameters$dia, size, initial_age, est_het)
-  dia_prior_bacteria <- individual::IntegerVariable$new(initial_values = dia_prior[,1])
-  dia_prior_virus <- individual::IntegerVariable$new(initial_values = dia_prior[,2])
-  dia_prior_parasite <- individual::IntegerVariable$new(initial_values = dia_prior[,3])
-  dia_prior_rotavirus <- individual::IntegerVariable$new(initial_values = dia_prior[,4])
-  ### Previous treatment
-  dia_last_tx <- individual::IntegerVariable$new(rep(NA, size))
-
-  ## Pneumonia
-  ### Infection status (0 = Uninfected, 1 = Asymptomatically infected, 2 = clinically infected, 3 = severely infected)
-  pneumonia_status <- individual::IntegerVariable$new(rep(0, size))
-  ### Disease type (see parameters$pneumonia$type for index)
-  pneumonia_disease <- individual::IntegerVariable$new(rep(0, size))
-  ### Start time of any active infection symptoms
-  pneumonia_symptom_start <- individual::IntegerVariable$new(rep(NA, size))
-  ### Fever indicator
-  pneumonia_fever <- individual::IntegerVariable$new(rep(0, size))
-  ### Prior exposures
-  pneumonia_prior <- prior_exposure_matrix(parameters$pneumonia, size, initial_age, est_het)
-  pneumonia_prior_bacteria <- individual::IntegerVariable$new(initial_values = pneumonia_prior[,1])
-  pneumonia_prior_virus <- individual::IntegerVariable$new(initial_values = pneumonia_prior[,2])
-  pneumonia_prior_fungus <- individual::IntegerVariable$new(initial_values = pneumonia_prior[,3])
-  pneumonia_prior_pneumococcus <- individual::IntegerVariable$new(initial_values = pneumonia_prior[,4])
-  pneumonia_prior_hib <- individual::IntegerVariable$new(initial_values = pneumonia_prior[,5])
-  ### Previous treatment
-  pneumonia_last_tx <- individual::IntegerVariable$new(rep(NA, size))
-
-  ## Malaria
-  ### Infection status (0 = Uninfected, 1 = Asymptomatically infected, 2 = clinically infected, 3 = severely infected)
-  malaria_status <- individual::IntegerVariable$new(rep(0, size))
-  ### Disease type (see parameters$malaria$type for index)
-  malaria_disease <- individual::IntegerVariable$new(rep(0, size))
-  ### Start time of any active infection symptoms
-  malaria_symptom_start <- individual::IntegerVariable$new(rep(NA, size))
-  ### Fever indicator
-  malaria_fever <- individual::IntegerVariable$new(rep(0, size))
-  malaria_prior <- prior_exposure_matrix(parameters$malaria, size, initial_age, est_het)
-  malaria_prior_pf <- individual::IntegerVariable$new(initial_values = malaria_prior[,1])
-  ### Previous treatment
-  malaria_last_tx <- individual::IntegerVariable$new(rep(NA, size))
+  # Diseases
+  n_disease <- length(parameters$disease)
+  disease_states <- c("uninfected", "asymptomatic", "symptomatic", "severe")
+  fever_states <- c("nonfebrile", "febrile")
+  variables$prior_exposure <- list()
+  variables$infection_status <- list()
+  variables$fever <- list()
+  variables$symptom_onset <- list()
+  for(disease in 1:n_disease){
+    ## Prior exposure
+    prior <- round(prior_exposure_equilibrium(parameters$disease[[disease]], parameters$population, initial_age, parameters$age_upper, est_het))
+    variables$prior_exposure[[disease]] <- individual::IntegerVariable$new(initial_values = prior)
+    ## Infection status
+    variables$infection_status[[disease]] <- individual::CategoricalVariable$new(disease_states, rep("uninfected", parameters$population))
+    ## Fever status
+    variables$fever[[disease]] <- individual::CategoricalVariable$new(fever_states, rep("nonfebrile", parameters$population))
+    ## Symptom onset
+    variables$symptom_onset[[disease]] <- individual::IntegerVariable$new(initial_values = rep(NA, parameters$population))
+    ## Vaccination status
+    variables$vaccine[[disease]] <- individual::IntegerVariable$new(initial_values = stats::rbinom(parameters$population, 1, parameters$disease[[disease]]$vaccine_coverage))
+  }
 
   # Treatment seeking
-  est_provider_preference <- sample_preference(size, parameters)
-  provider_preference <- individual::CategoricalVariable$new(c("None", "HF", "CHW", "Private"), est_provider_preference)
-  awaiting_followup <- individual::IntegerVariable$new(rep(0, size))
+  est_provider_preference <- sample_preference(parameters$population, parameters)
+  variables$provider_preference <- individual::CategoricalVariable$new(c("none", "hf", "chw", "private"), est_provider_preference$preference)
+  variables$provider_reserve_preference <- individual::CategoricalVariable$new(c("none", "hf", "chw", "private"), est_provider_preference$reserve_preference)
+  variables$awaiting_followup <- individual::IntegerVariable$new(rep(0,  parameters$population))
+  # Previous drugs (for prophylaxis)
+  variables$time_of_last_act <- individual::IntegerVariable$new(rep(NA,  parameters$population))
+  variables$time_of_last_amoxicillin <- individual::IntegerVariable$new(rep(NA,  parameters$population))
 
   # Interventions
-  llin <- individual::IntegerVariable$new(stats::rbinom(size, 1, parameters$llin_coverage))
-  rotavirus_vx <- individual::IntegerVariable$new(stats::rbinom(size, 1, parameters$rotavirus_vx_coverage))
-  pneumococcal_vx <- individual::IntegerVariable$new(stats::rbinom(size, 1, parameters$pneumococcal_vx_coverage))
-  hib_vx <- individual::IntegerVariable$new(stats::rbinom(size, 1, parameters$hib_vx_coverage))
-
-
-
-  variables <- list(
-    birth_t = birth_t,
-
-    dia_status = dia_status,
-    dia_disease = dia_disease,
-    dia_symptom_start = dia_symptom_start,
-    dia_fever = dia_fever,
-    dia_prior_bacteria = dia_prior_bacteria,
-    dia_prior_virus = dia_prior_virus,
-    dia_prior_parasite = dia_prior_parasite,
-    dia_prior_rotavirus = dia_prior_rotavirus,
-    dia_last_tx = dia_last_tx,
-
-    pneumonia_status = pneumonia_status,
-    pneumonia_disease = pneumonia_disease,
-    pneumonia_symptom_start = pneumonia_symptom_start,
-    pneumonia_fever = pneumonia_fever,
-    pneumonia_prior_bacteria = pneumonia_prior_bacteria,
-    pneumonia_prior_virus = pneumonia_prior_virus,
-    pneumonia_prior_fungus = pneumonia_prior_fungus,
-    pneumonia_prior_pneumococcus = pneumonia_prior_pneumococcus,
-    pneumonia_prior_hib = pneumonia_prior_hib,
-    pneumonia_last_tx = pneumonia_last_tx,
-
-    malaria_status = malaria_status,
-    malaria_disease = malaria_disease,
-    malaria_symptom_start = malaria_symptom_start,
-    malaria_fever = malaria_fever,
-    malaria_prior_pf = malaria_prior_pf,
-    malaria_last_tx = malaria_last_tx,
-
-    provider_preference = provider_preference,
-    awaiting_followup = awaiting_followup,
-
-    het = het,
-    llin = llin,
-    rotavirus_vx = rotavirus_vx,
-    pneumococcal_vx = pneumococcal_vx,
-    hib_vx = hib_vx
-  )
+  variables$llin <- individual::IntegerVariable$new(stats::rbinom(parameters$population, 1, parameters$llin_coverage))
 
   return(variables)
 }
 
-
-#' Add default values to render variables that won't get called every timestep
-#'
-#' @param renderer Model renderer
-#' @param zero_default Variables to set a default 0
-initialise_render_defaults <- function(renderer, zero_default = c("chw_patients", "chw_ors", "chw_followup", "chw_referral",
-                                         "private_patients", "private_ors",
-                                         "hf_patients", "hf_ors", "hf_severe_diarrhoea_tx",
-                                         "graduation", "dia_bacteria_mortality",
-                                         "dia_virus_mortality", "dia_parasite_mortality",
-                                         "dia_rotavirus_mortality", "malaria_pf_mortality",
-                                         "pneumonia_bacteria_mortality", "pneumonia_virus_mortality",
-                                         "pneumonia_fungus_mortality", "pneumonia_pneumococcus_mortality",
-                                         "pneumonia_hib_mortality", "malaria_pf_mortality",
-                                         "dia_bacteria_incidence",
-                                         "dia_virus_incidence", "dia_parasite_incidence",
-                                         "dia_rotavirus_incidence", "malaria_pf_incidence",
-                                         "pneumonia_bacteria_incidence", "pneumonia_virus_incidence",
-                                         "pneumonia_fungus_incidence", "pneumonia_pneumococcus_incidence",
-                                         "pneumonia_hib_incidence", "malaria_pf_incidence")){
-  for(var in zero_default){
-    renderer$set_default(var, 0)
-  }
-}
-
-
-#' Prior exposure equilibrium matrix
+#' Prior exposure equilibrium
 #'
 #' @param p Condition parameters
-#' @param size Population size
-#' @param initial_age Age variable
-#' @param est_het Het variable
-prior_exposure_matrix <- function(p, size, initial_age, est_het){
-  n <- p$groups
-  dp <- matrix(rep(0, size * n), ncol = n)
-  for(i in 1:n){
-    vx <- 1 - vaccine_effect(1:(365*5), p$vx_start[i], p$vx_initial_efficacy[i], p$vx_hl[i])
-    mi <- maternal_immunity(1:(365*5), p$mi_hl[i])
-    sigma <- p$sigma[i]
-    ii_shape <- p$ii_shape[i]
-    ii_rate <- p$ii_rate[i]
-    for(j in 1:size){
-      dp[j, i] <- round(eq_prior_indiv(initial_age[j],
-                                       sigma,
-                                       est_het[j],
-                                       vx,
-                                       mi,
-                                       ii_shape,
-                                       ii_rate))
-    }
+#' @param population Population size
+#' @param initial_age Age of each child
+#' @param maximum_age Maximum age
+#' @param est_het Heterogeneity of each child variable
+prior_exposure_equilibrium <- function(p, population, initial_age, maximum_age, est_het){
+  ages <- 1:maximum_age
+  vx <- rep(1, length(ages))
+  if(p$vaccine_coverage > 0){
+    vx <- 1 - vaccine_effect(ages, p$vaccine_start, p$vaccine_initial_efficacy, p$vaccine_hl)
+  }
+  mi <- maternal_immunity(ages, p$maternal_immunity_halflife)
+  dp <- rep(NA, population)
+  for(i in 1:population){
+    dp[i] <- eq_prior_indiv(initial_age[i],
+                            p$sigma,
+                            est_het[i],
+                            vx,
+                            mi,
+                            p$infection_immunity_shape,
+                            p$infection_immunity_rate)
   }
   return(dp)
 }
+

@@ -149,7 +149,8 @@ infection_probability <- function(target,
     target = target,
     disease = disease,
     parameters = parameters,
-    variables = variables
+    variables = variables,
+    timestep = timestep
   )
   # Estimate infection rate
   infection_rate <- parameters$disease[[disease]]$sigma * mi * ii * het * vi * li * tp

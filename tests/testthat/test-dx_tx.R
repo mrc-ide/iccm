@@ -230,8 +230,43 @@ test_that("cure",{
 
 
 test_that("treatment prophylaxis", {
-  expect_equal(treatment_prophylaxis(c(0, NA, 100), 100), c(0, 1, 1 - exp(-100 * (1/100))))
-  expect_gt(treatment_prophylaxis(5, 100), treatment_prophylaxis(1, 100))
+  parameters <- list(
+    disease = list(
+      plasmodium_falciparum = list(
+      ),
+      not_plasmodium_falciparum = list(
+      )
+    ),
+    dx_tx = list(
+      act_halflife = 10
+    )
+  )
+  target <- individual::Bitset$new(2)$insert(1:2)
+  variables <- list(
+    time_of_last_act = individual::IntegerVariable$new(c(1, NA))
+  )
+  #expect_equal(
+  act_prophylaxis <- c(1 - exp(-9 * (1 / parameters$dx_tx$act_halflife)), 1)
+  expect_equal(
+    treatment_prophylaxis(
+      target = target,
+      disease = 1,
+      parameters = parameters,
+      variables = variables,
+      timestep = 10
+    ),
+    act_prophylaxis
+  )
+  expect_equal(
+    treatment_prophylaxis(
+      target = target,
+      disease = 2,
+      parameters = parameters,
+      variables = variables,
+      timestep = 10
+    ),
+    c(1, 1)
+  )
 })
 
 test_that("has fever", {

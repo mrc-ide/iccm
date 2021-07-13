@@ -191,14 +191,17 @@ cure <- function(target, disease, variables, events){
 
 #' Treatment prophylaxis modifier
 #'
-#' @param time_since_treatment Time since disease last treated
-#' @param pr_hl Prophylaxis half life
+#' @param target Children exposed
+#' @param disease Disease index
+#' @param parameters Model parameters
+#' @param variables Model variables
+#' @param timestep Current timestep
 #'
 #' @return Treatment prophylaxis effect
-treatment_prophylaxis <- function(target, disease, parameters, variables){
+treatment_prophylaxis <- function(target, disease, parameters, variables, timestep){
   tp <- rep(1, target$size())
   if(names(parameters$disease)[disease] == "plasmodium_falciparum"){
-    time_since_treatment <- variables$time_of_last_act$get_values(target)
+    time_since_treatment <- timestep - variables$time_of_last_act$get_values(target)
     tp <- 1 - exp(-time_since_treatment * (1 / parameters$dx_tx$act_halflife))
     # Individuals who have never received treatment have no prophylaxis
     tp[is.na(tp)] <- 1
@@ -257,6 +260,9 @@ sample_preference <- function(n, parameters){
     reserve_preference <- rep("none", n)
   } else {
     prob <- providers * provider_weights
+    if(sum(prob) == 0){
+      prob <- c(1, 0, 1)
+    }
     prob <- prob / sum(prob)
     reserve_preference <- preference
     index <- preference == "chw"

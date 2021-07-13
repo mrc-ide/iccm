@@ -202,7 +202,6 @@ treatment_prophylaxis <- function(target, disease, parameters, variables){
     tp <- 1 - exp(-time_since_treatment * (1 / parameters$dx_tx$act_halflife))
     # Individuals who have never received treatment have no prophylaxis
     tp[is.na(tp)] <- 1
-    print(tp)
   }
   return(tp)
 }
@@ -245,11 +244,28 @@ sample_preference <- function(n, parameters){
   stopifnot(n > 0)
   providers <- c(parameters$hf$hf, parameters$chw$chw, parameters$private$private)
   if(all(providers == 0)){
-    return(rep("none", n))
+    preference <- rep("none", n)
+  } else {
+    provider_weights <- parameters$treatment_seeking$provider_preference_weights
+    prob <- providers * provider_weights
+    prob <- prob / sum(prob)
+    preference <- sample(c("hf", "chw", "private"), n, replace = TRUE, prob = prob)
   }
-  provider_weights <- parameters$treatment_seeking$provider_preference_weights
-  prob <- providers * provider_weights
-  prob <- prob / sum(prob)
-  preference <- sample(c("hf", "chw", "private"), n, replace = TRUE, prob = prob)
-  return(preference)
+  # Sample a reserve preference - used when CHW is first choice but a CHW is not available
+  providers <- c(parameters$hf$hf, 0, parameters$private$private)
+  if(all(providers == 0)){
+    reserve_preference <- rep("none", n)
+  } else {
+    prob <- providers * provider_weights
+    prob <- prob / sum(prob)
+    reserve_preference <- preference
+    index <- preference == "chw"
+    reserve_preference[index] <- sample(c("hf", "chw", "private"), sum(index), replace = TRUE, prob = prob)
+  }
+  return(
+    list(
+      preference = preference,
+      reserve_preference = reserve_preference
+    )
+  )
 }

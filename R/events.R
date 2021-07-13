@@ -66,6 +66,8 @@ create_event_listeners <- function(events, variables, parameters, renderer){
         probability_seek_treatment = parameters$treatment_seeking$prob_seek_treatment,
         behavioural_delay = parameters$treatment_seeking$treat_seeking_behaviour_delay,
         provider_preference = variables$provider_preference,
+        provider_reserve_preference = variables$provider_reserve_preference,
+        introduction_time = parameters$chw$introduction_time,
         hf_treatment = events$hf_treatment,
         hf_travel_time = parameters$hf$travel_time,
         chw_treatment = events$chw_treatment,
@@ -155,6 +157,8 @@ create_event_listeners <- function(events, variables, parameters, renderer){
         probability_seek_treatment = parameters$treatment_seeking$prob_seek_treatment_severe,
         behavioural_delay = 0,
         provider_preference = variables$provider_preference,
+        provider_reserve_preference = variables$provider_reserve_preference,
+        introduction_time = parameters$chw$introduction_time,
         hf_treatment = events$hf_treatment,
         hf_travel_time = parameters$hf$travel_time,
         chw_treatment = events$chw_treatment,
@@ -267,6 +271,8 @@ clear_scheduled_recovery <- function(event){
 schedule_treatment_seeking <- function(probability_seek_treatment,
                                        behavioural_delay,
                                        provider_preference,
+                                       provider_reserve_preference,
+                                       introduction_time,
                                        hf_treatment,
                                        hf_travel_time,
                                        chw_treatment,
@@ -276,6 +282,8 @@ schedule_treatment_seeking <- function(probability_seek_treatment,
   force(probability_seek_treatment)
   force(behavioural_delay)
   force(provider_preference)
+  force(provider_reserve_preference)
+  force(introduction_time)
   force(hf_treatment)
   force(hf_travel_time)
   force(chw_treatment)
@@ -284,9 +292,16 @@ schedule_treatment_seeking <- function(probability_seek_treatment,
   force(private_travel_time)
   function(timestep, target){
     to_treat <- target$copy()$sample(probability_seek_treatment)
-    to_treat_hf <- provider_preference$get_index_of("hf")$and(to_treat)
-    to_treat_chw <- provider_preference$get_index_of("chw")$and(to_treat)
-    to_treat_private <- provider_preference$get_index_of("private")$and(to_treat)
+    if(timestep < introduction_time){
+      to_treat_hf <- provider_reserve_preference$get_index_of("hf")$and(to_treat)
+      to_treat_chw <- provider_reserve_preference$get_index_of("chw")$and(to_treat)
+      print(to_treat_chw$size())
+      to_treat_private <- provider_reserve_preference$get_index_of("private")$and(to_treat)
+    } else {
+      to_treat_hf <- provider_preference$get_index_of("hf")$and(to_treat)
+      to_treat_chw <- provider_preference$get_index_of("chw")$and(to_treat)
+      to_treat_private <- provider_preference$get_index_of("private")$and(to_treat)
+    }
 
     hf_treatment$schedule(to_treat_hf, delay = hf_travel_time + stats::rpois(to_treat_hf$size(), behavioural_delay) + 1)
     chw_treatment$schedule(to_treat_chw, delay = chw_travel_time + stats::rpois(to_treat_chw$size(), behavioural_delay) + 1)

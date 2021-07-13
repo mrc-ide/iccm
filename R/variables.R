@@ -36,7 +36,8 @@ create_variables <- function(parameters){
 
   # Treatment seeking
   est_provider_preference <- sample_preference(parameters$population, parameters)
-  variables$provider_preference <- individual::CategoricalVariable$new(c("none", "hf", "chw", "private"), est_provider_preference)
+  variables$provider_preference <- individual::CategoricalVariable$new(c("none", "hf", "chw", "private"), est_provider_preference$preference)
+  variables$provider_reserve_preference <- individual::CategoricalVariable$new(c("none", "hf", "chw", "private"), est_provider_preference$reserve_preference)
   variables$awaiting_followup <- individual::IntegerVariable$new(rep(0,  parameters$population))
   # Previous drugs (for prophylaxis)
   variables$time_of_last_act <- individual::IntegerVariable$new(rep(NA,  parameters$population))

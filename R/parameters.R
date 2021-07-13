@@ -158,6 +158,7 @@ get_parameters <- function(user_overwrite = NULL){
 
   parameters$chw <- list(
     chw = 1,
+    introduction_time = 100,
     travel_time = 0,
     efficacy = 1,
     severe_diarrhoea_sensitivity = 1,

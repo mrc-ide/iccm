@@ -295,7 +295,6 @@ schedule_treatment_seeking <- function(probability_seek_treatment,
     if(timestep < introduction_time){
       to_treat_hf <- provider_reserve_preference$get_index_of("hf")$and(to_treat)
       to_treat_chw <- provider_reserve_preference$get_index_of("chw")$and(to_treat)
-      print(to_treat_chw$size())
       to_treat_private <- provider_reserve_preference$get_index_of("private")$and(to_treat)
     } else {
       to_treat_hf <- provider_preference$get_index_of("hf")$and(to_treat)

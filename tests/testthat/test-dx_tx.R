@@ -245,7 +245,6 @@ test_that("treatment prophylaxis", {
   variables <- list(
     time_of_last_act = individual::IntegerVariable$new(c(1, NA))
   )
-  #expect_equal(
   act_prophylaxis <- c(1 - exp(-9 * (1 / parameters$dx_tx$act_halflife)), 1)
   expect_equal(
     treatment_prophylaxis(

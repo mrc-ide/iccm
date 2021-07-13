@@ -134,7 +134,8 @@ get_parameters <- function(user_overwrite = NULL){
     rdt_specificity = 1,
     ors_efficacy = 0.75,
     ors_efficacy_severe = 0.75,
-    act_efficacy = 0.95
+    act_efficacy = 0.95,
+    act_halflife = 2000
   )
 
   parameters$hf <- list(

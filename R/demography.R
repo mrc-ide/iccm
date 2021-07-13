@@ -70,7 +70,7 @@ death_from_other_causes <- function(death_index, parameters, variables, events, 
 #' @param parameters Model parameters
 #' @param events  Model events
 replace_child <- function(target, timestep, variables, parameters, events) {
-  # Clear any future scheduling
+
   clear_all_scheduled_events(target, events)
 
   reset_disease_status(target, parameters, variables)

@@ -144,12 +144,15 @@ infection_probability <- function(target,
     parameters = parameters,
     variables = variables
   )
-  # Community impacts modifier (vaccine or LLIN)
-  #ci <- community_impact(disease = disease, index = i, p = p)
   # Treatment prophylaxis modifier
-  #tp <- treatment_prophylaxis(time_since_treatment, p$prophylaxis_hl[i])
+  tp <- treatment_prophylaxis(
+    target = target,
+    disease = disease,
+    parameters = parameters,
+    variables = variables
+  )
   # Estimate infection rate
-  infection_rate <- parameters$disease[[disease]]$sigma * mi * ii * het * vi * li# * ci * tp
+  infection_rate <- parameters$disease[[disease]]$sigma * mi * ii * het * vi * li * tp
   # Estimate infection probability
   infection_prob <- rate_to_prob(infection_rate)
   ##########################################################################

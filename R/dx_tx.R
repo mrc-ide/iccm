@@ -30,8 +30,6 @@ diagnosis <- function(target, sens, spec, parameters, variables, disease_index, 
   return(diagnosed)
 }
 
-
-
 #' Diagnostic result for severe disease
 #'
 #' @inheritParams diagnosis
@@ -55,9 +53,9 @@ severe_diagnosis <- function(target, sens, spec, parameters, variables, disease_
 long_symptoms <- function(target, disease_index, threshold, timestep, variables){
   long_symptom_duration <- rep(FALSE, target$size())
   for(disease in disease_index){
-      symptom_duration <- timestep - variables$symptom_onset[[disease]]$get_values(target)
-      symptom_duration[is.na(symptom_duration)] <- 0
-      long_symptom_duration[symptom_duration > threshold] <- TRUE
+    symptom_duration <- timestep - variables$symptom_onset[[disease]]$get_values(target)
+    symptom_duration[is.na(symptom_duration)] <- 0
+    long_symptom_duration[symptom_duration > threshold] <- TRUE
   }
   individual::filter_bitset(target, which(long_symptom_duration))
 }
@@ -197,10 +195,15 @@ cure <- function(target, disease, variables, events){
 #' @param pr_hl Prophylaxis half life
 #'
 #' @return Treatment prophylaxis effect
-treatment_prophylaxis <- function(time_since_treatment, pr_hl){
-  tp <- 1 - exp(-time_since_treatment * (1 / pr_hl))
-  # Individuals who have never received treatment have no prophylaxis
-  tp[is.na(tp)] <- 1
+treatment_prophylaxis <- function(target, disease, parameters, variables){
+  tp <- rep(1, target$size())
+  if(names(parameters$disease)[disease] == "plasmodium_falciparum"){
+    time_since_treatment <- variables$time_of_last_act$get_values(target)
+    tp <- 1 - exp(-time_since_treatment * (1 / parameters$dx_tx$act_halflife))
+    # Individuals who have never received treatment have no prophylaxis
+    tp[is.na(tp)] <- 1
+    print(tp)
+  }
   return(tp)
 }
 

@@ -10,16 +10,15 @@
 #'
 #' @return Vaccine modifier
 vaccine_impact <- function(target, disease, ages, parameters, variables){
+  modifier <- rep(1, target$size())
   if(parameters$disease[[disease]]$vaccine_coverage > 0) {
     modifier <- 1 - variables$vaccine[[disease]]$get_values(target) *
       vaccine_effect(
-        ages,
-        parameters$disease[[disease]]$vaccine_start,
-        parameters$disease[[disease]]$vaccine_initial_efficacy,
-        parameters$disease[[disease]]$vaccine_hl
+        ages = ages,
+        vaccine_start = parameters$disease[[disease]]$vaccine_start,
+        vaccine_initial_efficacy = parameters$disease[[disease]]$vaccine_initial_efficacy,
+        vaccine_hl = parameters$disease[[disease]]$vaccine_hl
       )
-  } else {
-    modifier <- rep(1, target$size())
   }
   return(modifier)
 }
@@ -37,7 +36,7 @@ vaccine_impact <- function(target, disease, ages, parameters, variables){
 vaccine_effect <- function(ages, vaccine_start, vaccine_initial_efficacy, vaccine_hl){
   vaccine_age <- ages - vaccine_start
   vaccine_age[vaccine_age < 0] <- Inf
-  vaccine_initial_efficacy * exp(-vaccine_age * (1/ vaccine_hl))
+  vaccine_initial_efficacy * exp(-vaccine_age * (1 / vaccine_hl))
 }
 
 #' LLIN impact
@@ -52,12 +51,6 @@ llin_impact <- function(target, disease, parameters, variables){
     modifier <- rep(1, target$size())
   }
   return(modifier)
-}
-
-#' Intervention community impact modifier
-#'
-community_impact <- function(){
-
 }
 
 

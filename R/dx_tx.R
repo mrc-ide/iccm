@@ -245,7 +245,12 @@ clear_scheduled_treatment_visits <- function(target, events){
 #' @return Vector of provider preference for each child
 sample_preference <- function(n, parameters){
   stopifnot(n > 0)
+
   providers <- c(parameters$hf$hf, parameters$chw$chw, parameters$private$private)
+  if(parameters$chw$introduction_time > 0){
+    providers[2] <- 0
+  }
+
   if(all(providers == 0)){
     preference <- rep("none", n)
   } else {
@@ -254,24 +259,24 @@ sample_preference <- function(n, parameters){
     prob <- prob / sum(prob)
     preference <- sample(c("hf", "chw", "private"), n, replace = TRUE, prob = prob)
   }
-  # Sample a reserve preference - used when CHW is first choice but a CHW is not available
-  providers <- c(parameters$hf$hf, 0, parameters$private$private)
-  if(all(providers == 0)){
-    reserve_preference <- rep("none", n)
-  } else {
-    prob <- providers * provider_weights
-    if(sum(prob) == 0){
-      prob <- c(1, 0, 1)
+
+  return(preference)
+}
+
+
+#' Resample provider preference when CHW introduced
+#'
+#' @param parameters Model parameters
+#' @param variables Model variables
+resample_preference <- function(parameters, variables){
+  function(timestep){
+    if(timestep == parameters$chw$introduction_time){
+      providers <- c(parameters$hf$hf, parameters$chw$chw, parameters$private$private)
+      provider_weights <- parameters$treatment_seeking$provider_preference_weights
+      prob <- providers * provider_weights
+      chw_prob <- prob[2] / sum(prob)
+      target <- individual::Bitset$new(parameters$population)$insert(1:parameters$population)$sample(chw_prob)
+      variables$provider_preference$queue_update("chw", target)
     }
-    prob <- prob / sum(prob)
-    reserve_preference <- preference
-    index <- preference == "chw"
-    reserve_preference[index] <- sample(c("hf", "chw", "private"), sum(index), replace = TRUE, prob = prob)
   }
-  return(
-    list(
-      preference = preference,
-      reserve_preference = reserve_preference
-    )
-  )
 }

@@ -7,17 +7,60 @@
 get_parameters(user_overwrite = NULL)
 }
 \arguments{
-\item{user_overwrite}{User overwrites to default parameters
-
-The parameters are defined below.
-
-\strong{Demography:}
-\itemize{
-\item pop - Population size
-\item average_age - The average lifespan of an individual within the population
-\item age_upper - The upper limit to modelled ages
-}}
+\item{user_overwrite}{User overwrites to default parameters}
 }
 \description{
 Create a named list of parameters for use in the model.
+The parameters are defined below.
+
+\strong{Demography:}
+
+\describe{
+\item{pop}{Population size}
+\item{average_age}{The average lifespan of an individual within the population}
+\item{age_upper}{The upper limit to modelled ages}
+}
+
+\strong{Disease:}
+
+Diseases may be added to the nested disease list. All parameter options are
+documented below.
+
+\describe{
+\item{type}{Disease type. Current supported types are: diarrhoea, malaria, pneumonia}
+\item{sigma}{Infection rate. This will be setting specific}
+\item{clinical_duration}{The average duration of a clinical episode}
+\item{daily_probability_severe}{The daily probability of developing a severe infection | a clinical infection}
+\item{severe_duration}{The average duration of a severe episode}
+\item{daily_probability_death}{Daily probability of dying | a severe infection}
+\item{probability_fever}{Probability of fever with clinical disease}
+\item{maternal_immunity_halflife}{Average duration of protection from maternal immunity}
+\item{infection_immunity_shape}{Infection immunity shape parameter}
+\item{infection_immunity_rate}{Infection immunity rate parameter}
+\item{clinical_immunity_shape}{Clinical immunity shape parameter}
+\item{clinical_immunity_rate}{Clinical immunity rate parameter}
+\item{vaccine_coverage}{Vaccine coverage (set to 0 for no vaccination)}
+\item{asymptomatic_pathway}{Boolean indicator if asmptomatic infections are to be modelled}
+\item{asymptomatic_duration}{Duration of asymptomatic infection (if modelled)}
+\item{amoxicillin_efficacy}{Efficacy of amoxicillin against this infection}
+}
+
+\strong{Treatment seeking:}
+
+\describe{
+\item{prob_seek_treatment}{Baseline probability of seeking treatment given symptom onset}
+\item{treat_seeking_behaviour_delay}{Average delay between symptom onset and seeking treatment}
+\item{prob_seek_treatment_severe}{Baseline probability of seeking treatment given onset of severe disease}
+\item{provider_preference_weights}{Population-level preference weights for treatment providers}
+}
+
+\strong{dx_tx:}
+
+\describe{
+\item{rdt_sensitivity}{Sensitivity of malaria rapid diagnostic test}
+\item{rdt_sepcificity}{Specificity of malaria rapid diagnostic test}
+\item{ors_efficacy}{Efficacy of oral rehydration therapy against diarrhoea}
+\item{act_efficacy}{Efficacy of artemisinin combination therapy against malaria}
+\item{act_halflife}{Halflife of artemisinin combination therapy}
+}
 }

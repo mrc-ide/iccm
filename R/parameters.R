@@ -52,6 +52,20 @@
 #'   \item{ors_efficacy}{Efficacy of oral rehydration therapy against diarrhoea}
 #'   \item{act_efficacy}{Efficacy of artemisinin combination therapy against malaria}
 #'   \item{act_halflife}{Halflife of artemisinin combination therapy}
+#'   \item{introduction_time}{Introduction time of CHW to community}
+#'   \item{followup_period}{Period between initial visit to a CHW and scheduled followup}
+#'   \item{_long_symptoms}{Threshold periods for diarrhoea, malaria and pneumonia that indicate a more severe illness}
+#' }
+#'
+#' \strong{Healthcare providers:}
+#'
+#' Most definitions are shared across providers (although parameterisations are unique to each). Some are specific.
+#'
+#' \describe{
+#'   \item{efficacy}{This efficacy parameter captures all "human error" from the provider}
+#'   \item{_sensitivity}{Sensitivity for named conditions. These are sensitivities associated with clinical diagnoses}
+#'   \item{_specificity}{Specificity for named conditions. These are specificites associated with clinical diagnoses}
+#'   \item{travel_time}{Travel time to reach provider}
 #' }
 #'
 #' @param user_overwrite User overwrites to default parameters

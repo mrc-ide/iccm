@@ -14,8 +14,9 @@ create_variables <- function(parameters){
 
   # Diseases
   n_disease <- length(parameters$disease)
-  disease_states <- c("uninfected", "asymptomatic", "symptomatic", "severe")
+  disease_states <- c("uninfected", "asymptomatic", "symptomatic")
   fever_states <- c("nonfebrile", "febrile")
+  severity_states <- c("nonsevere", "severe")
   variables$prior_exposure <- list()
   variables$infection_status <- list()
   variables$fever <- list()
@@ -26,6 +27,8 @@ create_variables <- function(parameters){
     variables$prior_exposure[[disease]] <- individual::IntegerVariable$new(initial_values = prior)
     ## Infection status
     variables$infection_status[[disease]] <- individual::CategoricalVariable$new(disease_states, rep("uninfected", parameters$population))
+    ## Severity status
+    variables$severity[[disease]] <- individual::CategoricalVariable$new(severity_states, rep("nonsevere", parameters$population))
     ## Fever status
     variables$fever[[disease]] <- individual::CategoricalVariable$new(fever_states, rep("nonfebrile", parameters$population))
     ## Symptom onset

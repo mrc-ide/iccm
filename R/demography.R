@@ -27,7 +27,7 @@ mortality_probability <- function(parameters, variables){
   mort_prob_matrix[ , length(parameters$disease) + 1] <- rate_to_prob(1 / parameters$average_age)
   diseases <- names(parameters$disease)
   for(i in seq_along(diseases)){
-    mort_prob_matrix[variables$infection_status[[i]]$get_index_of("severe")$to_vector() , i] <- parameters$disease[[i]]$daily_probability_death
+    mort_prob_matrix[variables$severity[[i]]$get_index_of("severe")$to_vector() , i] <- parameters$disease[[i]]$daily_probability_death
   }
   return(mort_prob_matrix)
 }

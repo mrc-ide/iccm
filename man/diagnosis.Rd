@@ -11,7 +11,7 @@ diagnosis(
   parameters,
   variables,
   disease_index,
-  positive_index = c("asymptomatic", "symptomatic", "severe")
+  positive_index = c("asymptomatic", "symptomatic")
 )
 }
 \arguments{

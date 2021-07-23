@@ -160,6 +160,25 @@ infection_probability <- function(target,
   return(infection_prob)
 }
 
+#' Severity process
+#'
+#' @param parameters Model parameters
+#' @param variables Model variables
+#' @param renderer Model renderer
+severity <- function(variables, parameters, renderer){
+  function(timestep){
+    for(disease in 1:length(parameters$disease)){
+      nonsevere <- variables$infection_status[[disease]]$get_index_of("symptomatic")$and(variables$severity[[disease]]$get_index_of("nonsevere"))
+      develop_severe <- nonsevere$sample(parameters$disease[[disease]]$daily_probability_severe)
+
+      variables$severity[[disease]]$queue_update("severe", develop_severe)
+      variables$fever[[disease]]$queue_update("febrile", develop_severe)
+      renderer$render(paste0(names(parameters$disease)[disease], "_severe_incidence"), develop_severe$size(), timestep)
+    }
+  }
+}
+
+
 #' Increment an integer variable +1
 #'
 #' @param target Bitset of individuals

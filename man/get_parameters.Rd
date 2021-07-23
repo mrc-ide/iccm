@@ -31,7 +31,6 @@ documented below.
 \item{sigma}{Infection rate. This will be setting specific}
 \item{clinical_duration}{The average duration of a clinical episode}
 \item{daily_probability_severe}{The daily probability of developing a severe infection | a clinical infection}
-\item{severe_duration}{The average duration of a severe episode}
 \item{daily_probability_death}{Daily probability of dying | a severe infection}
 \item{probability_fever}{Probability of fever with clinical disease}
 \item{maternal_immunity_halflife}{Average duration of protection from maternal immunity}

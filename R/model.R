@@ -6,9 +6,6 @@
 #'
 #' @return Simulation output
 #' @export
-#'
-#' @examples
-#' simulation1 <- run_simulation(timesteps = 365)
 run_simulation <- function(timesteps, parameters = NULL, long = TRUE){
   # TODO: need to fix this is using nested list of parameters
   if(is.null(parameters)){

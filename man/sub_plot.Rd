@@ -4,7 +4,7 @@
 \alias{sub_plot}
 \title{Sub plot}
 \usage{
-sub_plot(output, group_name, group_vars, var_names, ylab)
+sub_plot(output, group_name, group_vars, var_names, ylab, smooth = TRUE)
 }
 \arguments{
 \item{output}{Model output (long format)}
@@ -16,6 +16,8 @@ sub_plot(output, group_name, group_vars, var_names, ylab)
 \item{var_names}{Vector of variable names to relabel variables with}
 
 \item{ylab}{Y axis label}
+
+\item{smooth}{Apply 2 month rolling average smoothing}
 }
 \value{
 A sub plot

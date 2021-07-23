@@ -1,6 +1,6 @@
 Package: iccm
 Title: Integrated Community Case Management
-Version: 0.0.3
+Version: 0.0.4
 Authors@R: 
     person(given = "Peter",
            family = "Winskill",
@@ -26,7 +26,8 @@ Imports:
     rlang,
     patchwork,
     Rcpp,
-    R6
+    R6,
+    RcppRoll
 Suggests: 
   testthat,
   mockery

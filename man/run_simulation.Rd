@@ -19,6 +19,3 @@ Simulation output
 \description{
 Run an iccm simulation
 }
-\examples{
-simulation1 <- run_simulation(timesteps = 365)
-}

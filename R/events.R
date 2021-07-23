@@ -10,12 +10,10 @@ create_events <- function(variables, parameters){
   # Progression events for each disease
   events$asymptomatic <- list()
   events$clinical <- list()
-  events$severe <- list()
   events$susceptible <- list()
   for(disease in 1:length(parameters$disease)){
     events$asymptomatic[[disease]] <- individual::TargetedEvent$new(parameters$population)
     events$clinical[[disease]] <- individual::TargetedEvent$new(parameters$population)
-    events$severe[[disease]] <- individual::TargetedEvent$new(parameters$population)
     events$susceptible[[disease]] <- individual::TargetedEvent$new(parameters$population)
   }
   # Treatment provider visits
@@ -83,7 +81,6 @@ create_event_listeners <- function(events, variables, parameters, renderer){
     events$clinical[[disease]]$add_listener(
       schedule_progression_from_clinical_infection(
         p = p,
-        severe = events$severe[[disease]],
         asymptomatic = events$asymptomatic[[disease]],
         susceptible = events$susceptible[[disease]]
       ))
@@ -133,47 +130,6 @@ create_event_listeners <- function(events, variables, parameters, renderer){
       )
     )
     ############################################################################
-
-    ### Progress to severe disease #############################################
-    # Update status
-    events$severe[[disease]]$add_listener(
-      update_status(
-        variable = variables$infection_status[[disease]],
-        new_status = "severe"
-      )
-    )
-    # All severe disease is associated with fever
-    events$severe[[disease]]$add_listener(
-      update_fever(
-        variable = variables$fever[[disease]],
-        probability_fever = 1
-      )
-    )
-    # More likely to seek treatment with onset of severe disease
-    events$severe[[disease]]$add_listener(
-      schedule_treatment_seeking(
-        probability_seek_treatment = parameters$treatment_seeking$prob_seek_treatment_severe,
-        behavioural_delay = 0,
-        provider_preference = variables$provider_preference,
-        hf_treatment = events$hf_treatment,
-        hf_travel_time = parameters$hf$travel_time,
-        chw_treatment = events$chw_treatment,
-        chw_travel_time = parameters$chw$travel_time,
-        private_treatment = events$private_treatment,
-        private_travel_time = parameters$private$travel_time
-      )
-    )
-    # Schedule progression from severe infection
-    events$severe[[disease]]$add_listener(
-      schedule_progression_from_severe_infection(
-        p = p,
-        asymptomatic = events$asymptomatic[[disease]],
-        susceptible = events$susceptible[[disease]]
-      )
-    )
-    events$severe[[disease]]$add_listener(
-      record_severe_incidence(paste0(names(parameters$disease)[disease], "_severe_incidence"), renderer)
-    )
   }
 
   events$graduate$add_listener(
@@ -249,13 +205,6 @@ onset_symptoms <- function(variable){
   }
 }
 
-record_severe_incidence <- function(name, renderer){
-  force(name)
-  force(renderer)
-  function(timestep, target){
-    renderer$render(name, target$size(), timestep)
-  }
-}
 
 clear_scheduled_recovery <- function(event){
   force(event)
@@ -294,25 +243,17 @@ schedule_treatment_seeking <- function(probability_seek_treatment,
   }
 }
 
-schedule_progression_from_clinical_infection <- function(p, severe, asymptomatic, susceptible){
+schedule_progression_from_clinical_infection <- function(p, asymptomatic, susceptible){
   force(p)
-  force(severe)
   force(asymptomatic)
   force(susceptible)
 
   function(timestep, target){
     clinical_duration <- stats::rexp(target$size(), 1 / p$clinical_duration)
-    time_to_severe <- stats::rgeom(target$size(), p$daily_probability_severe)
-    to_severe_index <- time_to_severe < clinical_duration
-    to_severe <- individual::filter_bitset(target, which(to_severe_index))
-    severe$schedule(to_severe, time_to_severe[to_severe_index])
-
-    recovering <- individual::filter_bitset(target, which(!to_severe_index))
-
     if(p$asymptomatic_pathway){
-      asymptomatic$schedule(recovering, delay = clinical_duration[!to_severe_index])
+      asymptomatic$schedule(target, delay = clinical_duration)
     } else {
-      susceptible$schedule(recovering, delay = clinical_duration[!to_severe_index])
+      susceptible$schedule(target, delay = clinical_duration)
     }
   }
 }
@@ -326,22 +267,6 @@ schedule_progression_from_asymptomatic_infection <- function(p, susceptible){
     susceptible$schedule(target, delay = asymptomatic_duration)
   }
 }
-
-schedule_progression_from_severe_infection <- function(p, asymptomatic, susceptible){
-  force(p)
-  force(asymptomatic)
-  force(susceptible)
-
-  function(timestep, target){
-    severe_duration <- stats::rexp(target$size(), 1 / p$severe_duration)
-    if(p$asymptomatic_pathway){
-      asymptomatic$schedule(target, delay = severe_duration)
-    } else {
-      susceptible$schedule(target, delay = severe_duration)
-    }
-  }
-}
-
 
 #' Initialise events
 #'

@@ -12,11 +12,18 @@ test_that("mortality probability matrix estimated correctly",{
     )
   )
 
-  disease_states <- c("uninfected", "asymptomatic", "symptomatic", "severe")
+  disease_states <- c("uninfected", "asymptomatic", "symptomatic")
   variables <- list(
     infection_status = list(
-      individual::CategoricalVariable$new(disease_states, disease_states),
-      individual::CategoricalVariable$new(disease_states, disease_states)
+      individual::CategoricalVariable$new(disease_states, c(disease_states, "symptomatic")),
+      individual::CategoricalVariable$new(disease_states, c(disease_states, "symptomatic"))
+    )
+  )
+  severity_states <- c("nonsevere", "severe")
+  variables <- list(
+    severity = list(
+      individual::CategoricalVariable$new(severity_states, c("nonsevere", "nonsevere", "nonsevere", "severe")),
+      individual::CategoricalVariable$new(severity_states, c("nonsevere", "nonsevere", "nonsevere", "severe"))
     )
   )
 

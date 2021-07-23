@@ -1,7 +1,7 @@
 test_that("parameter defaults work", {
   parameters <- get_parameters()
   expect_type(parameters, "list")
-  expect_equal(parameters$average_age, 60 * 365)
+  expect_equal(parameters$average_age, 40 * 365)
 })
 
 test_that("parameter overrides work", {

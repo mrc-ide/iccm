@@ -18,7 +18,7 @@ test_that("diagnosis works", {
   variables <- list(
     infection_status = list(
       individual::CategoricalVariable$new(
-        c("uninfected", "asymptomatic", "symptomatic", "severe"),
+        c("uninfected", "asymptomatic", "symptomatic"),
         c(rep("symptomatic", 2), rep("uninfected", 8))
       )
     )
@@ -39,8 +39,14 @@ test_that("diagnosis works", {
   # Severe
   variables$infection_status = list(
     individual::CategoricalVariable$new(
-      c("uninfected", "asymptomatic", "symptomatic", "severe"),
-      c(rep("severe", 2), rep("uninfected", 8))
+      c("uninfected", "asymptomatic", "symptomatic"),
+      c(rep("symptomatic", 2), rep("uninfected", 8))
+    )
+  )
+  variables$severity = list(
+    individual::CategoricalVariable$new(
+      c("nonsevere", "severe"),
+      c(rep("severe", 2), rep("nonsevere", 8))
     )
   )
   # No false positives, no false negatives
@@ -103,11 +109,12 @@ test_that("give ORS", {
   scheduled2 <- individual::Bitset$new(4)
 
   for(disease in 1:length(parameters$disease)){
-    variables$infection_status[[disease]] <- mock_category(c("uninfected", "asymptomatic", "symptomatic", "severe"),
-                                                           c("uninfected", "asymptomatic", "symptomatic", "severe"))
+    variables$infection_status[[disease]] <- mock_category(c("uninfected", "asymptomatic", "symptomatic"),
+                                                           c("uninfected", "asymptomatic", "symptomatic"))
     variables$fever[[disease]] <- mock_category(c("nonfebrile", "febrile"),
                                                 c("nonfebrile", "nonfebrile", "febrile", "febrile"))
-    events$severe[[disease]] <- mock_event(scheduled)
+    variables$severity[[disease]] <-  mock_category(c("nonsevere", "severe"),
+                                                    rep("severe", 4))
     events$susceptible[[disease]] <- mock_event(scheduled2)
   }
   parameters <- get_parameters()
@@ -120,12 +127,9 @@ test_that("give ORS", {
 
   for(disease in 1:length(parameters$disease)){
     if(parameters$disease[[disease]]$type == "diarrhoea"){
-      expect_bitset_update(variables$infection_status[[disease]]$queue_update, "symptomatic", 4)
-      expect_bitset_update(variables$fever[[disease]]$queue_update, "nonfebrile", 4)
+      expect_bitset_update(variables$severity[[disease]]$queue_update, "nonsevere", 1:4)
+      expect_bitset_update(variables$fever[[disease]]$queue_update, "nonfebrile", 1:4)
 
-      expect_equal(mockery::mock_args(events$severe[[disease]]$clear_schedule)[[1]][[1]]$to_vector(), 3)
-      expect_equal(mockery::mock_args(events$susceptible[[disease]]$schedule)[[1]][[1]]$to_vector(), 3)
-      expect_equal(mockery::mock_args(events$susceptible[[disease]]$schedule)[[1]][[2]], 10)
     }
   }
 })
@@ -135,8 +139,8 @@ test_that("give ACT", {
   variables <- list()
   variables$infection_status =
     list(
-      individual::CategoricalVariable$new(c("uninfected", "asymptomatic", "symptomatic", "severe"),
-                                          c("uninfected", "asymptomatic", "symptomatic", "severe"))
+      individual::CategoricalVariable$new(c("uninfected", "asymptomatic", "symptomatic"),
+                                          c("uninfected", "uninfected", "asymptomatic", "symptomatic"))
     )
   variables$time_of_last_act <- mock_integer(rep(NA, 4))
   parameters <- list()
@@ -153,7 +157,7 @@ test_that("give ACT", {
   give_act(target, parameters, variables, events, timestep)
 
   expect_bitset_update(variables$time_of_last_act$queue_update, 1, 1:4)
-  expect_equal(mockery::mock_args(cure_stub)[[1]][[1]]$to_vector(), 2:4)
+  expect_equal(mockery::mock_args(cure_stub)[[1]][[1]]$to_vector(), 3:4)
   expect_equal(mockery::mock_args(cure_stub)[[1]][[2]], 1)
   expect_equal(mockery::mock_args(cure_stub)[[1]][[3]], variables)
   expect_equal(mockery::mock_args(cure_stub)[[1]][[4]], events)
@@ -165,8 +169,8 @@ test_that("give amoxicillin", {
   variables <- list()
   variables$infection_status =
     list(
-      individual::CategoricalVariable$new(c("uninfected", "asymptomatic", "symptomatic", "severe"),
-                                          c("uninfected", "asymptomatic", "symptomatic", "severe"))
+      individual::CategoricalVariable$new(c("uninfected", "asymptomatic", "symptomatic"),
+                                          c("uninfected", "uninfected", "asymptomatic", "symptomatic"))
     )
   variables$time_of_last_amoxicillin <- mock_integer(rep(NA, 4))
   parameters <- list()
@@ -183,7 +187,7 @@ test_that("give amoxicillin", {
   give_amoxicillin(target, parameters, variables, events, timestep)
 
   expect_bitset_update(variables$time_of_last_amoxicillin$queue_update, 1, 1:4)
-  expect_equal(mockery::mock_args(cure_stub)[[1]][[1]]$to_vector(), 2:4)
+  expect_equal(mockery::mock_args(cure_stub)[[1]][[1]]$to_vector(), 3:4)
   expect_equal(mockery::mock_args(cure_stub)[[1]][[2]], 1)
   expect_equal(mockery::mock_args(cure_stub)[[1]][[3]], variables)
   expect_equal(mockery::mock_args(cure_stub)[[1]][[4]], events)
@@ -195,10 +199,13 @@ test_that("cure",{
   disease <- 1
   variables <- list()
   variables$infection_status = list(
-    mock_category(c("uninfected", "asymptomatic", "symptomatic", "severe"), "symptomatic")
+    mock_category(c("uninfected", "asymptomatic", "symptomatic"), "symptomatic")
   )
   variables$fever = list(
     mock_category(c("nonfebrile", "febrile"), "febrile")
+  )
+  variables$severity = list(
+    mock_category(c("nonsevere", "severe"), "severe")
   )
   variables$symptom_onset = list(
     mock_integer(10)
@@ -210,9 +217,6 @@ test_that("cure",{
   events$clinical = list(
     mock_event(individual::Bitset$new(1))
   )
-  events$severe = list(
-    mock_event(individual::Bitset$new(1))
-  )
   events$susceptible = list(
     mock_event(individual::Bitset$new(1))
   )
@@ -220,11 +224,11 @@ test_that("cure",{
   cure(target, disease, variables, events)
   expect_bitset_update(variables$infection_status[[1]]$queue_update, "uninfected", 1)
   expect_bitset_update(variables$fever[[1]]$queue_update, "nonfebrile", 1)
+  expect_bitset_update(variables$severity[[1]]$queue_update, "nonsevere", 1)
   expect_bitset_update(variables$symptom_onset[[1]]$queue_update, as.numeric(NA), 1)
 
   expect_equal(mockery::mock_args(events$asymptomatic[[1]]$clear_schedule)[[1]][[1]]$to_vector(), 1)
   expect_equal(mockery::mock_args(events$clinical[[1]]$clear_schedule)[[1]][[1]]$to_vector(), 1)
-  expect_equal(mockery::mock_args(events$severe[[1]]$clear_schedule)[[1]][[1]]$to_vector(), 1)
   expect_equal(mockery::mock_args(events$susceptible[[1]]$clear_schedule)[[1]][[1]]$to_vector(), 1)
 })
 

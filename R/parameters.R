@@ -21,7 +21,6 @@
 #'  \item{sigma}{Infection rate. This will be setting specific}
 #'  \item{clinical_duration}{The average duration of a clinical episode}
 #'  \item{daily_probability_severe}{The daily probability of developing a severe infection | a clinical infection}
-#'  \item{severe_duration}{The average duration of a severe episode}
 #'  \item{daily_probability_death}{Daily probability of dying | a severe infection}
 #'  \item{probability_fever}{Probability of fever with clinical disease}
 #'  \item{maternal_immunity_halflife}{Average duration of protection from maternal immunity}
@@ -85,11 +84,10 @@ get_parameters <- function(user_overwrite = NULL){
   parameters$disease = list(
     bacterial_diarrhoea = list(
       type = "diarrhoea",
-      sigma = 0.0001,
-      clinical_duration = 4.3,
-      daily_probability_severe = 0.01,
-      severe_duration = 14,
-      daily_probability_death = 0.000001,
+      sigma = 0.01,
+      clinical_duration = 5.04,
+      daily_probability_severe = 0.012,
+      daily_probability_death = 0.00142,
       probability_fever = 0.5,
       maternal_immunity_halflife = 100,
       infection_immunity_shape = 5,
@@ -103,10 +101,9 @@ get_parameters <- function(user_overwrite = NULL){
     viral_diarrhoea = list(
       type = "diarrhoea",
       sigma = 0.001,
-      clinical_duration = 4.3,
-      daily_probability_severe = 0.0001,
-      severe_duration = 14,
-      daily_probability_death = 0.01,
+      clinical_duration = 5.04,
+      daily_probability_severe = 0.012,
+      daily_probability_death = 0.00142,
       probability_fever = 0.5,
       maternal_immunity_halflife = 100,
       infection_immunity_shape = 5,
@@ -119,11 +116,10 @@ get_parameters <- function(user_overwrite = NULL){
     ),
     parasitic_diarrhoea = list(
       type = "diarrhoea",
-      sigma = 0.001,
-      clinical_duration = 4.3,
-      daily_probability_severe = 0.0001,
-      severe_duration = 14,
-      daily_probability_death = 0.01,
+      sigma = 0.002,
+      clinical_duration = 5.04,
+      daily_probability_severe = 0.012,
+      daily_probability_death = 0.00142,
       probability_fever = 0.5,
       maternal_immunity_halflife = 100,
       infection_immunity_shape = 5,
@@ -136,11 +132,10 @@ get_parameters <- function(user_overwrite = NULL){
     ),
     rotavirus = list(
       type = "diarrhoea",
-      sigma = 0.001,
-      clinical_duration = 4.3,
-      daily_probability_severe = 0.01,
-      severe_duration = 14,
-      daily_probability_death = 0.01,
+      sigma = 0.003,
+      clinical_duration = 5.04,
+      daily_probability_severe = 0.012,
+      daily_probability_death = 0.00142,
       probability_fever = 0.5,
       maternal_immunity_halflife = 100,
       infection_immunity_shape = 5,
@@ -161,7 +156,6 @@ get_parameters <- function(user_overwrite = NULL){
       asymptomatic_pathway = TRUE,
       asymptomatic_duration = 30,
       daily_probability_severe = 0.001,
-      severe_duration = 14,
       daily_probability_death = 0.01,
       probability_fever = 0.5,
       maternal_immunity_halflife = 100,
@@ -178,7 +172,6 @@ get_parameters <- function(user_overwrite = NULL){
       sigma = 0.1,
       clinical_duration = 14,
       daily_probability_severe = 0.001,
-      severe_duration = 1,
       daily_probability_death = 0.01,
       probability_fever = 0.5,
       maternal_immunity_halflife = 100,
@@ -195,7 +188,6 @@ get_parameters <- function(user_overwrite = NULL){
       sigma = 0.1,
       clinical_duration = 14,
       daily_probability_severe = 0.01,
-      severe_duration = 1,
       daily_probability_death = 0.01,
       probability_fever = 0.5,
       maternal_immunity_halflife = 100,
@@ -212,7 +204,6 @@ get_parameters <- function(user_overwrite = NULL){
       sigma = 0.1,
       clinical_duration = 14,
       daily_probability_severe = 0.001,
-      severe_duration = 1,
       daily_probability_death = 0.01,
       probability_fever = 0.5,
       maternal_immunity_halflife = 100,
@@ -229,7 +220,6 @@ get_parameters <- function(user_overwrite = NULL){
       sigma = 0.1,
       clinical_duration = 14,
       daily_probability_severe = 0.001,
-      severe_duration = 1,
       daily_probability_death = 0.01,
       probability_fever = 0.5,
       maternal_immunity_halflife = 100,
@@ -249,7 +239,6 @@ get_parameters <- function(user_overwrite = NULL){
       sigma = 0.1,
       clinical_duration = 14,
       daily_probability_severe = 0.001,
-      severe_duration = 1,
       daily_probability_death = 0.01,
       probability_fever = 0.5,
       maternal_immunity_halflife = 100,
@@ -283,7 +272,7 @@ get_parameters <- function(user_overwrite = NULL){
   )
 
   parameters$hf <- list(
-    hf = 1,
+    hf = 0,
     travel_time = 10,
     efficacy = 1,
     severe_diarrhoea_sensitivity = 1,
@@ -302,7 +291,7 @@ get_parameters <- function(user_overwrite = NULL){
 
   parameters$chw <- list(
     chw = 1,
-    introduction_time = 365,
+    introduction_time = 365 * 3,
     travel_time = 0,
     efficacy = 1,
     severe_diarrhoea_sensitivity = 1,

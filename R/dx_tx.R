@@ -38,7 +38,7 @@ diagnosis <- function(target, sens, spec, parameters, variables, disease_index, 
 severe_diagnosis <- function(target, sens, spec, parameters, variables, disease_index){
   true_positives <- individual::Bitset$new(parameters$population)
   for(disease in disease_index){
-    true_positives <- true_positives$or(variables$severe[[disease]]$get_index_of("severe"))
+    true_positives <- true_positives$or(variables$severity[[disease]]$get_index_of("severe"))
   }
   true_negatives <- true_positives$not()
   # True positives OR False positives
@@ -183,7 +183,7 @@ give_severe_treatment_malaria <- function(target, efficacy){
 cure <- function(target, disease, variables, events){
   variables$infection_status[[disease]]$queue_update("uninfected", target)
   variables$fever[[disease]]$queue_update("nonfebrile", target)
-  variables$severe[[disease]]$queue_update("nonsevere", target)
+  variables$severity[[disease]]$queue_update("nonsevere", target)
   variables$symptom_onset[[disease]]$queue_update(as.numeric(NA), target)
   # Clear any future scheduled life course of disease
   events$asymptomatic[[disease]]$clear_schedule(target)

@@ -9,6 +9,7 @@
 create_processes <- function(parameters, variables, renderer, events){
   processes <- list(
     exposure(variables, parameters, events, renderer),
+    severity(variables, parameters, renderer),
     mortality(parameters, variables, events, renderer),
     resample_preference(parameters, variables),
 

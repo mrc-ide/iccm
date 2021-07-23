@@ -100,6 +100,12 @@ create_event_listeners <- function(events, variables, parameters, renderer){
         variable = variables$fever[[disease]]
       )
     )
+    # Clear any disease-related severity
+    events$asymptomatic[[disease]]$add_listener(
+      clear_severity(
+        variable = variables$severity[[disease]]
+      )
+    )
     # Schedule progression from asymptomatic infection
     events$asymptomatic[[disease]]$add_listener(
       schedule_progression_from_asymptomatic_infection(
@@ -121,6 +127,12 @@ create_event_listeners <- function(events, variables, parameters, renderer){
     events$susceptible[[disease]]$add_listener(
       clear_fever(
         variable = variables$fever[[disease]]
+      )
+    )
+    # Clear any disease-related severity
+    events$susceptible[[disease]]$add_listener(
+      clear_severity(
+        variable = variables$severity[[disease]]
       )
     )
     # Clear any symptom-onset time
@@ -188,6 +200,13 @@ clear_fever <- function(variable){
   force(variable)
   function(timestep, target){
     variable$queue_update("nonfebrile", target)
+  }
+}
+
+clear_severity <- function(variable){
+  force(variable)
+  function(timestep, target){
+    variable$queue_update("nonsevere", target)
   }
 }
 
